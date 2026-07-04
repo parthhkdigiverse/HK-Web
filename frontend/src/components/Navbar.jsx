@@ -67,7 +67,7 @@ export default function Navbar() {
     setIsVerifying(true);
 
     try {
-      const res = await fetch('http://localhost:8008/api/auth/verify', {
+      const res = await fetch(API_URL + '/api/auth/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
