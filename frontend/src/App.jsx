@@ -1,0 +1,232 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import Preloader from './components/Preloader';
+import Navbar from './components/Navbar';
+import HeroSection from './sections/HeroSection';
+import ScrollIndicator from './components/ScrollIndicator';
+import CustomCursor from './components/CustomCursor';
+import Footer from './components/Footer';
+
+// Import Provider
+import { ContentProvider } from './context/ContentContext';
+
+// Import Pages
+import OurStory from './pages/OurStory';
+import OurPeople from './pages/OurPeople';
+import OurCulture from './pages/OurCulture';
+import AboutUs from './pages/AboutUs';
+import Awards from './pages/Awards';
+import Blogs from './pages/Blogs';
+import Gallery from './pages/Gallery';
+import Services from './pages/Services';
+import Industry from './pages/Industry';
+import Career from './pages/Career';
+import CaseStudy from './pages/CaseStudy';
+import Portfolio from './pages/Portfolio';
+import Ventures from './pages/Ventures';
+import Contact from './pages/Contact';
+import AdminPanel from './pages/AdminPanel';
+
+// Service Subpages
+import ServiceWeb from './pages/ServiceWeb';
+import ServiceApp from './pages/ServiceApp';
+import ServiceCustomSoftware from './pages/ServiceCustomSoftware';
+import ServiceDigitalMarketing from './pages/ServiceDigitalMarketing';
+import ServiceSocialMedia from './pages/ServiceSocialMedia';
+import ServiceAiConsulting from './pages/ServiceAiConsulting';
+import ServiceItConsulting from './pages/ServiceItConsulting';
+
+import HomeSections from './sections/HomeSections';
+
+// Live Iframe Preview Container Component
+function PreviewContainer() {
+  const [previewContent, setPreviewContent] = useState(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const previewContentRef = React.useRef(previewContent);
+
+  const handlePreloadComplete = useCallback(() => {
+    setIsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    previewContentRef.current = previewContent;
+  }, [previewContent]);
+
+  useEffect(() => {
+    const handleMessage = (event) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data && event.data.type === 'UPDATE_CMS_PREVIEW') {
+        const nextContent = event.data.content;
+        const currentContent = previewContentRef.current;
+        setPreviewContent(nextContent);
+        // If the video URL changed, we need to trigger re-loading
+        if (currentContent && currentContent.hero && nextContent.hero && nextContent.hero.videoUrl !== currentContent.hero.videoUrl) {
+          setIsLoaded(false);
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
+    if (window.parent) {
+      window.parent.postMessage({ type: 'CMS_PREVIEW_READY' }, '*');
+    }
+
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  if (!previewContent) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-black text-neutral-400 font-mono text-xs select-none">
+        <span className="animate-pulse">// CONNECTING TO BUILDER CANVAS...</span>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {!isLoaded && <Preloader onComplete={handlePreloadComplete} />}
+      <div className={`transition-opacity duration-1000 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
+        <Navbar overrideContent={previewContent} />
+        <HeroSection isLoaded={isLoaded} overrideContent={previewContent} />
+        <HomeSections overrideContent={previewContent} />
+        <Footer overrideContent={previewContent} />
+      </div>
+    </>
+  );
+}
+
+function App() {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [currentHash, setCurrentHash] = useState(window.location.hash || '#');
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const newHash = window.location.hash || '#';
+      setCurrentHash((prevHash) => {
+        const prevBase = prevHash.split('?')[0];
+        const newBase = newHash.split('?')[0];
+        if (prevBase !== newBase) {
+          window.scrollTo({ top: 0, behavior: 'instant' });
+        }
+        return newHash;
+      });
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const handlePreloadComplete = useCallback(() => {
+    setIsLoaded(true);
+  }, []);
+
+  // Extract base hash without query params
+  const baseHash = currentHash.split('?')[0];
+
+  // Check if current hash is for a subpage
+  const isSubpage = baseHash !== '#' && baseHash !== '#home' && baseHash !== '#admin' && baseHash !== '#preview';
+
+  const renderPageContent = () => {
+    switch (baseHash) {
+      case '#admin':
+        return <AdminPanel />;
+      case '#preview':
+        return <PreviewContainer />;
+      case '#our-story':
+        return <OurStory />;
+      case '#our-people':
+        return <OurPeople />;
+      case '#our-culture':
+        return <OurCulture />;
+      case '#about-us':
+        return <AboutUs />;
+      case '#awards-achievements':
+        return <Awards />;
+      case '#blogs':
+        return <Blogs />;
+      case '#our-gallery':
+        return <Gallery />;
+      case '#services':
+        return <Services />;
+      case '#industry':
+        return <Industry />;
+      case '#career':
+        return <Career />;
+      case '#case-study':
+        return <CaseStudy />;
+      case '#portfolio':
+        return <Portfolio />;
+      case '#ventures':
+        return <Ventures />;
+      case '#contact':
+        return <Contact />;
+      case '#service-web':
+        return <ServiceWeb />;
+      case '#service-app':
+        return <ServiceApp />;
+      case '#service-custom-software':
+        return <ServiceCustomSoftware />;
+      case '#service-digital-marketing':
+        return <ServiceDigitalMarketing />;
+      case '#service-social-media-management':
+        return <ServiceSocialMedia />;
+      case '#service-ai-consulting':
+        return <ServiceAiConsulting />;
+      case '#service-it-consulting':
+        return <ServiceItConsulting />;
+      default:
+        return null;
+    }
+  };
+
+  const isAdminOrPreview = currentHash === '#admin' || currentHash === '#preview';
+
+  return (
+    <ContentProvider>
+      {/* Desktop custom cursor - hidden in admin and preview modes for cleaner UX */}
+      {!isAdminOrPreview && <CustomCursor />}
+
+      {/* Cinematic preloader screen - bypassed in preview mode */}
+      {!isLoaded && currentHash !== '#preview' && <Preloader onComplete={handlePreloadComplete} />}
+
+      {/* Main website layout */}
+      <div className={`transition-opacity duration-1000 ${(isLoaded || currentHash === '#preview') ? 'opacity-100' : 'opacity-0'}`}>
+        {!isAdminOrPreview && <Navbar />}
+
+        {isSubpage ? (
+          /* Subpages Layout Wrapper */
+          <main className="pt-36 sm:pt-40 lg:pt-44 xl:pt-48 pb-24 w-full mx-auto min-h-screen relative z-10">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={baseHash}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+              >
+                {renderPageContent()}
+              </motion.div>
+            </AnimatePresence>
+          </main>
+        ) : isAdminOrPreview ? (
+          /* Fullscreen Admin Panel or Preview container */
+          renderPageContent()
+        ) : (
+          /* Home Page Cinematic Hero & Sections */
+          <>
+            <HeroSection isLoaded={isLoaded} />
+            <HomeSections />
+          </>
+        )}
+
+        {!isAdminOrPreview && <Footer />}
+
+        {/* Sleek bottom scroll hint - only shown on Home page */}
+        {!isSubpage && !isAdminOrPreview && <ScrollIndicator />}
+      </div>
+    </ContentProvider>
+  );
+}
+
+export default App;

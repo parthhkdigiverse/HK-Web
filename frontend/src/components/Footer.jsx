@@ -1,0 +1,53 @@
+import React from 'react';
+
+export default function Footer() {
+  return (
+    <footer className="border-t border-white/5 bg-black px-4 sm:px-6 md:px-8 lg:px-12 py-20 text-sm sm:text-[15px] font-light text-neutral-400 relative z-10">
+      <div className="max-w-[1600px] w-full mx-auto grid grid-cols-12 gap-8 lg:gap-12">
+        <div className="col-span-12 lg:col-span-4 space-y-6">
+          <div className="flex items-center gap-3">
+            <img src="/images/hk-logo.png" alt="HariKrushn DigiVerse Logo" className="w-10 h-10 object-contain" />
+            <span className="font-display text-xl font-bold text-white tracking-tight">HariKrushn DigiVerse LLP</span>
+          </div>
+          <p className="leading-relaxed max-w-xs text-neutral-400 text-sm sm:text-[15px]">
+            Architecting the infinite digital through precision engineering and editorial design.
+          </p>
+        </div>
+        <div className="col-span-6 lg:col-span-2 space-y-4">
+          <div className="font-mono text-[11px] sm:text-xs uppercase tracking-widest text-white font-bold">// Capabilities</div>
+          <ul className="space-y-2.5">
+            <li><a href="#service-web" className="hover:text-white transition-colors">Engineering</a></li>
+            <li><a href="#service-ai-consulting" className="hover:text-white transition-colors">AI & ML</a></li>
+            <li><a href="#service-social-media-management" className="hover:text-white transition-colors">Branding</a></li>
+            <li><a href="#service-custom-software" className="hover:text-white transition-colors">Product Strategy</a></li>
+          </ul>
+        </div>
+        <div className="col-span-6 lg:col-span-2 space-y-4">
+          <div className="font-mono text-[11px] sm:text-xs uppercase tracking-widest text-white font-bold">// Ecosystem</div>
+          <ul className="space-y-2.5">
+            <li><a href="#portfolio" className="hover:text-white transition-colors">Portfolio</a></li>
+            <li><a href="#ventures" className="hover:text-white transition-colors">Ventures</a></li>
+            <li><a href="#career" className="hover:text-white transition-colors">Careers</a></li>
+            <li><a href="#contact" className="hover:text-white transition-colors">Contact</a></li>
+          </ul>
+        </div>
+        <div className="col-span-12 lg:col-span-4 space-y-4 lg:text-right">
+          <div className="font-mono text-[11px] sm:text-xs uppercase tracking-widest text-white font-bold">// Office</div>
+          <p className="leading-relaxed text-neutral-400 text-sm sm:text-[15px]">
+            Techno Hub, Silicon Oasis<br />
+            Dubai, United Arab Emirates
+          </p>
+          <p className="text-white font-semibold mt-2 text-sm sm:text-[15px]">hello@hkdigiverse.com</p>
+        </div>
+        
+        <div className="col-span-12 pt-16 mt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+          <p className="text-neutral-500 text-xs sm:text-sm">© 2026 HariKrushn DigiVerse LLP. Architecting the Infinite Digital.</p>
+          <div className="flex gap-6 text-neutral-500 text-xs sm:text-sm">
+            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
+            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
