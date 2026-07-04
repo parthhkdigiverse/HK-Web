@@ -561,6 +561,14 @@ if __name__ == "__main__":
     npm_cmd = "npm.cmd" if os.name == 'nt' else "npm"
     frontend_dir = os.path.join(os.path.dirname(__file__), "frontend")
 
+    # Write frontend env dynamically to sync backend port
+    backend_port = os.getenv("PORT", "8008")
+    try:
+        with open(os.path.join(frontend_dir, ".env"), "w") as f:
+            f.write(f"VITE_API_URL=http://localhost:{backend_port}\n")
+    except Exception as e:
+        print(f"[System] Warning: Could not write frontend .env ({e})")
+
     # Run build synchronously first
     print("[System] Generating frontend production build...")
     try:
