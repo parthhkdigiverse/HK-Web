@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useContent } from '../context/ContentContext';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8008';
+
 const DEFAULT_CONTENT = {
   hero: {
     label: "// EST. 2019 — A DIGITAL ATELIER",
