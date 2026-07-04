@@ -143,7 +143,7 @@ export default function AdminPanel() {
     setIsVerifying(true);
     setAuthError('');
     try {
-      const res = await fetch('http://localhost:8008/api/auth/verify', {
+      const res = await fetch(API_URL + '/api/auth/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: passToVerify })
@@ -174,7 +174,7 @@ export default function AdminPanel() {
   const loadDraft = async (pass) => {
     setLoadingDraft(true);
     try {
-      const res = await fetch('http://localhost:8008/api/content/draft');
+      const res = await fetch(API_URL + '/api/content/draft');
       if (res.ok) {
         const draft = await res.json();
         // Fallbacks for draft schema compatibility
@@ -348,7 +348,7 @@ export default function AdminPanel() {
     formData.append('file', file);
 
     try {
-      const res = await fetch('http://localhost:8008/api/upload/image', {
+      const res = await fetch(API_URL + '/api/upload/image', {
         method: 'POST',
         body: formData
       });
@@ -377,7 +377,7 @@ export default function AdminPanel() {
     formData.append('file', file);
 
     try {
-      const res = await fetch('http://localhost:8008/api/upload/video', {
+      const res = await fetch(API_URL + '/api/upload/video', {
         method: 'POST',
         body: formData
       });
