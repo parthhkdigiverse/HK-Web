@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { cn } from '../utils/cn';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8008';
+
 export default function Navbar() {
   const [isHidden, setIsHidden] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);

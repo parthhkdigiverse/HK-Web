@@ -571,13 +571,15 @@ if __name__ == "__main__":
 
     # Define commands
     # Use reload, but ignore frontend files to prevent restart loops
+    backend_port = os.getenv("PORT", "8008")
+    frontend_port = os.getenv("FRONTEND_PORT", "5173")
     backend_cmd = [
         python_exe, "-m", "uvicorn", "main:app",
         "--host", "0.0.0.0",
-        "--port", "8008",
+        "--port", backend_port,
         "--reload"
     ]
-    frontend_cmd = [npm_cmd, "run", "dev"]
+    frontend_cmd = [npm_cmd, "run", "dev", "--", "--port", frontend_port]
 
     processes = []
 
@@ -636,8 +638,8 @@ if __name__ == "__main__":
         frontend_proc = run_service(frontend_cmd, os.path.join(os.path.dirname(__file__), "frontend"), "[Frontend]")
 
         print("\n" + "=" * 60)
-        print("  - Backend:  http://localhost:8008")
-        print("  - Frontend: http://localhost:5173")
+        print(f"  - Backend:  http://localhost:{backend_port}")
+        print(f"  - Frontend: http://localhost:{frontend_port}")
         print("  - CTRL+C to terminate both servers")
         print("=" * 60 + "\n")
 

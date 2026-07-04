@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 
 const ContentContext = createContext(null);
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8008';
 
 const DEFAULT_CONTENT = {
   hero: {
@@ -115,7 +116,7 @@ export function ContentProvider({ children }) {
   const fetchContent = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch('http://localhost:8008/api/content');
+      const res = await fetch(API_URL + '/api/content');
       if (res.ok) {
         const data = await res.json();
         setContent(data);
@@ -129,7 +130,7 @@ export function ContentProvider({ children }) {
 
   const fetchDraft = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:8008/api/content/draft');
+      const res = await fetch(API_URL + '/api/content/draft');
       if (res.ok) {
         return await res.json();
       }
@@ -141,7 +142,7 @@ export function ContentProvider({ children }) {
 
   const saveDraft = useCallback(async (contentData, password) => {
     try {
-      const res = await fetch('http://localhost:8008/api/content/draft', {
+      const res = await fetch(API_URL + '/api/content/draft', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password, content: contentData })
@@ -155,7 +156,7 @@ export function ContentProvider({ children }) {
 
   const publishDraft = useCallback(async (contentData, password) => {
     try {
-      const res = await fetch('http://localhost:8008/api/content/publish', {
+      const res = await fetch(API_URL + '/api/content/publish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password, content: contentData })
@@ -173,7 +174,7 @@ export function ContentProvider({ children }) {
 
   const getHistory = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:8008/api/content/history');
+      const res = await fetch(API_URL + '/api/content/history');
       if (res.ok) {
         return await res.json();
       }
@@ -185,7 +186,7 @@ export function ContentProvider({ children }) {
 
   const restoreVersion = useCallback(async (versionId, password) => {
     try {
-      const res = await fetch('http://localhost:8008/api/content/history/restore', {
+      const res = await fetch(API_URL + '/api/content/history/restore', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password, version_id: versionId })
