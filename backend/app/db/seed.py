@@ -386,8 +386,38 @@ def seed_database():
     client = pymongo.MongoClient(uri, serverSelectionTimeoutMS=5000)
     db = client["hk_digiverse"]
 
+    # Roles seed definition
+    default_roles = [
+        {
+            "name": "super_admin",
+            "description": "Full access to all modules, roles, logs, and backups.",
+            "permissions": ["all"]
+        },
+        {
+            "name": "admin",
+            "description": "Manage content, media, files, and backups.",
+            "permissions": ["content:read", "content:write", "content:publish", "media:upload", "media:delete", "submissions:read", "backups:manage", "logs:read"]
+        },
+        {
+            "name": "editor",
+            "description": "Edit and publish draft content.",
+            "permissions": ["content:read", "content:write", "content:publish", "media:upload", "submissions:read"]
+        },
+        {
+            "name": "content_manager",
+            "description": "Create and edit draft content without publishing rights.",
+            "permissions": ["content:read", "content:write", "media:upload", "submissions:read"]
+        },
+        {
+            "name": "viewer",
+            "description": "Read-only access to drafts, logs, and public pages.",
+            "permissions": ["content:read"]
+        }
+    ]
+
     # Collection Seed Map
     seed_map = {
+        "roles": (default_roles, "name"),
         "site_settings": ([DEFAULT_SITE_SETTINGS], "identifier"),
         "about_us": ([DEFAULT_ABOUT_US], "identifier"),
         "our_culture": (DEFAULT_CULTURE, "title"),
@@ -425,6 +455,38 @@ def seed_database():
                 print(f"[{coll_name}] Seeding failed: {e}")
         else:
             print(f"[{coll_name}] Collection already populated, skipping seeding.")
+
+    # Seed default admin user
+    users_collection = db["users"]
+    try:
+        users_collection.create_index([("username", pymongo.ASCENDING)], unique=True)
+    except Exception:
+        pass
+
+    if users_collection.count_documents({"username": "admin"}) == 0:
+        from app.core.security import hash_password
+        import datetime
+        try:
+            users_collection.insert_one({
+                "username": "admin",
+                "hashed_password": hash_password("admin123"),
+                "email": "admin@hkdigiverse.com",
+                "role": "super_admin",
+                "status": "active",
+                "created_at": datetime.datetime.utcnow().isoformat(),
+                "updated_at": datetime.datetime.utcnow().isoformat()
+            })
+            print("[Users] Seeded default super_admin 'admin' user.")
+        except Exception as e:
+            print(f"[Users] Seeding failed: {e}")
+
+    # Seed default media explorer folder index
+    media_collection = db["media_library"]
+    try:
+        media_collection.create_index([("file_url", pymongo.ASCENDING)], unique=True)
+        media_collection.create_index([("folder_path", pymongo.ASCENDING)])
+    except Exception:
+        pass
 
     print("\nDatabase initialization and seeding completed successfully!")
 
