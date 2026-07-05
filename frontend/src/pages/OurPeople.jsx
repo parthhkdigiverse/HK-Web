@@ -1,8 +1,9 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useContent } from '../context/ContentContext';
 
-/* ─────────────────────────── DATA ─────────────────────────── */
-const founders = [
+/* ─────────────────────────── DEFAULT DATA FALLBACKS ─────────────────────────── */
+const DEFAULT_FOUNDERS = [
   {
     name: 'Radhe Patel',
     role: 'Co-Founder & CEO',
@@ -23,7 +24,7 @@ const founders = [
   }
 ];
 
-const cLevels = {
+const DEFAULT_C_LEVELS = {
   cto: {
     name: 'Krushn Patel',
     role: 'Chief Technology Officer',
@@ -62,7 +63,7 @@ const cLevels = {
   }
 };
 
-const departments = [
+const DEFAULT_DEPARTMENTS = [
   {
     key: 'dev',
     name: 'Software Development',
@@ -530,7 +531,7 @@ function PersonCard({ node, isActive, isDimmed, onHover, onClick, accent, hovere
 }
 
 /* ───────────────────── DESKTOP CONSTELLATION TREE ───────────────────── */
-function DesktopTree({ activeMember, onSelect, expandedExecs, toggleExec, hoveredNode, setHoveredNode }) {
+function DesktopTree({ activeMember, onSelect, expandedExecs, toggleExec, hoveredNode, setHoveredNode, parentMap, founders, cLevels, departments }) {
   const treeContainerRef = useRef(null);
   const [connections, setConnections] = useState([]);
 
@@ -1036,28 +1037,116 @@ function MobileTreeNode({ node, activeMember, onSelect }) {
   );
 }
 
-const mobileTreeData = [
-  {
-    ...founders[0],
-    children: [
-      {
-        ...cLevels.cto,
-        children: [departments[0].lead, departments[1].lead]
-      }
-    ]
-  },
-  {
-    ...founders[1],
-    children: [
-      { ...cLevels.cdo, children: [departments[2].lead] },
-      { ...cLevels.caio, children: [departments[3].lead] },
-      { ...cLevels.cmo, children: [departments[4].lead] }
-    ]
-  }
-];
-
 /* ══════════════════ MAIN EXPORT ══════════════════ */
 export default function OurPeople() {
+  const { content } = useContent();
+  const peopleList = content?.people || [];
+
+  // Compute structures dynamically
+  const founders = [
+    peopleList.find(p => p.level === 1 && p.name.toLowerCase().includes('radhe')) || DEFAULT_FOUNDERS[0],
+    peopleList.find(p => p.level === 1 && p.name.toLowerCase().includes('prince')) || DEFAULT_FOUNDERS[1]
+  ];
+
+  const cLevels = {
+    cto: peopleList.find(p => p.level === 2 && (p.role.includes('CTO') || p.dept.includes('TECH'))) || DEFAULT_C_LEVELS.cto,
+    cdo: peopleList.find(p => p.level === 2 && (p.role.includes('CDO') || p.dept.includes('DESIGN'))) || DEFAULT_C_LEVELS.cdo,
+    caio: peopleList.find(p => p.level === 2 && (p.role.includes('CAIO') || p.dept.includes('AI'))) || DEFAULT_C_LEVELS.caio,
+    cmo: peopleList.find(p => p.level === 2 && (p.role.includes('CMO') || p.dept.includes('MARKETING') || p.dept.includes('GROWTH'))) || DEFAULT_C_LEVELS.cmo
+  };
+
+  const departments = [
+    {
+      key: 'dev',
+      name: 'Software Development',
+      dept: 'DEVELOPMENT',
+      parentKey: 'cto',
+      lead: peopleList.find(p => p.level === 3 && p.dept === 'DEVELOPMENT') || DEFAULT_DEPARTMENTS[0].lead
+    },
+    {
+      key: 'qa',
+      name: 'Product & QA',
+      dept: 'PRODUCT & QA',
+      parentKey: 'cto',
+      lead: peopleList.find(p => p.level === 3 && p.dept === 'PRODUCT & QA') || DEFAULT_DEPARTMENTS[1].lead
+    },
+    {
+      key: 'design',
+      name: 'UI/UX & Design',
+      dept: 'CREATIVE & DESIGN',
+      parentKey: 'cdo',
+      lead: peopleList.find(p => p.level === 3 && p.dept === 'CREATIVE & DESIGN') || DEFAULT_DEPARTMENTS[2].lead
+    },
+    {
+      key: 'research',
+      name: 'AI Research',
+      dept: 'AI RESEARCH',
+      parentKey: 'caio',
+      lead: peopleList.find(p => p.level === 3 && p.dept === 'AI RESEARCH') || DEFAULT_DEPARTMENTS[3].lead
+    },
+    {
+      key: 'marketing',
+      name: 'Marketing & Brand',
+      dept: 'MARKETING',
+      parentKey: 'cmo',
+      lead: peopleList.find(p => p.level === 3 && p.dept === 'MARKETING') || DEFAULT_DEPARTMENTS[4].lead
+    }
+  ];
+
+  // Deep clone to avoid mutating defaults
+  const clonedDeps = JSON.parse(JSON.stringify(departments));
+
+  clonedDeps.forEach(dept => {
+    if (dept.lead) {
+      const employee = peopleList.find(p => p.level === 4 && p.parent_id === dept.lead.name);
+      if (employee) {
+        dept.lead.employee = { ...employee };
+        const intern = peopleList.find(p => p.level === 5 && p.parent_id === employee.name);
+        if (intern) {
+          dept.lead.employee.intern = { ...intern };
+        }
+      } else {
+        const defaultDept = DEFAULT_DEPARTMENTS.find(d => d.key === dept.key);
+        if (defaultDept && defaultDept.lead.employee) {
+          dept.lead.employee = defaultDept.lead.employee;
+        }
+      }
+    }
+  });
+
+  // Re-build parentMap dynamically
+  const parentMap = {};
+  peopleList.forEach(p => {
+    const ancestors = [];
+    let current = p;
+    while (current && current.parent_id) {
+      ancestors.push(current.parent_id);
+      current = peopleList.find(x => x.name === current.parent_id);
+    }
+    ancestors.push("HariKrushn DigiVerse LLP");
+    parentMap[p.name] = ancestors;
+  });
+
+  const mobileTreeData = [
+    {
+      ...founders[0],
+      children: [
+        {
+          ...cLevels.cto,
+          children: [clonedDeps[0].lead, clonedDeps[1].lead]
+        }
+      ]
+    },
+    {
+      ...founders[1],
+      children: [
+        { ...cLevels.cdo, children: [clonedDeps[2].lead] },
+        { ...cLevels.caio, children: [clonedDeps[3].lead] },
+        { ...cLevels.cmo, children: [clonedDeps[4].lead] }
+      ]
+    }
+  ];
+
   const [activeMember, setActiveMember] = useState(null);
   const [hoveredNode, setHoveredNode] = useState(null);
   const [expandedExecs, setExpandedExecs] = useState({
@@ -1133,6 +1222,10 @@ export default function OurPeople() {
             toggleExec={toggleExec}
             hoveredNode={hoveredNode}
             setHoveredNode={setHoveredNode}
+            parentMap={parentMap}
+            founders={founders}
+            cLevels={cLevels}
+            departments={clonedDeps}
           />
         </div>
       </div>

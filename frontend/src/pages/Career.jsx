@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useContent } from '../context/ContentContext';
 
 /* ────────────────────────── JOBS DATA ────────────────────────── */
-const jobs = [
+const DEFAULT_JOBS = [
   {
     id: 'frontend',
     title: 'Senior Frontend Architect',
@@ -205,10 +206,18 @@ const stats = [
 ];
 
 export default function Career() {
+  const { content } = useContent();
+  const jobs = (content?.careers || DEFAULT_JOBS).map(j => ({
+    ...j,
+    id: j.slug || j.id
+  }));
+
   const [activeJob, setActiveJob] = useState(null);
   const [activeDept, setActiveDept] = useState('All');
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', role: '', resume: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const [highlightForm, setHighlightForm] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
   const [counters, setCounters] = useState(stats.map(() => 0));
@@ -219,10 +228,37 @@ export default function Career() {
   const [showInternshipForm, setShowInternshipForm] = useState(false);
   const [internFormData, setInternFormData] = useState({ name: '', email: '', phone: '', track: 'React/Next.js', college: '', resume: '', message: '' });
   const [internSubmitted, setInternSubmitted] = useState(false);
+  const [internSubmitting, setInternSubmitting] = useState(false);
+  const [internErrorMsg, setInternErrorMsg] = useState('');
 
-  const handleInternSubmit = (e) => {
+  const handleInternSubmit = async (e) => {
     e.preventDefault();
-    setInternSubmitted(true);
+    setInternSubmitting(true);
+    setInternErrorMsg('');
+    try {
+      const response = await fetch('/api/applications/intern', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(internFormData),
+      });
+      if (response.ok) {
+        setInternSubmitted(true);
+        setTimeout(() => {
+          setInternSubmitted(false);
+          setInternFormData({ name: '', email: '', phone: '', track: 'React/Next.js', college: '', resume: '', message: '' });
+          setShowInternshipForm(false);
+        }, 4000);
+      } else {
+        const err = await response.json();
+        setInternErrorMsg(err.detail || 'Failed to submit application. Please try again.');
+      }
+    } catch (err) {
+      setInternErrorMsg('Failed to submit application. Please check your network connection.');
+    } finally {
+      setInternSubmitting(false);
+    }
   };
 
   // Animated counter on scroll
@@ -267,14 +303,34 @@ export default function Career() {
     if (formElement) formElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setFormData({ name: '', email: '', phone: '', role: '', resume: '', message: '' });
-      setActiveJob(null);
-    }, 4000);
+    setSubmitting(true);
+    setErrorMsg('');
+    try {
+      const response = await fetch('/api/applications/job', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+      if (response.ok) {
+        setSubmitted(true);
+        setTimeout(() => {
+          setSubmitted(false);
+          setFormData({ name: '', email: '', phone: '', role: '', resume: '', message: '' });
+          setActiveJob(null);
+        }, 4000);
+      } else {
+        const err = await response.json();
+        setErrorMsg(err.detail || 'Failed to submit application. Please try again.');
+      }
+    } catch (err) {
+      setErrorMsg('Failed to submit application. Please check your network connection.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -537,9 +593,12 @@ export default function Career() {
                   <textarea id="job-app-message" value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} placeholder="Tell us why you'd be a great fit..." rows={3} className="bg-black/60 border border-white/5 rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-white/30 transition-all resize-none text-left" />
                 </div>
 
-                <button type="submit" className="bg-white text-black px-6 py-4 rounded-xl text-[10px] font-mono font-bold uppercase tracking-widest hover:bg-neutral-200 transition-all mt-2 shadow-md cursor-pointer">
-                  Submit Application
+                <button type="submit" disabled={submitting} className={`bg-white text-black px-6 py-4 rounded-xl text-[10px] font-mono font-bold uppercase tracking-widest hover:bg-neutral-200 transition-all mt-2 shadow-md cursor-pointer ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                  {submitting ? 'Submitting...' : 'Submit Application'}
                 </button>
+                {errorMsg && (
+                  <div className="text-red-500 font-mono text-[10px] text-center mt-2">{errorMsg}</div>
+                )}
               </form>
             )}
           </div>
@@ -718,10 +777,14 @@ export default function Career() {
 
                         <button 
                           type="submit"
-                          className="w-full bg-emerald-500 text-black px-4 py-2.5 rounded-xl text-xs font-mono font-bold uppercase tracking-widest hover:bg-emerald-400 transition-all shadow-md mt-2 cursor-pointer"
+                          disabled={internSubmitting}
+                          className={`w-full bg-emerald-500 text-black px-4 py-2.5 rounded-xl text-xs font-mono font-bold uppercase tracking-widest hover:bg-emerald-400 transition-all shadow-md mt-2 cursor-pointer ${internSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                          Submit Internship Application
+                          {internSubmitting ? 'Submitting...' : 'Submit Internship Application'}
                         </button>
+                        {internErrorMsg && (
+                          <div className="text-red-500 font-mono text-[9px] text-center mt-2">{internErrorMsg}</div>
+                        )}
                       </form>
                     )}
                   </motion.div>

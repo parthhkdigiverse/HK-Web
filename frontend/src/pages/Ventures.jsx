@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useContent } from '../context/ContentContext';
 
 /* ────────────────────────── VENTURES DATA ────────────────────────── */
-const ventures = [
+const DEFAULT_VENTURES = [
   {
     id: 'aisetu',
     name: 'AI Setu',
@@ -96,7 +97,13 @@ const ventures = [
 ];
 
 export default function Ventures() {
+  const { content } = useContent();
   const [selectedVenture, setSelectedVenture] = useState(null);
+
+  const ventures = (content?.ventures || DEFAULT_VENTURES).map(v => ({
+    ...v,
+    id: v.slug || v.id
+  }));
 
   const activeVenture = ventures.find(v => v.id === selectedVenture);
 

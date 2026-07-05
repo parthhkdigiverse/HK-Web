@@ -1,74 +1,81 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useContent } from '../context/ContentContext';
+
+const DEFAULT_POSTS = [
+  {
+    id: "microservices",
+    title: "Re-architecting Enterprise Microservices for Scale",
+    desc: "How we transitioned a legacy monolithic platform into a high-availability microservices mesh capable of millions of transactions.",
+    date: "JUNE 24, 2026",
+    category: "ENGINEERING",
+    readTime: "5 MIN READ",
+    image: "/images/gallery/ai_orchestrator.png",
+    author: "Radhe Patel (CEO)",
+    longContent: [
+      "At HariKrushn DigiVerse, we frequently consult with enterprise firms running legacy monolithic codebases. Over time, these platforms struggle to maintain performance under high concurrent user load, leading to database lockups and downtime. In this deep dive, we walk through our engineering strategy for decomposing a core monolithic financial transactional ledger into a fully distributed microservices mesh.",
+      "We began by establishing strict boundaries using domain-driven design (DDD). By separating user authentication, transactional ledger records, billing details, and analytics into independent services, we isolated computational dependencies. We chose FastAPI for our REST endpoints and compiled them into lightweight Docker containers orchestrated by Kubernetes.",
+      "A key challenge was maintaining transaction consistency across services without introducing blocking locks. We implemented the Saga design pattern using an asynchronous message broker (RabbitMQ) to trigger compensating transactions in case of failure. Additionally, we placed a Redis Sentinel caching grid in front of hot database tables, reducing average response latency from 450ms to less than 15ms.",
+      "The resulting network now easily scales to handle millions of transactions daily, providing our enterprise clients with absolute reliability, auto-scaling, and a clean interface to integrate emerging internal apps."
+    ],
+    highlights: [
+      "Reduced response latency from 450ms to 15ms",
+      "Implemented Saga Pattern for transaction safety",
+      "Containerized orchestration with Auto-Scaling Kubernetes"
+    ]
+  },
+  {
+    id: "cinematic-design",
+    title: "The Art of Cinematic Web Design",
+    desc: "Exploring the boundary between luxury brand aesthetics, smooth WebGL canvasses, and interactive scroll animations.",
+    date: "MAY 18, 2026",
+    category: "DESIGN",
+    readTime: "4 MIN READ",
+    image: "/images/gallery/cinematic_review.png",
+    author: "Prince Patel (Partner)",
+    longContent: [
+      "Traditional web development prioritizes static layout grids. However, high-end brands require digital environments that evoke emotion, establish premium status, and tell a memorable visual story. Cinematic web design bridges this gap by merging classic layout logic with WebGL graphics, custom typography matrices, and dynamic scroll physics.",
+      "When we set out to build HariKrushn's design system, we established a strict set of visual parameters. Every hover state should feel responsive, utilizing custom cursor interactions to guide the user. Every transition should utilize smooth spring physics (via Framer Motion) to mimic the natural inertia of real-world materials.",
+      "Furthermore, we utilize asset lazy-loading and GPU-accelerated canvas layers to ensure that complex animation-heavy websites load instantly. By separating heavy visual logic onto background threads and rendering only viewport-adjacent nodes, we achieve 120 FPS scrolling interactions even on legacy mobile devices.",
+      "Ultimately, cinematic design is not about decoration. It is about crafting an interactive virtual space where brand values are communicated through motion, light, and editorial detail."
+    ],
+    highlights: [
+      "Maintained consistent 120 FPS viewport transitions",
+      "Designed fluid glassmorphism component libraries",
+      "Engineered custom cursor tracking algorithms"
+    ]
+  },
+  {
+    id: "ai-agents",
+    title: "Integrating Advanced AI Agents in CRM Systems",
+    desc: "A technical walkthrough of building automated database query flows and vector search engines into modern SaaS apps.",
+    date: "APRIL 02, 2026",
+    category: "AI & SYSTEMS",
+    readTime: "7 MIN READ",
+    image: "/images/gallery/digiverse_workspace.png",
+    author: "Radhe Patel (CEO)",
+    longContent: [
+      "Integrating Large Language Models (LLMs) into customer relationship platforms (CRMs) has evolved beyond basic chatbot widgets. Today's enterprise applications require autonomous AI agents capable of querying live databases, executing workflows, and preparing data briefs without human intervention.",
+      "In this technical guide, we outline our architecture for building AI agents that operate directly inside client-managed CRM systems. We utilize a secure prompt-cache compilation layer to reduce API latency. When a user requests an analytical summary, the agent utilizes a secure semantic router to match the query to a pre-authorized SQL template.",
+      "To maintain data security, the agent operates in an isolated execution sandbox. Telemetry data is stripped of personally identifiable information (PII) before it is passed to cloud-hosted LLM endpoints. For highly sensitive operations, we deploy decentralized local LLM clusters within the client's private VPC.",
+      "By automating database queries, client categorization, and response drafting, our AI integrations have increased operational efficiency for our clients by more than 10x, enabling teams to focus on relationship management rather than database navigation."
+    ],
+    highlights: [
+      "Developed secure sandboxed execution environments",
+      "Reduced API costs with semantic prompt caching",
+      "Deployed private local LLM clusters for VPC security"
+    ]
+  }
+];
 
 export default function Blogs() {
+  const { content } = useContent();
   const [selectedPost, setSelectedPost] = useState(null);
 
-  const posts = [
-    {
-      id: "microservices",
-      title: "Re-architecting Enterprise Microservices for Scale",
-      desc: "How we transitioned a legacy monolithic platform into a high-availability microservices mesh capable of millions of transactions.",
-      date: "JUNE 24, 2026",
-      category: "ENGINEERING",
-      readTime: "5 MIN READ",
-      image: "/images/gallery/ai_orchestrator.png",
-      author: "Radhe Patel (CEO)",
-      longContent: [
-        "At HariKrushn DigiVerse, we frequently consult with enterprise firms running legacy monolithic codebases. Over time, these platforms struggle to maintain performance under high concurrent user load, leading to database lockups and downtime. In this deep dive, we walk through our engineering strategy for decomposing a core monolithic financial transactional ledger into a fully distributed microservices mesh.",
-        "We began by establishing strict boundaries using domain-driven design (DDD). By separating user authentication, transactional ledger records, billing details, and analytics into independent services, we isolated computational dependencies. We chose FastAPI for our REST endpoints and compiled them into lightweight Docker containers orchestrated by Kubernetes.",
-        "A key challenge was maintaining transaction consistency across services without introducing blocking locks. We implemented the Saga design pattern using an asynchronous message broker (RabbitMQ) to trigger compensating transactions in case of failure. Additionally, we placed a Redis Sentinel caching grid in front of hot database tables, reducing average response latency from 450ms to less than 15ms.",
-        "The resulting network now easily scales to handle millions of transactions daily, providing our enterprise clients with absolute reliability, auto-scaling, and a clean interface to integrate emerging internal apps."
-      ],
-      highlights: [
-        "Reduced response latency from 450ms to 15ms",
-        "Implemented Saga Pattern for transaction safety",
-        "Containerized orchestration with Auto-Scaling Kubernetes"
-      ]
-    },
-    {
-      id: "cinematic-design",
-      title: "The Art of Cinematic Web Design",
-      desc: "Exploring the boundary between luxury brand aesthetics, smooth WebGL canvasses, and interactive scroll animations.",
-      date: "MAY 18, 2026",
-      category: "DESIGN",
-      readTime: "4 MIN READ",
-      image: "/images/gallery/cinematic_review.png",
-      author: "Prince Patel (Partner)",
-      longContent: [
-        "Traditional web development prioritizes static layout grids. However, high-end brands require digital environments that evoke emotion, establish premium status, and tell a memorable visual story. Cinematic web design bridges this gap by merging classic layout logic with WebGL graphics, custom typography matrices, and dynamic scroll physics.",
-        "When we set out to build HariKrushn's design system, we established a strict set of visual parameters. Every hover state should feel responsive, utilizing custom cursor interactions to guide the user. Every transition should utilize smooth spring physics (via Framer Motion) to mimic the natural inertia of real-world materials.",
-        "Furthermore, we utilize asset lazy-loading and GPU-accelerated canvas layers to ensure that complex animation-heavy websites load instantly. By separating heavy visual logic onto background threads and rendering only viewport-adjacent nodes, we achieve 120 FPS scrolling interactions even on legacy mobile devices.",
-        "Ultimately, cinematic design is not about decoration. It is about crafting an interactive virtual space where brand values are communicated through motion, light, and editorial detail."
-      ],
-      highlights: [
-        "Maintained consistent 120 FPS viewport transitions",
-        "Designed fluid glassmorphism component libraries",
-        "Engineered custom cursor tracking algorithms"
-      ]
-    },
-    {
-      id: "ai-agents",
-      title: "Integrating Advanced AI Agents in CRM Systems",
-      desc: "A technical walkthrough of building automated database query flows and vector search engines into modern SaaS apps.",
-      date: "APRIL 02, 2026",
-      category: "AI & SYSTEMS",
-      readTime: "7 MIN READ",
-      image: "/images/gallery/digiverse_workspace.png",
-      author: "Radhe Patel (CEO)",
-      longContent: [
-        "Integrating Large Language Models (LLMs) into customer relationship platforms (CRMs) has evolved beyond basic chatbot widgets. Today's enterprise applications require autonomous AI agents capable of querying live databases, executing workflows, and preparing data briefs without human intervention.",
-        "In this technical guide, we outline our architecture for building AI agents that operate directly inside client-managed CRM systems. We utilize a secure prompt-cache compilation layer to reduce API latency. When a user requests an analytical summary, the agent utilizes a secure semantic router to match the query to a pre-authorized SQL template.",
-        "To maintain data security, the agent operates in an isolated execution sandbox. Telemetry data is stripped of personally identifiable information (PII) before it is passed to cloud-hosted LLM endpoints. For highly sensitive operations, we deploy decentralized local LLM clusters within the client's private VPC.",
-        "By automating database queries, client categorization, and response drafting, our AI integrations have increased operational efficiency for our clients by more than 10x, enabling teams to focus on relationship management rather than database navigation."
-      ],
-      highlights: [
-        "Developed secure sandboxed execution environments",
-        "Reduced API costs with semantic prompt caching",
-        "Deployed private local LLM clusters for VPC security"
-      ]
-    }
-  ];
+  const posts = (content?.blogs || DEFAULT_POSTS).map(p => ({
+    ...p,
+    id: p.slug || p.id
+  }));
 
   const activePost = posts.find(p => p.id === selectedPost);
 

@@ -2,6 +2,9 @@ import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 
 // Magnetic Button Wrapper for interactive back button
+import { useContent } from '../context/ContentContext';
+
+// Magnetic Button Wrapper for interactive back button
 function Magnetic({ children, speed = 0.5 }) {
   const ref = useRef(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -125,138 +128,145 @@ function AwardCard({ award, idx, onClick }) {
   );
 }
 
+const DEFAULT_AWARDS = [
+  {
+    id: 'digital-craftsmanship',
+    title: 'Best Digital Craftsmanship Studio',
+    by: 'Tech & Design Guild',
+    year: '2024',
+    description: 'Awarded to HariKrushn DigiVerse for outstanding excellence in building bespoke, high-performance web systems and premium responsive animations.',
+    category: 'company',
+    recipient: 'HariKrushn DigiVerse LLP',
+    img: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=600&h=400&q=80',
+    longDescription: 'This award recognizes our studio\'s commitment to pushing the boundaries of web engineering and aesthetics. The Tech & Design Guild evaluated our projects based on visual supremacy, codebase clean-room metrics, and 120 FPS motion responses on high-concurrency portals.',
+    impactStats: [
+      { label: 'Evaluation Score', value: '99.4%' },
+      { label: 'Performance Rank', value: 'Top 1%' },
+      { label: 'Motion Frame Rate', value: '120 FPS' }
+    ],
+    highlights: [
+      'Exceptional design engineering rating',
+      'Bespoke web framework rendering standards',
+      'Clean-room visual development practices'
+    ]
+  },
+  {
+    id: 'tech-leader',
+    title: 'Tech Leader of the Year',
+    by: 'Gujarat Tech Startups Association',
+    year: '2024',
+    description: 'Honored to Radhe Patel for setting tech leadership benchmarks in secure serverless system deployment, scaling web app speed, and cloud architectures.',
+    category: 'founders',
+    recipient: 'Radhe Patel (CEO)',
+    img: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=600&h=400&q=80',
+    longDescription: 'Honored to Radhe Patel for setting tech leadership benchmarks in secure serverless system deployment, scaling web app speed, and cloud architectures. Radhe\'s vision of absolute engineering reliability has enabled our clients to process large transaction volumes with zero downtime.',
+    impactStats: [
+      { label: 'System Uptime', value: '99.99%' },
+      { label: 'Avg Latency', value: '< 25ms' },
+      { label: 'Security Grade', value: 'Enterprise' }
+    ],
+    highlights: [
+      'Pioneered zero-downtime serverless nodes',
+      'Optimized edge-computed LLM agent paths',
+      'Maintained 100% cloud security records'
+    ]
+  },
+  {
+    id: 'ai-innovation',
+    title: 'Enterprise AI Innovation Honors',
+    by: 'Automation Council International',
+    year: '2023',
+    description: 'Awarded to HariKrushn DigiVerse for the innovative deployment of local LLM agent workflows and secure automated syncing layers.',
+    category: 'company',
+    recipient: 'HariKrushn DigiVerse LLP',
+    img: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=600&h=400&q=80',
+    longDescription: 'Awarded to HariKrushn DigiVerse for the innovative deployment of local LLM agent workflows and secure automated syncing layers. Our AI systems have enabled automated workflow execution inside isolated environments, protecting business telemetry while delivering high accuracy.',
+    impactStats: [
+      { label: 'Agent Accuracy', value: '98.5%' },
+      { label: 'Data Security', value: 'Isolated' },
+      { label: 'Workflow Efficiency', value: '10x' }
+    ],
+    highlights: [
+      'Bespoke prompt-cache compilation grids',
+      'Decentralized local LLM node clusters',
+      'Automated secure sync infrastructure'
+    ]
+  },
+  {
+    id: 'creative-director',
+    title: 'Creative Director Landmark Award',
+    by: 'Design & Motion Syndicate',
+    year: '2023',
+    description: 'Honored to Prince Patel for visual design excellence, introducing fluid glassmorphism interfaces and interactive UI/UX motion standards.',
+    category: 'founders',
+    recipient: 'Prince Patel (Partner)',
+    img: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=600&h=400&q=80',
+    longDescription: 'Honored to Prince Patel for visual design excellence, introducing fluid glassmorphism interfaces and interactive UI/UX motion standards. Prince\'s philosophy of editorial digital experiences merges fine art with complex engineering constraints.',
+    impactStats: [
+      { label: 'UX Rating', value: '4.9 / 5' },
+      { label: 'Design System Coverage', value: '100%' },
+      { label: 'Interaction Response', value: 'Instant' }
+    ],
+    highlights: [
+      'Defined unified design system blueprints',
+      'Pioneered custom fluid glassmorphic components',
+      'Established strict 120 FPS scroll policies'
+    ]
+  },
+  {
+    id: 'web-performance',
+    title: 'Outstanding Web Performance Award',
+    by: 'Lighthouse Web Audits Group',
+    year: '2023',
+    description: 'Recognized for achieving 99+ metrics on complex, animation-heavy, and high-concurrency systems without loading lags.',
+    category: 'company',
+    recipient: 'HariKrushn DigiVerse LLP',
+    img: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=600&h=400&q=80',
+    longDescription: 'Recognized for achieving 99+ metrics on complex, animation-heavy, and high-concurrency systems without loading lags. The auditing team noted our unique asset lazy-loading and GPU-accelerated transition strategies.',
+    impactStats: [
+      { label: 'Lighthouse Performance', value: '100/100' },
+      { label: 'Interaction to Next Paint', value: '< 10ms' },
+      { label: 'Largest Contentful Paint', value: '0.8s' }
+    ],
+    highlights: [
+      'GPU-accelerated animation engines',
+      'Zero-blocking assets loading pipeline',
+      'Bespoke bundle code-splitting systems'
+    ]
+  },
+  {
+    id: 'young-entrepreneurs',
+    title: 'Young Tech Entrepreneurs Award',
+    by: 'Gujarat Tech Startups Association',
+    year: '2022',
+    description: 'Awarded to Co-Founders Radhe Patel & Prince Patel for their rapid growth, client retention, and technical job creation in Surat.',
+    category: 'founders',
+    recipient: 'Radhe Patel & Prince Patel',
+    img: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=600&h=400&q=80',
+    longDescription: 'Awarded to Co-Founders Radhe Patel & Prince Patel for their rapid growth, client retention, and technical job creation in Surat. The association recognized their focus on premium employment and high-value software exports.',
+    impactStats: [
+      { label: 'Yearly Growth Rate', value: '120%' },
+      { label: 'Client Retention Rate', value: '95%' },
+      { label: 'Engineering Talents', value: '30+' }
+    ],
+    highlights: [
+      'Created premium jobs in Surat, Gujarat',
+      'Generated high-value tech export volumes',
+      'Founded a modern digital-craft studio model'
+    ]
+  }
+];
+
 export default function Awards() {
+  const { content } = useContent();
   const [activeTab, setActiveTab] = useState('all');
   const [selectedAward, setSelectedAward] = useState(null);
 
-  const awardsData = [
-    {
-      id: 'digital-craftsmanship',
-      title: 'Best Digital Craftsmanship Studio',
-      by: 'Tech & Design Guild',
-      year: '2024',
-      description: 'Awarded to HariKrushn DigiVerse for outstanding excellence in building bespoke, high-performance web systems and premium responsive animations.',
-      category: 'company',
-      recipient: 'HariKrushn DigiVerse LLP',
-      img: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=600&h=400&q=80',
-      longDescription: 'This award recognizes our studio\'s commitment to pushing the boundaries of web engineering and aesthetics. The Tech & Design Guild evaluated our projects based on visual supremacy, codebase clean-room metrics, and 120 FPS motion responses on high-concurrency portals.',
-      impactStats: [
-        { label: 'Evaluation Score', value: '99.4%' },
-        { label: 'Performance Rank', value: 'Top 1%' },
-        { label: 'Motion Frame Rate', value: '120 FPS' }
-      ],
-      highlights: [
-        'Exceptional design engineering rating',
-        'Bespoke web framework rendering standards',
-        'Clean-room visual development practices'
-      ]
-    },
-    {
-      id: 'tech-leader',
-      title: 'Tech Leader of the Year',
-      by: 'Gujarat Tech Startups Association',
-      year: '2024',
-      description: 'Honored to Radhe Patel for setting tech leadership benchmarks in secure serverless system deployment, scaling web app speed, and cloud architectures.',
-      category: 'founders',
-      recipient: 'Radhe Patel (CEO)',
-      img: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=600&h=400&q=80',
-      longDescription: 'Honored to Radhe Patel for setting tech leadership benchmarks in secure serverless system deployment, scaling web app speed, and cloud architectures. Radhe\'s vision of absolute engineering reliability has enabled our clients to process large transaction volumes with zero downtime.',
-      impactStats: [
-        { label: 'System Uptime', value: '99.99%' },
-        { label: 'Avg Latency', value: '< 25ms' },
-        { label: 'Security Grade', value: 'Enterprise' }
-      ],
-      highlights: [
-        'Pioneered zero-downtime serverless nodes',
-        'Optimized edge-computed LLM agent paths',
-        'Maintained 100% cloud security records'
-      ]
-    },
-    {
-      id: 'ai-innovation',
-      title: 'Enterprise AI Innovation Honors',
-      by: 'Automation Council International',
-      year: '2023',
-      description: 'Awarded to HariKrushn DigiVerse for the innovative deployment of local LLM agent workflows and secure automated syncing layers.',
-      category: 'company',
-      recipient: 'HariKrushn DigiVerse LLP',
-      img: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=600&h=400&q=80',
-      longDescription: 'Awarded to HariKrushn DigiVerse for the innovative deployment of local LLM agent workflows and secure automated syncing layers. Our AI systems have enabled automated workflow execution inside isolated environments, protecting business telemetry while delivering high accuracy.',
-      impactStats: [
-        { label: 'Agent Accuracy', value: '98.5%' },
-        { label: 'Data Security', value: 'Isolated' },
-        { label: 'Workflow Efficiency', value: '10x' }
-      ],
-      highlights: [
-        'Bespoke prompt-cache compilation grids',
-        'Decentralized local LLM node clusters',
-        'Automated secure sync infrastructure'
-      ]
-    },
-    {
-      id: 'creative-director',
-      title: 'Creative Director Landmark Award',
-      by: 'Design & Motion Syndicate',
-      year: '2023',
-      description: 'Honored to Prince Patel for visual design excellence, introducing fluid glassmorphism interfaces and interactive UI/UX motion standards.',
-      category: 'founders',
-      recipient: 'Prince Patel (Partner)',
-      img: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=600&h=400&q=80',
-      longDescription: 'Honored to Prince Patel for visual design excellence, introducing fluid glassmorphism interfaces and interactive UI/UX motion standards. Prince\'s philosophy of editorial digital experiences merges fine art with complex engineering constraints.',
-      impactStats: [
-        { label: 'UX Rating', value: '4.9 / 5' },
-        { label: 'Design System Coverage', value: '100%' },
-        { label: 'Interaction Response', value: 'Instant' }
-      ],
-      highlights: [
-        'Defined unified design system blueprints',
-        'Pioneered custom fluid glassmorphic components',
-        'Established strict 120 FPS scroll policies'
-      ]
-    },
-    {
-      id: 'web-performance',
-      title: 'Outstanding Web Performance Award',
-      by: 'Lighthouse Web Audits Group',
-      year: '2023',
-      description: 'Recognized for achieving 99+ metrics on complex, animation-heavy, and high-concurrency systems without loading lags.',
-      category: 'company',
-      recipient: 'HariKrushn DigiVerse LLP',
-      img: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=600&h=400&q=80',
-      longDescription: 'Recognized for achieving 99+ metrics on complex, animation-heavy, and high-concurrency systems without loading lags. The auditing team noted our unique asset lazy-loading and GPU-accelerated transition strategies.',
-      impactStats: [
-        { label: 'Lighthouse Performance', value: '100/100' },
-        { label: 'Interaction to Next Paint', value: '< 10ms' },
-        { label: 'Largest Contentful Paint', value: '0.8s' }
-      ],
-      highlights: [
-        'GPU-accelerated animation engines',
-        'Zero-blocking assets loading pipeline',
-        'Bespoke bundle code-splitting systems'
-      ]
-    },
-    {
-      id: 'young-entrepreneurs',
-      title: 'Young Tech Entrepreneurs Award',
-      by: 'Gujarat Tech Startups Association',
-      year: '2022',
-      description: 'Awarded to Co-Founders Radhe Patel & Prince Patel for their rapid growth, client retention, and technical job creation in Surat.',
-      category: 'founders',
-      recipient: 'Radhe Patel & Prince Patel',
-      img: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=600&h=400&q=80',
-      longDescription: 'Awarded to Co-Founders Radhe Patel & Prince Patel for their rapid growth, client retention, and technical job creation in Surat. The association recognized their focus on premium employment and high-value software exports.',
-      impactStats: [
-        { label: 'Yearly Growth Rate', value: '120%' },
-        { label: 'Client Retention Rate', value: '95%' },
-        { label: 'Engineering Talents', value: '30+' }
-      ],
-      highlights: [
-        'Created premium jobs in Surat, Gujarat',
-        'Generated high-value tech export volumes',
-        'Founded a modern digital-craft studio model'
-      ]
-    }
-  ];
+  const awardsData = (content?.awards || DEFAULT_AWARDS).map(a => ({
+    ...a,
+    id: a.slug || a.id
+  }));
+
 
   const activeAward = awardsData.find(a => a.id === selectedAward);
 

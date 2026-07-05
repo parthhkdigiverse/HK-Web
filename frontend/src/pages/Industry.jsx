@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useContent } from '../context/ContentContext';
 
 /* ────────────────────────── INDUSTRIES DATA ────────────────────────── */
-const industries = [
+const DEFAULT_INDUSTRIES = [
   {
     id: 'fintech',
     title: 'Fintech & Banking',
@@ -262,6 +263,17 @@ const projects = [
 ];
 
 export default function Industry() {
+  const { content } = useContent();
+
+  const industries = (content?.industries || DEFAULT_INDUSTRIES).map(ind => {
+    const styleFallback = DEFAULT_INDUSTRIES.find(x => x.id === ind.slug || x.id === ind.id) || DEFAULT_INDUSTRIES[0];
+    return {
+      ...styleFallback,
+      ...ind,
+      id: ind.slug || ind.id
+    };
+  });
+
   const [selectedIndustry, setSelectedIndustry] = useState('fintech');
   const detailsRef = useRef(null);
 

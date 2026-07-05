@@ -1,5 +1,44 @@
 import React, { useRef } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { useContent } from '../context/ContentContext';
+
+const iconMap = {
+  web: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+    </svg>
+  ),
+  app: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+    </svg>
+  ),
+  software: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+    </svg>
+  ),
+  ai: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+    </svg>
+  ),
+  it: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+    </svg>
+  ),
+  marketing: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+    </svg>
+  ),
+  social: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+    </svg>
+  )
+};
 
 // Sub-component for 3D Perspective Tilt Service Card
 function ServiceCard({ service, idx }) {
@@ -99,95 +138,102 @@ function ServiceCard({ service, idx }) {
   );
 }
 
+const DEFAULT_SERVICES = [
+  {
+    title: 'Web Engineering',
+    code: 'HK-WEB',
+    description: 'Crafting high-fidelity, cinematic, and fast-loading web applications using custom WebGL rendering, 120 FPS Framer Motion structures, and optimized server side rendering (SSR).',
+    href: '#service-web',
+    span: 'md:col-span-2', // Double width card for layout asymmetry
+    color: 'from-amber-500/40 to-transparent',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+      </svg>
+    )
+  },
+  {
+    title: 'App Engineering',
+    code: 'HK-APP',
+    description: 'Designing and developing native iOS & Android applications with offline support, fluid gestural layers, and real-time syncing architectures.',
+    href: '#service-app',
+    color: 'from-cyan-500/40 to-transparent',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+      </svg>
+    )
+  },
+  {
+    title: 'Custom Software',
+    code: 'HK-SYS',
+    description: 'Constructing robust enterprise portals, customized backend panels, scalable dashboards, and automated database syncing solutions.',
+    href: '#service-custom-software',
+    color: 'from-purple-500/40 to-transparent',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+      </svg>
+    )
+  },
+  {
+    title: 'AI Consulting',
+    code: 'HK-AI',
+    description: 'Deploying neural automation pipelines, custom training agent workflows, semantic vector configurations, and AI-driven CRM integration patterns.',
+    href: '#service-ai-consulting',
+    color: 'from-rose-500/40 to-transparent',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+      </svg>
+    )
+  },
+  {
+    title: 'IT Consulting',
+    code: 'HK-NET',
+    description: 'Auditing system safety layers, backup routines, load handling systems, API gates, and deploying corporate zero-trust network configurations.',
+    href: '#service-it-consulting',
+    color: 'from-emerald-500/40 to-transparent',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      </svg>
+    )
+  },
+  {
+    title: 'Digital Marketing',
+    code: 'HK-MKT',
+    description: 'Optimizing web rankings, setting search console metrics, setting automated newsletter campaigns, and managing strategic search rankings.',
+    href: '#service-digital-marketing',
+    color: 'from-sky-500/40 to-transparent',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+      </svg>
+    )
+  },
+  {
+    title: 'Social Media Management',
+    code: 'HK-SOC',
+    description: 'Designing brand post layouts, content planners, motion micro-visuals, and managing business communication across multi-channel client grids.',
+    href: '#service-social-media-management',
+    span: 'md:col-span-2', // Double width card to complete the row balance
+    color: 'from-pink-500/40 to-transparent',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+      </svg>
+    )
+  }
+];
+
 export default function Services() {
-  const servicesList = [
-    {
-      title: 'Web Engineering',
-      code: 'HK-WEB',
-      description: 'Crafting high-fidelity, cinematic, and fast-loading web applications using custom WebGL rendering, 120 FPS Framer Motion structures, and optimized server side rendering (SSR).',
-      href: '#service-web',
-      span: 'md:col-span-2', // Double width card for layout asymmetry
-      color: 'from-amber-500/40 to-transparent',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
-      )
-    },
-    {
-      title: 'App Engineering',
-      code: 'HK-APP',
-      description: 'Designing and developing native iOS & Android applications with offline support, fluid gestural layers, and real-time syncing architectures.',
-      href: '#service-app',
-      color: 'from-cyan-500/40 to-transparent',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-        </svg>
-      )
-    },
-    {
-      title: 'Custom Software',
-      code: 'HK-SYS',
-      description: 'Constructing robust enterprise portals, customized backend panels, scalable dashboards, and automated database syncing solutions.',
-      href: '#service-custom-software',
-      color: 'from-purple-500/40 to-transparent',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-        </svg>
-      )
-    },
-    {
-      title: 'AI Consulting',
-      code: 'HK-AI',
-      description: 'Deploying neural automation pipelines, custom training agent workflows, semantic vector configurations, and AI-driven CRM integration patterns.',
-      href: '#service-ai-consulting',
-      color: 'from-rose-500/40 to-transparent',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-        </svg>
-      )
-    },
-    {
-      title: 'IT Consulting',
-      code: 'HK-NET',
-      description: 'Auditing system safety layers, backup routines, load handling systems, API gates, and deploying corporate zero-trust network configurations.',
-      href: '#service-it-consulting',
-      color: 'from-emerald-500/40 to-transparent',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-        </svg>
-      )
-    },
-    {
-      title: 'Digital Marketing',
-      code: 'HK-MKT',
-      description: 'Optimizing web rankings, setting search console metrics, setting automated newsletter campaigns, and managing strategic search rankings.',
-      href: '#service-digital-marketing',
-      color: 'from-sky-500/40 to-transparent',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-        </svg>
-      )
-    },
-    {
-      title: 'Social Media Management',
-      code: 'HK-SOC',
-      description: 'Designing brand post layouts, content planners, motion micro-visuals, and managing business communication across multi-channel client grids.',
-      href: '#service-social-media-management',
-      span: 'md:col-span-2', // Double width card to complete the row balance
-      color: 'from-pink-500/40 to-transparent',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-        </svg>
-      )
-    }
-  ];
+  const { content } = useContent();
+
+  const servicesList = (content?.services || DEFAULT_SERVICES).map((s, idx) => ({
+    ...s,
+    icon: iconMap[s.icon] || DEFAULT_SERVICES[idx % DEFAULT_SERVICES.length].icon
+  }));
 
   return (
     <div className="relative text-neutral-300 font-sans min-h-screen">

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, useScroll, useSpring, useTransform, AnimatePresence, useMotionValue } from 'framer-motion';
+import { useContent } from '../context/ContentContext';
 
 // Workspace card sub-component with 3D Perspective Tilt Effect
 function WorkspaceCard({ room, idx }) {
@@ -42,7 +43,7 @@ function WorkspaceCard({ room, idx }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: idx * 0.05 }}
-      className={`break-inside-avoid relative rounded-2xl overflow-hidden border border-white/5 bg-[#0a0a0f] group cursor-pointer ${room.size}`}
+      className={`break-inside-avoid relative rounded-2xl overflow-hidden border border-white/5 bg-[#0a0a0f] group cursor-pointer ${room.size || 'h-72'}`}
     >
       <img 
         src={room.img} 
@@ -76,8 +77,22 @@ export default function AboutUs() {
   const yRadhe = useTransform(founderScroll, [0, 1], [-25, 25]);
   const yPrince = useTransform(founderScroll, [0, 1], [25, -25]);
 
-  // Section 3: DNA orbital details
-  const dnaValues = [
+  const { content } = useContent();
+  const aboutUs = content?.about_us || {};
+  const philosophy = aboutUs.philosophy || {
+    title: "Why We Exist",
+    quote: "We exist to simplify digital transformation and construct scalable, future-ready technology platforms that drive clear business value.",
+    description: "In a landscape crowded with off-the-shelf templates and rigid software designs, HariKrushn DigiVerse stands for bespoke digital craftsmanship. We combine architectural-grade frontend graphics with secure, high-concurrency microservices, crafting products that elevate your brand and work reliably."
+  };
+  const vision = aboutUs.vision || {
+    title: "Our Vision",
+    text: "To stand as the international benchmark for bespoke digital craftsmanship, engineering high-concurrency cloud networks that empower enterprises to run reliably at scale."
+  };
+  const mission = aboutUs.mission || {
+    title: "Our Mission",
+    text: "Architect fully autonomous multi-agent networks that execute secure device-level tasks, rendering real-time responsive spatial grids."
+  };
+  const dnaValues = aboutUs.dna_values || [
     { name: 'Innovation', desc: 'Pushing technical boundaries to create custom, forward-thinking architectures.' },
     { name: 'Ownership', desc: 'Taking complete accountability for code execution, product quality, and business impact.' },
     { name: 'Transparency', desc: 'Clear, open communication with no hidden costs, agendas, or black boxes.' },
@@ -141,7 +156,7 @@ export default function AboutUs() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="font-display text-4xl sm:text-5xl font-bold text-white tracking-tight leading-tight"
           >
-            Why We Exist
+            {philosophy.title}
           </motion.h2>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
@@ -150,7 +165,7 @@ export default function AboutUs() {
             transition={{ duration: 0.8, ease: "easeOut" }}
             className="font-display text-lg sm:text-xl leading-relaxed max-w-2xl mx-auto bg-clip-text text-transparent bg-gradient-to-r from-neutral-300 via-white to-neutral-400 font-light"
           >
-            "We exist to simplify digital transformation and construct scalable, future-ready technology platforms that drive clear business value."
+            "{philosophy.quote}"
           </motion.p>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
@@ -159,7 +174,7 @@ export default function AboutUs() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="text-neutral-400 font-light text-sm sm:text-base leading-relaxed max-w-3xl mx-auto"
           >
-            In a landscape crowded with off-the-shelf templates and rigid software designs, HariKrushn DigiVerse stands for bespoke digital craftsmanship. We combine architectural-grade frontend graphics with secure, high-concurrency microservices, crafting products that elevate your brand and work reliably.
+            {philosophy.description}
           </motion.p>
         </div>
       </section>
@@ -193,9 +208,9 @@ export default function AboutUs() {
               
               <div className="space-y-3">
                 <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest text-indigo-400">// The Long Horizon</span>
-                <h3 className="font-display text-2xl font-bold text-white tracking-tight">Our Vision</h3>
+                <h3 className="font-display text-2xl font-bold text-white tracking-tight">{vision.title}</h3>
                 <p className="font-light text-neutral-300 text-sm sm:text-base leading-relaxed">
-                  To stand as the international benchmark for bespoke digital craftsmanship, engineering high-concurrency cloud networks that empower enterprises to run reliably at scale.
+                  {vision.text}
                 </p>
               </div>
             </div>
@@ -225,9 +240,9 @@ export default function AboutUs() {
               
               <div className="space-y-3">
                 <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest text-amber-400">// The Strategic Path</span>
-                <h3 className="font-display text-2xl font-bold text-white tracking-tight">Our Mission</h3>
+                <h3 className="font-display text-2xl font-bold text-white tracking-tight">{mission.title}</h3>
                 <p className="font-light text-neutral-300 text-sm sm:text-base leading-relaxed">
-                  To replace rigid, off-the-shelf software models with custom digital architectures, delivering visual supremacy, robust security, and 120 FPS scroll interactions.
+                  {mission.text}
                 </p>
               </div>
             </div>
@@ -494,16 +509,20 @@ export default function AboutUs() {
 
           {/* Masonry Columns Grid using 3D tilt WorkspaceCard sub-component */}
           <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
-            {[
+            {(aboutUs.workspace_rooms || [
               { title: 'Office Reception', size: 'h-64', desc: 'A minimalist reception area introducing our high-fidelity design ethos.', img: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=80' },
               { title: 'Development Floor', size: 'h-80', desc: 'Where robust architectures are coded and high-concurrency systems scale.', img: 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=600&q=80' },
               { title: 'Meeting Room', size: 'h-72', desc: 'Collaborating on system flows, blueprints and client partnerships.', img: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=600&q=80' },
               { title: 'Innovation Lab', size: 'h-96', desc: 'Testing AI agent models, LLM vector configurations and automated logic.', img: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=600&q=80' },
               { title: 'Discussion Area', size: 'h-64', desc: 'Reviewing wireframes and fine art assets over high-speed connectivity.', img: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=600&q=80' },
               { title: 'Creative Workspace', size: 'h-80', desc: 'Designing brand typography systems and micro-interactions.', img: 'https://images.unsplash.com/photo-1517502884422-41eaaced0168?auto=format&fit=crop&w=600&q=80' }
-            ].map((room, idx) => (
-              <WorkspaceCard key={room.title} room={room} idx={idx} />
-            ))}
+            ]).map((room, idx) => {
+              const heightMap = ['h-64', 'h-80', 'h-72', 'h-96', 'h-64', 'h-80'];
+              const size = room.size && room.size.includes('h-') ? room.size : (heightMap[idx % 6]);
+              return (
+                <WorkspaceCard key={room.title} room={{ ...room, size }} idx={idx} />
+              );
+            })}
           </div>
         </div>
       </section>

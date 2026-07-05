@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useContent } from '../context/ContentContext';
 
 /* ────────────────────────── PORTFOLIO PROJECTS ────────────────────────── */
-const projects = [
+const DEFAULT_PROJECTS = [
   {
     id: 'zenith',
     title: 'Zenith CRM Platform',
@@ -146,8 +147,14 @@ const categories = [
 ];
 
 export default function Portfolio() {
+  const { content } = useContent();
   const [filter, setFilter] = useState('all');
   const [hoveredId, setHoveredId] = useState(null);
+
+  const projects = (content?.portfolio || DEFAULT_PROJECTS).map(p => ({
+    ...p,
+    id: p.slug || p.id
+  }));
 
   const filtered = filter === 'all' ? projects : projects.filter(p => p.category === filter);
 

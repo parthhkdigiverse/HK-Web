@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Gallery() {
   const { content } = useContent();
-  const items = content.gallery;
+  const items = content?.gallery || [];
   const [selectedIdx, setSelectedIdx] = useState(null);
 
   const handleNext = useCallback(() => {

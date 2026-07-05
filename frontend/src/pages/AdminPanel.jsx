@@ -1,91 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useContent } from '../context/ContentContext';
+import { useContent, DEFAULT_CONTENT } from '../context/ContentContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8008';
-
-const DEFAULT_CONTENT = {
-  hero: {
-    label: "// EST. 2019 — A DIGITAL ATELIER",
-    title1: "Architecting the",
-    title2: "infinite digital.",
-    desc: "HariKrushn DigiVerse is an engineering & design partnership building custom software, AI systems and digital brand presence for ambitious global teams.",
-    primaryBtnText: "Start a Project →",
-    primaryBtnLink: "#contact",
-    secondaryBtnText: "View Work",
-    secondaryBtnLink: "#portfolio",
-    videoUrl: "/images/hero_video.mp4",
-    frameCount: 315,
-    height: "100vh",
-    overlayColor: "#000000",
-    overlayOpacity: 0.5,
-    align: "left",
-    show: true
-  },
-  stats: [
-    { value: "140+", label: "Projects Shipped", show: true },
-    { value: "46", label: "Engineers", show: true },
-    { value: "18", label: "Countries Served", show: true },
-    { value: "98%", label: "Client Retention", show: true }
-  ],
-  services: [
-    {
-      num: "01/07",
-      title: "Web Engineering",
-      desc: "Creating high-fidelity, cinematic, and fast-loading web applications that captivate and convert.",
-      tags: ["FRONTEND", "DESIGN"],
-      href: "#service-web",
-      show: true
-    },
-    {
-      num: "02/07",
-      title: "Mobile Applications",
-      desc: "Building bespoke native-feeling iOS and Android solutions with fluid gestures and offline sync.",
-      tags: ["IOS", "ANDROID"],
-      href: "#service-app",
-      show: true
-    },
-    {
-      num: "03/07",
-      title: "Custom Software",
-      desc: "Constructing robust backend panels, CRM matrices, SaaS dashboards, and multi-tenant systems.",
-      tags: ["CRM", "ERP"],
-      href: "#service-custom-software",
-      show: true
-    },
-    {
-      num: "04/07",
-      title: "Digital Marketing",
-      desc: "Driving traffic and client acquisitions using data-backed strategies, SEO, and paid ads.",
-      tags: ["SEO", "GROWTH"],
-      href: "#service-digital-marketing",
-      show: true
-    },
-    {
-      num: "05/07",
-      title: "Social Media Management",
-      desc: "Crafting brand presence, graphic design guides, and content calendars to elevate recognition.",
-      tags: ["BRANDING", "CONTENT"],
-      href: "#service-social-media-management",
-      show: true
-    },
-    {
-      num: "06/07",
-      title: "AI Consulting",
-      desc: "Developing automated AI agents, vector database search pipelines, and custom LLM integrations.",
-      tags: ["LLM", "AGENTS"],
-      href: "#service-ai-consulting",
-      show: true
-    },
-    {
-      num: "07/07",
-      title: "IT Consulting",
-      desc: "Designing Cloud migrations, Docker orchestration files, hardened security, and CI/CD pipelines.",
-      tags: ["CLOUD", "DEVOPS"],
-      href: "#service-it-consulting",
-      show: true
-    }
-  ]
-};
 
 export default function AdminPanel() {
   const { 
@@ -183,7 +99,22 @@ export default function AdminPanel() {
           ...draft,
           hero: { ...DEFAULT_CONTENT.hero, ...(draft.hero || {}) },
           stats: (draft.stats || DEFAULT_CONTENT.stats).map(s => ({ show: true, ...s })),
-          services: (draft.services || DEFAULT_CONTENT.services).map(s => ({ show: true, ...s }))
+          services: (draft.services || DEFAULT_CONTENT.services).map(s => ({ show: true, ...s })),
+          about_us: {
+            philosophy: { ...DEFAULT_CONTENT.about_us.philosophy, ...(draft.about_us?.philosophy || {}) },
+            vision: { ...DEFAULT_CONTENT.about_us.vision, ...(draft.about_us?.vision || {}) },
+            mission: { ...DEFAULT_CONTENT.about_us.mission, ...(draft.about_us?.mission || {}) },
+            dna_values: draft.about_us?.dna_values || DEFAULT_CONTENT.about_us.dna_values,
+            workspace_rooms: draft.about_us?.workspace_rooms || DEFAULT_CONTENT.about_us.workspace_rooms
+          },
+          our_culture: draft.our_culture || DEFAULT_CONTENT.our_culture,
+          people: draft.people || DEFAULT_CONTENT.people,
+          awards: draft.awards || DEFAULT_CONTENT.awards,
+          blogs: draft.blogs || DEFAULT_CONTENT.blogs,
+          gallery: draft.gallery || DEFAULT_CONTENT.gallery,
+          portfolio: draft.portfolio || DEFAULT_CONTENT.portfolio,
+          ventures: draft.ventures || DEFAULT_CONTENT.ventures,
+          careers: draft.careers || DEFAULT_CONTENT.careers
         };
         setHistory([sanitized]);
         setHistoryIndex(0);
@@ -337,6 +268,329 @@ export default function AdminPanel() {
       nextContent.services[targetIdx] = temp;
       pushState(nextContent);
     }
+  };
+
+  // Submissions Log states
+  const [inquiries, setInquiries] = useState([]);
+  const [applications, setApplications] = useState([]);
+  const [loadingSubmissions, setLoadingSubmissions] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'submissions' && authorized) {
+      loadSubmissions();
+    }
+  }, [activeTab, authorized]);
+
+  const loadSubmissions = async () => {
+    setLoadingSubmissions(true);
+    try {
+      const inqRes = await fetch(API_URL + '/api/admin/inquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      const appRes = await fetch(API_URL + '/api/admin/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      if (inqRes.ok) setInquiries(await inqRes.json());
+      if (appRes.ok) setApplications(await appRes.json());
+    } catch (e) {
+      console.error("Failed to load submissions log:", e);
+    } finally {
+      setLoadingSubmissions(false);
+    }
+  };
+
+  // About Us handlers
+  const updateAboutUsField = (section, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.about_us) nextContent.about_us = {};
+    if (!nextContent.about_us[section]) nextContent.about_us[section] = {};
+    nextContent.about_us[section][field] = value;
+    pushState(nextContent);
+  };
+
+  const updateWorkspaceRoom = (index, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.about_us.workspace_rooms) {
+      nextContent.about_us.workspace_rooms = [];
+    }
+    nextContent.about_us.workspace_rooms[index][field] = value;
+    pushState(nextContent);
+  };
+
+  const addWorkspaceRoom = () => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.about_us.workspace_rooms) {
+      nextContent.about_us.workspace_rooms = [];
+    }
+    nextContent.about_us.workspace_rooms.push({
+      title: 'New Workspace Room',
+      desc: 'Describe the room setup...',
+      img: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=80',
+      size: 'col-span-1 row-span-1'
+    });
+    pushState(nextContent);
+  };
+
+  const deleteWorkspaceRoom = (index) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    nextContent.about_us.workspace_rooms.splice(index, 1);
+    pushState(nextContent);
+  };
+
+  // Culture handlers
+  const updateCultureItem = (index, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    nextContent.our_culture[index][field] = value;
+    pushState(nextContent);
+  };
+
+  const addCultureItem = () => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.our_culture) nextContent.our_culture = [];
+    nextContent.our_culture.push({
+      title: 'New Culture Aspect',
+      desc: 'Detail this cultural aspect...',
+      img: '/images/culture/learning.png',
+      icon: 'learning'
+    });
+    pushState(nextContent);
+  };
+
+  const deleteCultureItem = (index) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    nextContent.our_culture.splice(index, 1);
+    pushState(nextContent);
+  };
+
+  // People handlers
+  const updatePeopleItem = (index, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (field === 'level') {
+      nextContent.people[index][field] = parseInt(value) || 1;
+    } else {
+      nextContent.people[index][field] = value;
+    }
+    pushState(nextContent);
+  };
+
+  const addPeopleItem = () => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.people) nextContent.people = [];
+    nextContent.people.push({
+      name: 'New Member',
+      role: 'Engineer / Designer',
+      bio: 'Detail bio...',
+      level: 4,
+      icon: '💻',
+      dept: 'DEVELOPMENT',
+      image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&h=150&q=80',
+      parent_id: 'Vikram Rathod'
+    });
+    pushState(nextContent);
+  };
+
+  const deletePeopleItem = (index) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    nextContent.people.splice(index, 1);
+    pushState(nextContent);
+  };
+
+  // Awards handlers
+  const updateAwardItem = (index, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    nextContent.awards[index][field] = value;
+    pushState(nextContent);
+  };
+
+  const addAwardItem = () => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.awards) nextContent.awards = [];
+    nextContent.awards.push({
+      slug: 'new-award',
+      title: 'New Award Title',
+      by: 'Guild/Association',
+      year: '2026',
+      description: 'Short summary...',
+      category: 'company',
+      recipient: 'HariKrushn DigiVerse LLP',
+      img: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=600&h=400&q=80',
+      longDescription: 'Expanded detail...'
+    });
+    pushState(nextContent);
+  };
+
+  const deleteAwardItem = (index) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    nextContent.awards.splice(index, 1);
+    pushState(nextContent);
+  };
+
+  // Blogs handlers
+  const updateBlogItem = (index, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (field === 'longContent') {
+      nextContent.blogs[index].longContent = value.split('\n\n').map(p => p.trim()).filter(Boolean);
+    } else if (field === 'highlights') {
+      nextContent.blogs[index].highlights = value.split('\n').map(h => h.trim()).filter(Boolean);
+    } else {
+      nextContent.blogs[index][field] = value;
+    }
+    pushState(nextContent);
+  };
+
+  const addBlogItem = () => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.blogs) nextContent.blogs = [];
+    nextContent.blogs.push({
+      slug: 'new-blog-post',
+      title: 'New Blog Post Title',
+      desc: 'Short preview description...',
+      date: 'JULY 05, 2026',
+      category: 'ENGINEERING',
+      readTime: '5 MIN READ',
+      image: '/images/gallery/ai_orchestrator.png',
+      author: 'Radhe Patel (CEO)',
+      longContent: ['Full paragraph narrative here...'],
+      highlights: ['Key takeaway highlight...']
+    });
+    pushState(nextContent);
+  };
+
+  const deleteBlogItem = (index) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    nextContent.blogs.splice(index, 1);
+    pushState(nextContent);
+  };
+
+  // Gallery handlers
+  const updateGalleryItem = (index, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    nextContent.gallery[index][field] = value;
+    pushState(nextContent);
+  };
+
+  const addGalleryItem = () => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.gallery) nextContent.gallery = [];
+    nextContent.gallery.push({
+      title: 'New Image',
+      category: 'Studio',
+      size: 'col-span-1 row-span-1',
+      image: '/images/gallery/cinematic_review.png'
+    });
+    pushState(nextContent);
+  };
+
+  const deleteGalleryItem = (index) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    nextContent.gallery.splice(index, 1);
+    pushState(nextContent);
+  };
+
+  // Portfolio handlers
+  const updatePortfolioItem = (index, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (field === 'tech') {
+      nextContent.portfolio[index].tech = value.split(',').map(t => t.trim()).filter(Boolean);
+    } else {
+      nextContent.portfolio[index][field] = value;
+    }
+    pushState(nextContent);
+  };
+
+  const addPortfolioItem = () => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.portfolio) nextContent.portfolio = [];
+    nextContent.portfolio.push({
+      slug: 'new-project',
+      title: 'New Project Title',
+      client: 'Client Name',
+      category: 'web',
+      description: 'Detail description...',
+      tech: ['React', 'FastAPI'],
+      img: '/images/casestudies/novadefi.png',
+      color: 'blue',
+      accentColor: '#3b82f6'
+    });
+    pushState(nextContent);
+  };
+
+  const deletePortfolioItem = (index) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    nextContent.portfolio.splice(index, 1);
+    pushState(nextContent);
+  };
+
+  // Ventures handlers
+  const updateVentureItem = (index, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    nextContent.ventures[index][field] = value;
+    pushState(nextContent);
+  };
+
+  const addVentureItem = () => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.ventures) nextContent.ventures = [];
+    nextContent.ventures.push({
+      slug: 'new-venture',
+      name: 'New Venture Name',
+      tagline: 'Venture Tagline',
+      status: 'Active',
+      img: '/images/ventures/aisetu.png',
+      color: 'cyan',
+      accentColor: '#06b6d4',
+      glowColor: 'rgba(6,182,212,0.20)',
+      shortDesc: 'Short description...',
+      fullDescription: 'Full detailed description...',
+      mission: 'Venture mission...',
+      vision: 'Venture vision...'
+    });
+    pushState(nextContent);
+  };
+
+  const deleteVentureItem = (index) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    nextContent.ventures.splice(index, 1);
+    pushState(nextContent);
+  };
+
+  // Careers handlers
+  const updateCareerItem = (index, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (field === 'requirements') {
+      nextContent.careers[index].requirements = value.split('\n').map(r => r.trim()).filter(Boolean);
+    } else if (field === 'steps') {
+      nextContent.careers[index].steps = value.split(',').map(s => s.trim()).filter(Boolean);
+    } else {
+      nextContent.careers[index][field] = value;
+    }
+    pushState(nextContent);
+  };
+
+  const addCareerItem = () => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.careers) nextContent.careers = [];
+    nextContent.careers.push({
+      slug: 'new-open-role',
+      title: 'New Open Role Title',
+      department: 'Engineering',
+      type: 'Full-time / Hybrid',
+      location: 'Surat, Gujarat',
+      description: 'Detail job description...',
+      requirements: ['Requirement listing...'],
+      steps: ['Resume Screening', 'Technical Sync', 'Offer']
+    });
+    pushState(nextContent);
+  };
+
+  const deleteCareerItem = (index) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    nextContent.careers.splice(index, 1);
+    pushState(nextContent);
   };
 
   // Upload handlers
@@ -572,20 +826,27 @@ export default function AdminPanel() {
         </header>
 
         {/* Tab Selector Accordions */}
-        <nav className="flex border-b border-white/5 bg-black/30">
-          {['hero', 'stats', 'services'].map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-4 text-[9px] uppercase tracking-widest font-mono font-medium border-b-2 cursor-pointer transition-all duration-300 ${
-                activeTab === tab 
-                  ? 'border-white text-white bg-white/[0.01]' 
-                  : 'border-transparent text-neutral-500 hover:text-white'
-              }`}
-            >
-              {tab === 'hero' ? 'Hero Section' : tab === 'stats' ? 'Statistics' : 'Capabilities'}
-            </button>
-          ))}
+        <nav className="p-4 border-b border-white/5 bg-black/30 flex flex-col gap-2">
+          <label className="font-mono text-[9px] uppercase tracking-widest text-neutral-500 block text-left">Active Module</label>
+          <select
+            value={activeTab}
+            onChange={(e) => setActiveTab(e.target.value)}
+            className="w-full px-4 py-3 bg-black border border-white/10 rounded-lg text-white font-sans text-xs focus:outline-none focus:border-white/30"
+          >
+            <option value="hero">Hero Section</option>
+            <option value="stats">Statistics</option>
+            <option value="services">Services / Capabilities</option>
+            <option value="about_us">About Us (Philosophy & Rooms)</option>
+            <option value="our_culture">Life & Culture</option>
+            <option value="people">Team Members</option>
+            <option value="awards">Awards & Achievements</option>
+            <option value="blogs">Insights / Blogs</option>
+            <option value="gallery">Our Gallery</option>
+            <option value="portfolio">Portfolio Work</option>
+            <option value="ventures">Ventures</option>
+            <option value="careers">Careers & Open Roles</option>
+            <option value="submissions">Submissions Log (Form Entries)</option>
+          </select>
         </nav>
 
         {/* CMS Configuration Panels */}
@@ -1058,6 +1319,1020 @@ export default function AdminPanel() {
                 ))}
               </div>
 
+            </div>
+          )}
+
+          {/* 4. ABOUT US CMS PANEL */}
+          {activeTab === 'about_us' && currentContent.about_us && (
+            <div className="space-y-6">
+              <h3 className="font-mono text-[10px] uppercase tracking-wider text-white">// About Us Overview</h3>
+              
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4">
+                <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Philosophy</h4>
+                <div className="space-y-1">
+                  <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Title</label>
+                  <input
+                    type="text"
+                    value={currentContent.about_us.philosophy?.title || ''}
+                    onChange={(e) => updateAboutUsField('philosophy', 'title', e.target.value)}
+                    className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Quote</label>
+                  <textarea
+                    rows={3}
+                    value={currentContent.about_us.philosophy?.quote || ''}
+                    onChange={(e) => updateAboutUsField('philosophy', 'quote', e.target.value)}
+                    className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none resize-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Description</label>
+                  <textarea
+                    rows={4}
+                    value={currentContent.about_us.philosophy?.description || ''}
+                    onChange={(e) => updateAboutUsField('philosophy', 'description', e.target.value)}
+                    className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none resize-none"
+                  />
+                </div>
+              </div>
+
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4">
+                <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Vision & Mission</h4>
+                <div className="space-y-1">
+                  <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Vision Title</label>
+                  <input
+                    type="text"
+                    value={currentContent.about_us.vision?.title || ''}
+                    onChange={(e) => updateAboutUsField('vision', 'title', e.target.value)}
+                    className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Vision Text</label>
+                  <textarea
+                    rows={3}
+                    value={currentContent.about_us.vision?.text || ''}
+                    onChange={(e) => updateAboutUsField('vision', 'text', e.target.value)}
+                    className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none resize-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Mission Title</label>
+                  <input
+                    type="text"
+                    value={currentContent.about_us.mission?.title || ''}
+                    onChange={(e) => updateAboutUsField('mission', 'title', e.target.value)}
+                    className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Mission Text</label>
+                  <textarea
+                    rows={3}
+                    value={currentContent.about_us.mission?.text || ''}
+                    onChange={(e) => updateAboutUsField('mission', 'text', e.target.value)}
+                    className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none resize-none"
+                  />
+                </div>
+              </div>
+
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Workspace Rooms ({currentContent.about_us.workspace_rooms?.length || 0})</h4>
+                  <button
+                    onClick={addWorkspaceRoom}
+                    className="px-3 py-1.5 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors"
+                  >
+                    + Add Room
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  {(currentContent.about_us.workspace_rooms || []).map((room, index) => (
+                    <div key={index} className="p-4 bg-black/40 border border-white/5 rounded-xl space-y-3 text-left">
+                      <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                        <span className="font-mono text-[9px] text-neutral-500">Room #{index + 1}</span>
+                        <button
+                          onClick={() => deleteWorkspaceRoom(index)}
+                          className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                      <div className="space-y-2">
+                        <input
+                          type="text"
+                          placeholder="Room Title"
+                          value={room.title}
+                          onChange={(e) => updateWorkspaceRoom(index, 'title', e.target.value)}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Image URL"
+                          value={room.img}
+                          onChange={(e) => updateWorkspaceRoom(index, 'img', e.target.value)}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                        />
+                        <textarea
+                          placeholder="Description"
+                          rows={2}
+                          value={room.desc}
+                          onChange={(e) => updateWorkspaceRoom(index, 'desc', e.target.value)}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none resize-none"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 5. LIFE & CULTURE CMS PANEL */}
+          {activeTab === 'our_culture' && currentContent.our_culture && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Culture Aspects Registry ({currentContent.our_culture.length})</span>
+                <button
+                  onClick={addCultureItem}
+                  className="px-3 py-1.5 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors"
+                >
+                  + Add Culture Aspect
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {currentContent.our_culture.map((item, index) => (
+                  <div key={index} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-3 text-left">
+                    <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                      <span className="font-mono text-[9px] text-neutral-500 font-bold">{item.title || 'New Culture Aspect'}</span>
+                      <button
+                        onClick={() => deleteCultureItem(index)}
+                        className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        placeholder="Title"
+                        value={item.title}
+                        onChange={(e) => updateCultureItem(index, 'title', e.target.value)}
+                        className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Icon Identifier (learning, collab, celebrate, client, ownership, grow)"
+                        value={item.icon}
+                        onChange={(e) => updateCultureItem(index, 'icon', e.target.value)}
+                        className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Image URL"
+                        value={item.img}
+                        onChange={(e) => updateCultureItem(index, 'img', e.target.value)}
+                        className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                      />
+                      <textarea
+                        placeholder="Description"
+                        rows={2}
+                        value={item.desc}
+                        onChange={(e) => updateCultureItem(index, 'desc', e.target.value)}
+                        className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none resize-none"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 6. TEAM MEMBERS CMS PANEL */}
+          {activeTab === 'people' && currentContent.people && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Organigram Team Registry ({currentContent.people.length})</span>
+                <button
+                  onClick={addPeopleItem}
+                  className="px-3 py-1.5 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors"
+                >
+                  + Add Member
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {currentContent.people.map((item, index) => (
+                  <div key={index} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-3 text-left">
+                    <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                      <span className="font-mono text-[9px] text-neutral-500 font-bold">{item.name || 'New Member'}</span>
+                      <button
+                        onClick={() => deletePeopleItem(index)}
+                        className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Name</label>
+                        <input
+                          type="text"
+                          value={item.name}
+                          onChange={(e) => updatePeopleItem(index, 'name', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Role</label>
+                        <input
+                          type="text"
+                          value={item.role}
+                          onChange={(e) => updatePeopleItem(index, 'role', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Level (1-5)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="5"
+                          value={item.level}
+                          onChange={(e) => updatePeopleItem(index, 'level', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Icon / Emoji</label>
+                        <input
+                          type="text"
+                          value={item.icon}
+                          onChange={(e) => updatePeopleItem(index, 'icon', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Department</label>
+                        <input
+                          type="text"
+                          value={item.dept}
+                          onChange={(e) => updatePeopleItem(index, 'dept', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Manager ID (Name)</label>
+                        <input
+                          type="text"
+                          value={item.parent_id || ''}
+                          onChange={(e) => updatePeopleItem(index, 'parent_id', e.target.value || null)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                          placeholder="e.g. Radhe Patel"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Avatar Image URL</label>
+                        <input
+                          type="text"
+                          value={item.image}
+                          onChange={(e) => updatePeopleItem(index, 'image', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Short Bio</label>
+                      <textarea
+                        rows={2}
+                        value={item.bio}
+                        onChange={(e) => updatePeopleItem(index, 'bio', e.target.value)}
+                        className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 7. AWARDS & ACHIEVEMENTS CMS PANEL */}
+          {activeTab === 'awards' && currentContent.awards && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Awards Registry ({currentContent.awards.length})</span>
+                <button
+                  onClick={addAwardItem}
+                  className="px-3 py-1.5 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors"
+                >
+                  + Add Award
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {currentContent.awards.map((item, index) => (
+                  <div key={index} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-3 text-left">
+                    <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                      <span className="font-mono text-[9px] text-neutral-500 font-bold">{item.title || 'New Award'}</span>
+                      <button
+                        onClick={() => deleteAwardItem(index)}
+                        className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Slug ID</label>
+                        <input
+                          type="text"
+                          value={item.slug}
+                          onChange={(e) => updateAwardItem(index, 'slug', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Year</label>
+                        <input
+                          type="text"
+                          value={item.year}
+                          onChange={(e) => updateAwardItem(index, 'year', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Awarded By</label>
+                        <input
+                          type="text"
+                          value={item.by}
+                          onChange={(e) => updateAwardItem(index, 'by', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Recipient</label>
+                        <input
+                          type="text"
+                          value={item.recipient}
+                          onChange={(e) => updateAwardItem(index, 'recipient', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Category (company / founders)</label>
+                        <input
+                          type="text"
+                          value={item.category}
+                          onChange={(e) => updateAwardItem(index, 'category', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Banner Image URL</label>
+                        <input
+                          type="text"
+                          value={item.img}
+                          onChange={(e) => updateAwardItem(index, 'img', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Short Summary</label>
+                      <textarea
+                        rows={2}
+                        value={item.description}
+                        onChange={(e) => updateAwardItem(index, 'description', e.target.value)}
+                        className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Detailed Narrative</label>
+                      <textarea
+                        rows={3}
+                        value={item.longDescription}
+                        onChange={(e) => updateAwardItem(index, 'longDescription', e.target.value)}
+                        className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 8. INSIGHTS / BLOGS CMS PANEL */}
+          {activeTab === 'blogs' && currentContent.blogs && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Blogs Registry ({currentContent.blogs.length})</span>
+                <button
+                  onClick={addBlogItem}
+                  className="px-3 py-1.5 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors"
+                >
+                  + Add Post
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {currentContent.blogs.map((item, index) => (
+                  <div key={index} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-3 text-left">
+                    <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                      <span className="font-mono text-[9px] text-neutral-500 font-bold">{item.title || 'New Post'}</span>
+                      <button
+                        onClick={() => deleteBlogItem(index)}
+                        className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Slug URL ID</label>
+                        <input
+                          type="text"
+                          value={item.slug}
+                          onChange={(e) => updateBlogItem(index, 'slug', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Publish Date</label>
+                        <input
+                          type="text"
+                          value={item.date}
+                          onChange={(e) => updateBlogItem(index, 'date', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Author</label>
+                        <input
+                          type="text"
+                          value={item.author}
+                          onChange={(e) => updateBlogItem(index, 'author', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Category</label>
+                        <input
+                          type="text"
+                          value={item.category}
+                          onChange={(e) => updateBlogItem(index, 'category', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Read Time</label>
+                        <input
+                          type="text"
+                          value={item.readTime}
+                          onChange={(e) => updateBlogItem(index, 'readTime', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Post Image URL</label>
+                        <input
+                          type="text"
+                          value={item.image}
+                          onChange={(e) => updateBlogItem(index, 'image', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Short Preview Description</label>
+                      <textarea
+                        rows={2}
+                        value={item.desc}
+                        onChange={(e) => updateBlogItem(index, 'desc', e.target.value)}
+                        className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Narrative Paragraphs (separate by double newlines \n\n)</label>
+                      <textarea
+                        rows={4}
+                        value={item.longContent ? item.longContent.join('\n\n') : ''}
+                        onChange={(e) => updateBlogItem(index, 'longContent', e.target.value)}
+                        className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Key Takeaways (one per line)</label>
+                      <textarea
+                        rows={2}
+                        value={item.highlights ? item.highlights.join('\n') : ''}
+                        onChange={(e) => updateBlogItem(index, 'highlights', e.target.value)}
+                        className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 9. VISUAL GALLERY CMS PANEL */}
+          {activeTab === 'gallery' && currentContent.gallery && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Gallery Registry ({currentContent.gallery.length})</span>
+                <button
+                  onClick={addGalleryItem}
+                  className="px-3 py-1.5 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors"
+                >
+                  + Add Image
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {currentContent.gallery.map((item, index) => (
+                  <div key={index} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-3 text-left">
+                    <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                      <span className="font-mono text-[9px] text-neutral-500 font-bold">{item.title || 'New Gallery Image'}</span>
+                      <button
+                        onClick={() => deleteGalleryItem(index)}
+                        className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        placeholder="Image Title"
+                        value={item.title}
+                        onChange={(e) => updateGalleryItem(index, 'title', e.target.value)}
+                        className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Category"
+                        value={item.category}
+                        onChange={(e) => updateGalleryItem(index, 'category', e.target.value)}
+                        className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Masonry Size Class (e.g. col-span-1 row-span-1 / col-span-2 row-span-1)"
+                        value={item.size}
+                        onChange={(e) => updateGalleryItem(index, 'size', e.target.value)}
+                        className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Image URL"
+                        value={item.image}
+                        onChange={(e) => updateGalleryItem(index, 'image', e.target.value)}
+                        className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 10. PORTFOLIO WORK CMS PANEL */}
+          {activeTab === 'portfolio' && currentContent.portfolio && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Portfolio Work Registry ({currentContent.portfolio.length})</span>
+                <button
+                  onClick={addPortfolioItem}
+                  className="px-3 py-1.5 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors"
+                >
+                  + Add Project
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {currentContent.portfolio.map((item, index) => (
+                  <div key={index} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-3 text-left">
+                    <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                      <span className="font-mono text-[9px] text-neutral-500 font-bold">{item.title || 'New Project'}</span>
+                      <button
+                        onClick={() => deletePortfolioItem(index)}
+                        className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Project Title</label>
+                        <input
+                          type="text"
+                          value={item.title}
+                          onChange={(e) => updatePortfolioItem(index, 'title', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Slug ID</label>
+                        <input
+                          type="text"
+                          value={item.slug}
+                          onChange={(e) => updatePortfolioItem(index, 'slug', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Client Name</label>
+                        <input
+                          type="text"
+                          value={item.client}
+                          onChange={(e) => updatePortfolioItem(index, 'client', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Category (web / platform / ai / ecommerce)</label>
+                        <input
+                          type="text"
+                          value={item.category}
+                          onChange={(e) => updatePortfolioItem(index, 'category', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Project Image URL</label>
+                        <input
+                          type="text"
+                          value={item.img}
+                          onChange={(e) => updatePortfolioItem(index, 'img', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Theme Color (emerald, purple, amber, red, blue, etc)</label>
+                        <input
+                          type="text"
+                          value={item.color}
+                          onChange={(e) => updatePortfolioItem(index, 'color', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Accent Color Hex Code</label>
+                        <input
+                          type="text"
+                          value={item.accentColor}
+                          onChange={(e) => updatePortfolioItem(index, 'accentColor', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                          placeholder="#3b82f6"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Tech Stack (comma separated)</label>
+                        <input
+                          type="text"
+                          value={item.tech ? item.tech.join(', ') : ''}
+                          onChange={(e) => updatePortfolioItem(index, 'tech', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Short Project Description</label>
+                      <textarea
+                        rows={3}
+                        value={item.description}
+                        onChange={(e) => updatePortfolioItem(index, 'description', e.target.value)}
+                        className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 11. VENTURES CMS PANEL */}
+          {activeTab === 'ventures' && currentContent.ventures && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Ventures Registry ({currentContent.ventures.length})</span>
+                <button
+                  onClick={addVentureItem}
+                  className="px-3 py-1.5 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors"
+                >
+                  + Add Venture
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {currentContent.ventures.map((item, index) => (
+                  <div key={index} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-3 text-left">
+                    <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                      <span className="font-mono text-[9px] text-neutral-500 font-bold">{item.name || 'New Venture'}</span>
+                      <button
+                        onClick={() => deleteVentureItem(index)}
+                        className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Venture Name</label>
+                        <input
+                          type="text"
+                          value={item.name}
+                          onChange={(e) => updateVentureItem(index, 'name', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Slug ID</label>
+                        <input
+                          type="text"
+                          value={item.slug}
+                          onChange={(e) => updateVentureItem(index, 'slug', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Tagline</label>
+                        <input
+                          type="text"
+                          value={item.tagline}
+                          onChange={(e) => updateVentureItem(index, 'tagline', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Status</label>
+                        <input
+                          type="text"
+                          value={item.status}
+                          onChange={(e) => updateVentureItem(index, 'status', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Logo/Poster URL</label>
+                        <input
+                          type="text"
+                          value={item.img}
+                          onChange={(e) => updateVentureItem(index, 'img', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Theme Color (cyan, amber, emerald, etc)</label>
+                        <input
+                          type="text"
+                          value={item.color}
+                          onChange={(e) => updateVentureItem(index, 'color', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Short Summary Description</label>
+                      <textarea
+                        rows={2}
+                        value={item.shortDesc}
+                        onChange={(e) => updateVentureItem(index, 'shortDesc', e.target.value)}
+                        className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Full Venture Narrative Description</label>
+                      <textarea
+                        rows={3}
+                        value={item.fullDescription}
+                        onChange={(e) => updateVentureItem(index, 'fullDescription', e.target.value)}
+                        className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Mission</label>
+                        <textarea
+                          rows={2}
+                          value={item.mission}
+                          onChange={(e) => updateVentureItem(index, 'mission', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Vision</label>
+                        <textarea
+                          rows={2}
+                          value={item.vision}
+                          onChange={(e) => updateVentureItem(index, 'vision', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 12. CAREERS & OPEN ROLES CMS PANEL */}
+          {activeTab === 'careers' && currentContent.careers && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Careers Registry ({currentContent.careers.length})</span>
+                <button
+                  onClick={addCareerItem}
+                  className="px-3 py-1.5 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors"
+                >
+                  + Add Job Role
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {currentContent.careers.map((item, index) => (
+                  <div key={index} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-3 text-left">
+                    <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                      <span className="font-mono text-[9px] text-neutral-500 font-bold">{item.title || 'New Job Role'}</span>
+                      <button
+                        onClick={() => deleteCareerItem(index)}
+                        className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Job Title</label>
+                        <input
+                          type="text"
+                          value={item.title}
+                          onChange={(e) => updateCareerItem(index, 'title', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Slug ID</label>
+                        <input
+                          type="text"
+                          value={item.slug}
+                          onChange={(e) => updateCareerItem(index, 'slug', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Department</label>
+                        <input
+                          type="text"
+                          value={item.department}
+                          onChange={(e) => updateCareerItem(index, 'department', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Type (Full-time / Part-time)</label>
+                        <input
+                          type="text"
+                          value={item.type}
+                          onChange={(e) => updateCareerItem(index, 'type', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Location</label>
+                        <input
+                          type="text"
+                          value={item.location}
+                          onChange={(e) => updateCareerItem(index, 'location', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Description Summary</label>
+                      <textarea
+                        rows={2}
+                        value={item.description}
+                        onChange={(e) => updateCareerItem(index, 'description', e.target.value)}
+                        className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Requirements (one per line)</label>
+                      <textarea
+                        rows={3}
+                        value={item.requirements ? item.requirements.join('\n') : ''}
+                        onChange={(e) => updateCareerItem(index, 'requirements', e.target.value)}
+                        className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Interview Steps (comma separated)</label>
+                      <input
+                        type="text"
+                        value={item.steps ? item.steps.join(', ') : ''}
+                        onChange={(e) => updateCareerItem(index, 'steps', e.target.value)}
+                        className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 13. SUBMISSIONS LOG VIEW */}
+          {activeTab === 'submissions' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Form Submissions Log</span>
+                <button
+                  onClick={loadSubmissions}
+                  className="px-4 py-2 bg-white text-black font-semibold text-[9px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors"
+                >
+                  Refresh
+                </button>
+              </div>
+
+              {loadingSubmissions ? (
+                <div className="text-center py-10 font-mono text-xs text-neutral-500">Loading logs from database...</div>
+              ) : (
+                <div className="space-y-8">
+                  {/* Inquiries */}
+                  <div className="space-y-3">
+                    <h4 className="font-mono text-[10px] uppercase tracking-widest text-emerald-400">// Client Inquiries ({inquiries.length})</h4>
+                    <div className="space-y-3">
+                      {inquiries.map((inq, idx) => (
+                        <div key={idx} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-2 text-left">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <span className="text-white font-bold text-xs">{inq.name}</span>
+                              <span className="text-neutral-500 text-[10px] font-mono ml-2">({inq.email})</span>
+                            </div>
+                            <span className="font-mono text-[8px] text-neutral-400 bg-white/5 border border-white/10 px-2 py-0.5 rounded">{inq.budget}</span>
+                          </div>
+                          <p className="text-xs text-neutral-300 leading-relaxed font-light">{inq.message}</p>
+                          <div className="font-mono text-[8px] text-neutral-500">Service: {inq.service} | Date: {inq.created_at ? new Date(inq.created_at).toLocaleString() : 'N/A'}</div>
+                        </div>
+                      ))}
+                      {inquiries.length === 0 && <div className="text-center py-6 text-neutral-500 font-mono text-[10px]">No inquiries received yet.</div>}
+                    </div>
+                  </div>
+
+                  {/* Applications */}
+                  <div className="space-y-3">
+                    <h4 className="font-mono text-[10px] uppercase tracking-widest text-blue-400">// Job & Intern Applications ({applications.length})</h4>
+                    <div className="space-y-3">
+                      {applications.map((app, idx) => (
+                        <div key={idx} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-2 text-left">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <span className="text-white font-bold text-xs">{app.name}</span>
+                              <span className="text-neutral-500 text-[10px] font-mono ml-2">({app.email} | {app.phone})</span>
+                            </div>
+                            <span className="font-mono text-[8px] text-neutral-400 bg-white/5 border border-white/10 px-2 py-0.5 rounded uppercase">{app.type || 'job'}</span>
+                          </div>
+                          <div className="text-xs text-neutral-300">
+                            <strong>Role/Track:</strong> {app.role || app.track} <br/>
+                            {app.college && <><strong>College:</strong> {app.college} <br/></>}
+                            <strong>Resume URL:</strong> <a href={app.resume} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">{app.resume}</a>
+                          </div>
+                          {app.message && <p className="text-xs text-neutral-400 leading-relaxed font-light mt-1">"{app.message}"</p>}
+                          <div className="font-mono text-[8px] text-neutral-500">Date: {app.created_at ? new Date(app.created_at).toLocaleString() : 'N/A'}</div>
+                        </div>
+                      ))}
+                      {applications.length === 0 && <div className="text-center py-6 text-neutral-500 font-mono text-[10px]">No applications received yet.</div>}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

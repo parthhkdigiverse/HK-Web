@@ -51,6 +51,8 @@ const budgetRanges = [
 export default function Contact() {
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', service: '', budget: '', message: '' });
   const [sent, setSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const [timeSlots, setTimeSlots] = useState({});
   const [openFaq, setOpenFaq] = useState(null);
 
@@ -84,13 +86,33 @@ export default function Contact() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSent(true);
-    setTimeout(() => {
-      setSent(false);
-      setFormData({ name: '', email: '', phone: '', service: '', budget: '', message: '' });
-    }, 4000);
+    setSubmitting(true);
+    setErrorMsg('');
+    try {
+      const response = await fetch('/api/inquiries', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+      if (response.ok) {
+        setSent(true);
+        setTimeout(() => {
+          setSent(false);
+          setFormData({ name: '', email: '', phone: '', service: '', budget: '', message: '' });
+        }, 4000);
+      } else {
+        const err = await response.json();
+        setErrorMsg(err.detail || 'Failed to send message. Please try again.');
+      }
+    } catch (err) {
+      setErrorMsg('Failed to send message. Please check your network connection.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   // Motion variants for fade-in & container orchestration
@@ -466,10 +488,14 @@ export default function Contact() {
 
                 <button 
                   type="submit" 
-                  className="bg-white text-black hover:bg-emerald-400 hover:text-black hover:shadow-[0_0_20px_rgba(52,211,153,0.4)] px-6 py-4 rounded-xl text-[10px] font-mono font-bold uppercase tracking-widest transition-all duration-300 mt-2 shadow-md cursor-pointer"
+                  disabled={submitting}
+                  className={`bg-white text-black hover:bg-emerald-400 hover:text-black hover:shadow-[0_0_20px_rgba(52,211,153,0.4)] px-6 py-4 rounded-xl text-[10px] font-mono font-bold uppercase tracking-widest transition-all duration-300 mt-2 shadow-md cursor-pointer ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  Send Message
+                  {submitting ? 'Sending...' : 'Send Message'}
                 </button>
+                {errorMsg && (
+                  <div className="text-red-500 font-mono text-[10px] text-center mt-2">{errorMsg}</div>
+                )}
               </form>
             )}
           </AnimatePresence>

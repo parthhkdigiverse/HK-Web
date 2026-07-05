@@ -197,7 +197,7 @@ function ParticleCanvas() {
 /* ───────────────────── MAIN COMPONENT ───────────────────── */
 export default function OurStory() {
   const { content } = useContent();
-  const milestones = content.milestones;
+  const milestones = content?.milestones || [];
 
   // Filter out years before 2023
   const baseMilestones = milestones
@@ -230,7 +230,22 @@ export default function OurStory() {
   const [activeYearIndex, setActiveYearIndex] = useState("");
   const [isMobile, setIsMobile] = useState(false);
 
-  const activeDirective = strategicDirectives[activeYear] || strategicDirectives["2025"];
+  // Merge database strategic directives dynamically
+  const dbDirectives = {};
+  (content?.strategic_directives || []).forEach(item => {
+    const staticStyle = strategicDirectives[item.year] || strategicDirectives["2025"];
+    dbDirectives[item.year] = {
+      ...staticStyle,
+      ...item
+    };
+  });
+
+  const combinedDirectives = {
+    ...strategicDirectives,
+    ...dbDirectives
+  };
+
+  const activeDirective = combinedDirectives[activeYear] || combinedDirectives["2025"];
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);

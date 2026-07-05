@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useContent } from '../context/ContentContext';
 
 /* ────────────────────────── CONSULTANCY CASE STUDIES ────────────────────────── */
-const cases = [
+const DEFAULT_CASES = [
   {
     id: 'vesper',
     client: 'Vesper Luxury Living',
@@ -126,6 +127,17 @@ const cases = [
 ];
 
 export default function CaseStudy() {
+  const { content } = useContent();
+
+  const cases = (content?.case_studies || DEFAULT_CASES).map(c => {
+    const styleFallback = DEFAULT_CASES.find(x => x.id === c.slug || x.id === c.id) || DEFAULT_CASES[0];
+    return {
+      ...styleFallback,
+      ...c,
+      id: c.slug || c.id
+    };
+  });
+
   const [selectedCase, setSelectedCase] = useState(null);
 
   return (
