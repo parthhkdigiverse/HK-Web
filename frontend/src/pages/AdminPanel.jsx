@@ -22,9 +22,18 @@ export default function AdminPanel() {
   const [history, setHistory] = useState([DEFAULT_CONTENT]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('hero');
+  const [adminView, setAdminView] = useState('pages'); // 'pages' or 'edit'
+  const [iframeHash, setIframeHash] = useState('#preview');
   const [previewDevice, setPreviewDevice] = useState('desktop'); // desktop, tablet, mobile
   const [isDirty, setIsDirty] = useState(false);
   const [loadingDraft, setLoadingDraft] = useState(true);
+  const [expandedGroups, setExpandedGroups] = useState({
+    "Global Layout Elements": true,
+    "Home Page Sections": true,
+    "Company Inner Pages": true,
+    "Capabilities Pages (Static)": false,
+    "Ecosystem Admin Logs": true
+  });
 
   // Status and Modals
   const [saveStatus, setSaveStatus] = useState({ type: '', message: '' });
@@ -40,6 +49,11 @@ export default function AdminPanel() {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const iframeRef = useRef(null);
+
+  // States for adding a new navbar link
+  const [newLinkName, setNewLinkName] = useState('');
+  const [newLinkHref, setNewLinkHref] = useState('');
+  const [newLinkType, setNewLinkType] = useState('link'); // 'link' or 'dropdown'
 
   // Active state content is pulled from our history stack
   const currentContent = history[historyIndex] || DEFAULT_CONTENT;
@@ -218,6 +232,129 @@ export default function AdminPanel() {
       const temp = nextContent.stats[index];
       nextContent.stats[index] = nextContent.stats[targetIdx];
       nextContent.stats[targetIdx] = temp;
+      pushState(nextContent);
+    }
+  };
+
+  // Navbar editing helper functions
+  const updateNavbarStyles = (field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.site_settings) nextContent.site_settings = {};
+    if (!nextContent.site_settings.navbar_styles) {
+      nextContent.site_settings.navbar_styles = {
+        fontSize: "12px",
+        color: "#a3a3a3",
+        hoverColor: "#ffffff",
+        logoSize: "14px",
+        logoColor: "#ffffff"
+      };
+    }
+    nextContent.site_settings.navbar_styles[field] = value;
+    pushState(nextContent);
+  };
+
+  const addNavbarLink = () => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.site_settings) nextContent.site_settings = {};
+    if (!nextContent.site_settings.navbar_links) nextContent.site_settings.navbar_links = [];
+    
+    const label = newLinkName.trim() || "New Link";
+    const href = newLinkType === 'dropdown' ? "#" : (newLinkHref.trim() || "#new-route");
+    
+    const newItem = {
+      label: label,
+      href: href,
+      show: true
+    };
+    
+    if (newLinkType === 'dropdown') {
+      newItem.dropdown = [
+        { label: "Sub Link 1", href: "#sub-route", show: true }
+      ];
+    }
+    
+    nextContent.site_settings.navbar_links.push(newItem);
+    pushState(nextContent);
+    
+    // Reset input fields
+    setNewLinkName('');
+    setNewLinkHref('');
+    setNewLinkType('link');
+  };
+
+  const deleteNavbarLink = (index) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    nextContent.site_settings.navbar_links.splice(index, 1);
+    pushState(nextContent);
+  };
+
+  const moveNavbarLink = (index, direction) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    const targetIdx = index + direction;
+    if (targetIdx >= 0 && targetIdx < nextContent.site_settings.navbar_links.length) {
+      const temp = nextContent.site_settings.navbar_links[index];
+      nextContent.site_settings.navbar_links[index] = nextContent.site_settings.navbar_links[targetIdx];
+      nextContent.site_settings.navbar_links[targetIdx] = temp;
+      pushState(nextContent);
+    }
+  };
+
+  const updateNavbarLink = (index, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    nextContent.site_settings.navbar_links[index][field] = value;
+    pushState(nextContent);
+  };
+
+  const convertToDropdown = (index) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    const item = nextContent.site_settings.navbar_links[index];
+    item.dropdown = [
+      { label: "Sub Link 1", href: item.href || "#", show: true }
+    ];
+    item.href = "#"; // Disable top level href for dropdowns
+    pushState(nextContent);
+  };
+
+  const convertToSimpleLink = (index) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    const item = nextContent.site_settings.navbar_links[index];
+    delete item.dropdown;
+    item.href = "#new-route";
+    pushState(nextContent);
+  };
+
+  const addNavbarSubLink = (parentIdx) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    const item = nextContent.site_settings.navbar_links[parentIdx];
+    if (!item.dropdown) item.dropdown = [];
+    item.dropdown.push({
+      label: "New Sub Link",
+      href: "#new-sub-route",
+      show: true
+    });
+    pushState(nextContent);
+  };
+
+  const updateNavbarSubLink = (parentIdx, subIdx, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    nextContent.site_settings.navbar_links[parentIdx].dropdown[subIdx][field] = value;
+    pushState(nextContent);
+  };
+
+  const deleteNavbarSubLink = (parentIdx, subIdx) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    nextContent.site_settings.navbar_links[parentIdx].dropdown.splice(subIdx, 1);
+    pushState(nextContent);
+  };
+
+  const moveNavbarSubLink = (parentIdx, subIdx, direction) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    const dropdown = nextContent.site_settings.navbar_links[parentIdx].dropdown;
+    const targetIdx = subIdx + direction;
+    if (targetIdx >= 0 && targetIdx < dropdown.length) {
+      const temp = dropdown[subIdx];
+      dropdown[subIdx] = dropdown[targetIdx];
+      dropdown[targetIdx] = temp;
       pushState(nextContent);
     }
   };
@@ -804,17 +941,73 @@ export default function AdminPanel() {
     );
   }
 
+  const pageNavGroups = [
+    {
+      title: "Global Layout Elements",
+      items: [
+        { label: "Navigation Bar", tab: "navbar", route: "#preview/navbar", icon: "💎", badge: "GLOBAL", badgeStyle: "bg-blue-500/10 text-blue-400 border border-blue-500/20" },
+        { label: "Footer Details", tab: "footer", route: "#preview/footer", icon: "👣", badge: "GLOBAL", badgeStyle: "bg-blue-500/10 text-blue-400 border border-blue-500/20" }
+      ]
+    },
+    {
+      title: "Home Page Sections",
+      items: [
+        { label: "Hero Canvas Section", tab: "hero", route: "#preview/home", icon: "⚡", badge: "LIVE", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
+        { label: "Statistics & Metrics", tab: "stats", route: "#preview/home", icon: "📊", badge: "LIVE", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
+        { label: "Services Preview Index", tab: "services", route: "#preview/home", icon: "💼", badge: "LIVE", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" }
+      ]
+    },
+    {
+      title: "Company Inner Pages",
+      items: [
+        { label: "Our Story", tab: "our_story", route: "#preview/our-story", icon: "📖", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
+        { label: "Team Members", tab: "people", route: "#preview/our-people", icon: "👥", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
+        { label: "Life & Culture", tab: "our_culture", route: "#preview/our-culture", icon: "🌟", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
+        { label: "About Us Details", tab: "about_us", route: "#preview/about-us", icon: "🏢", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
+        { label: "Awards & Trophies", tab: "awards", route: "#preview/awards-achievements", icon: "🏆", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
+        { label: "Insights / Blogs", tab: "blogs", route: "#preview/blogs", icon: "📝", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
+        { label: "Our Gallery", tab: "gallery", route: "#preview/our-gallery", icon: "🖼️", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
+        { label: "Portfolio Work", tab: "portfolio", route: "#preview/portfolio", icon: "🚀", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
+        { label: "Ventures", tab: "ventures", route: "#preview/ventures", icon: "💡", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
+        { label: "Careers & Jobs", tab: "careers", route: "#preview/career", icon: "🤝", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
+        { label: "Contact Us", tab: "contact", route: "#preview/contact", icon: "✉️", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" }
+      ]
+    },
+    {
+      title: "Capabilities Pages (Static)",
+      items: [
+        { label: "Services Main Page", tab: "services_main", route: "#preview/services", icon: "⚙️", badge: "STATIC", badgeStyle: "bg-purple-500/10 text-purple-400 border border-purple-500/20" },
+        { label: "Web Engineering", tab: "service_web", route: "#preview/service-web", icon: "💻", badge: "STATIC", badgeStyle: "bg-purple-500/10 text-purple-400 border border-purple-500/20" },
+        { label: "Mobile Applications", tab: "service_app", route: "#preview/service-app", icon: "📱", badge: "STATIC", badgeStyle: "bg-purple-500/10 text-purple-400 border border-purple-500/20" },
+        { label: "Custom Software", tab: "service_custom_software", route: "#preview/service-custom-software", icon: "🛠️", badge: "STATIC", badgeStyle: "bg-purple-500/10 text-purple-400 border border-purple-500/20" },
+        { label: "Digital Marketing", tab: "service_digital_marketing", route: "#preview/service-digital-marketing", icon: "📈", badge: "STATIC", badgeStyle: "bg-purple-500/10 text-purple-400 border border-purple-500/20" },
+        { label: "Social Media", tab: "service_social_media", route: "#preview/service-social-media-management", icon: "📣", badge: "STATIC", badgeStyle: "bg-purple-500/10 text-purple-400 border border-purple-500/20" },
+        { label: "AI Consulting", tab: "service_ai_consulting", route: "#preview/service-ai-consulting", icon: "🧠", badge: "STATIC", badgeStyle: "bg-purple-500/10 text-purple-400 border border-purple-500/20" },
+        { label: "IT Consulting", tab: "service_it_consulting", route: "#preview/service-it-consulting", icon: "🛡️", badge: "STATIC", badgeStyle: "bg-purple-500/10 text-purple-400 border border-purple-500/20" }
+      ]
+    },
+    {
+      title: "Ecosystem Admin Logs",
+      items: [
+        { label: "Form Submissions Log", tab: "submissions", route: "#preview/home", icon: "📨", badge: "LOGS", badgeStyle: "bg-rose-500/10 text-rose-400 border border-rose-500/20" }
+      ]
+    }
+  ];
+
   return (
     <div className="flex flex-col lg:flex-row h-screen bg-black text-[#e5e2e1] overflow-hidden select-none">
       
       {/* LEFT PANEL: CMS CONTROLS (35% Width on desktop, full width on mobile) */}
-      <aside className="w-full lg:w-[35%] lg:min-w-[380px] lg:max-w-[500px] border-b lg:border-b-0 lg:border-r border-white/5 bg-[#070707] flex flex-col h-[50vh] lg:h-full relative z-20 overflow-y-auto">
+      <aside className="w-full lg:w-[35%] lg:min-w-[380px] lg:max-w-[500px] border-b lg:border-b-0 lg:border-r border-white/10 bg-[#060608]/90 backdrop-blur-xl flex flex-col h-[50vh] lg:h-full relative z-20 overflow-y-auto">
         
         {/* Editor Title */}
-        <header className="p-6 border-b border-white/5 flex items-center justify-between">
+        <header className="p-6 border-b border-white/10 flex items-center justify-between bg-white/[0.01]">
           <div className="space-y-1">
-            <h1 className="font-display text-sm font-bold tracking-widest text-white uppercase">HK DIGIVERSE</h1>
-            <p className="font-mono text-[8px] text-neutral-500 uppercase tracking-widest font-light">// VISUAL CMS BUILDER</p>
+            <h1 className="font-display text-sm font-bold tracking-widest text-white uppercase bg-gradient-to-r from-white via-neutral-200 to-neutral-400 bg-clip-text text-transparent">HK DIGIVERSE</h1>
+            <p className="font-mono text-[8px] text-emerald-400 uppercase tracking-widest font-semibold flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse inline-block" />
+              // VISUAL CMS BUILDER
+            </p>
           </div>
           
           <button 
@@ -825,32 +1018,113 @@ export default function AdminPanel() {
           </button>
         </header>
 
-        {/* Tab Selector Accordions */}
-        <nav className="p-4 border-b border-white/5 bg-black/30 flex flex-col gap-2">
-          <label className="font-mono text-[9px] uppercase tracking-widest text-neutral-500 block text-left">Active Module</label>
-          <select
-            value={activeTab}
-            onChange={(e) => setActiveTab(e.target.value)}
-            className="w-full px-4 py-3 bg-black border border-white/10 rounded-lg text-white font-sans text-xs focus:outline-none focus:border-white/30"
-          >
-            <option value="hero">Hero Section</option>
-            <option value="stats">Statistics</option>
-            <option value="services">Services / Capabilities</option>
-            <option value="about_us">About Us (Philosophy & Rooms)</option>
-            <option value="our_culture">Life & Culture</option>
-            <option value="people">Team Members</option>
-            <option value="awards">Awards & Achievements</option>
-            <option value="blogs">Insights / Blogs</option>
-            <option value="gallery">Our Gallery</option>
-            <option value="portfolio">Portfolio Work</option>
-            <option value="ventures">Ventures</option>
-            <option value="careers">Careers & Open Roles</option>
-            <option value="submissions">Submissions Log (Form Entries)</option>
-          </select>
-        </nav>
+        {/* Content Area based on adminView */}
+        {adminView === 'pages' ? (
+          /* Pages List View */
+          <div className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin">
+            <div className="space-y-1 px-2 mb-4">
+              <h2 className="font-display text-xs font-bold text-white uppercase tracking-wider">Pages & Components</h2>
+              <p className="font-mono text-[8px] text-neutral-500 uppercase tracking-widest font-light">// Select a page or layout block to edit in real time</p>
+            </div>
 
-        {/* CMS Configuration Panels */}
-        <section className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
+            <div className="space-y-6">
+              {pageNavGroups.map((group, groupIdx) => {
+                const isExpanded = expandedGroups[group.title] !== false;
+                return (
+                  <div key={groupIdx} className="space-y-2 border-b border-white/[0.03] pb-4 last:border-b-0 last:pb-0">
+                    <button
+                      onClick={() => setExpandedGroups(prev => ({ ...prev, [group.title]: !prev[group.title] }))}
+                      className="w-full flex items-center justify-between py-1 px-2 font-mono text-[9px] uppercase tracking-widest text-neutral-400 hover:text-white font-bold transition-colors text-left cursor-pointer select-none"
+                    >
+                      <span>{group.title}</span>
+                      <span className={`text-[8px] transform transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
+                        ▼
+                      </span>
+                    </button>
+                    
+                    <div className={`grid transition-all duration-300 ease-in-out ${isExpanded ? 'grid-rows-[1fr] opacity-100 mt-2' : 'grid-rows-[0fr] opacity-0 pointer-events-none'}`}>
+                      <div className="overflow-hidden space-y-1.5 px-1">
+                        {group.items.map((item, itemIdx) => {
+                          const isActive = activeTab === item.tab;
+                          return (
+                            <button
+                              key={itemIdx}
+                              onClick={() => {
+                                setActiveTab(item.tab);
+                                setIframeHash(item.route);
+                                setAdminView('edit');
+                              }}
+                              className={`w-full text-left px-3 py-2.5 rounded-lg border flex items-center gap-3 transition-all duration-300 cursor-pointer group relative overflow-hidden ${
+                                isActive
+                                  ? 'bg-emerald-500/[0.04] border-emerald-500/20 text-white shadow-[0_0_15px_rgba(16,185,129,0.05)]'
+                                  : 'bg-white/[0.01] hover:bg-white/[0.03] border-white/5 hover:border-white/10 text-neutral-300 hover:text-white'
+                              }`}
+                            >
+                              {/* Left active line glow indicator */}
+                              {isActive && (
+                                <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-cyan-400 to-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
+                              )}
+                              
+                              <span className={`text-sm transition-all duration-300 ${
+                                isActive ? 'scale-110 grayscale-0' : 'filter grayscale group-hover:grayscale-0 group-hover:scale-110'
+                              }`}>{item.icon}</span>
+                              
+                              <div className="flex flex-col">
+                                <span className={`text-xs font-semibold font-sans tracking-wide transition-colors ${
+                                  isActive ? 'text-white' : 'text-neutral-300 group-hover:text-white'
+                                }`}>
+                                  {item.label}
+                                </span>
+                                <span className="font-mono text-[8px] text-neutral-500/80 group-hover:text-neutral-400/80 transition-colors mt-0.5 tracking-wider font-light">
+                                  route: {item.route.replace('#preview', '') || '/'}
+                                </span>
+                              </div>
+                              
+                              <div className="ml-auto flex items-center gap-2">
+                                <span className={`text-[8px] font-mono px-2 py-0.5 rounded-full border ${item.badgeStyle}`}>
+                                  {item.badge}
+                                </span>
+                                <span className="text-[8px] font-mono text-neutral-600 group-hover:text-neutral-400 transition-colors uppercase font-light">
+                                  Edit →
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          /* Editor Panels View */
+          <>
+            <div className="p-4 border-b border-white/10 bg-black/40 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setAdminView('pages')}
+                  className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg font-mono text-[8px] uppercase tracking-widest text-neutral-400 hover:text-white cursor-pointer transition-colors"
+                >
+                  ← Back to Pages
+                </button>
+                <div className="space-y-0.5">
+                  <span className="font-mono text-[8px] text-neutral-500 uppercase tracking-widest font-light">// Editing Module</span>
+                  <h2 className="text-xs font-bold text-white uppercase tracking-wider">
+                    {activeTab.replace('_', ' ')}
+                  </h2>
+                </div>
+              </div>
+              
+              {/* Connected Pulse Badge */}
+              <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 animate-pulse">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span className="font-mono text-[7px] text-emerald-400 uppercase tracking-widest">Connected</span>
+              </div>
+            </div>
+
+            <section className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin">
           
           {/* 1. HERO CMS PANEL */}
           {activeTab === 'hero' && (
@@ -2268,6 +2542,559 @@ export default function AdminPanel() {
             </div>
           )}
 
+          {/* NAVBAR CMS PANEL */}
+          {activeTab === 'navbar' && (
+            <div className="space-y-6">
+              <h3 className="font-mono text-[10px] uppercase tracking-wider text-white">// Navbar Layout Settings</h3>
+              
+              {/* Logo Styles */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4">
+                <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Logo Styling</h4>
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Logo Text</label>
+                    <input
+                      type="text"
+                      value={currentContent.site_settings?.logo_text || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.site_settings) nextContent.site_settings = {};
+                        nextContent.site_settings.logo_text = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none focus:border-white/20"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Logo Font Size</label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="range"
+                          min="10"
+                          max="28"
+                          value={parseInt(currentContent.site_settings?.navbar_styles?.logoSize || '14')}
+                          onChange={(e) => updateNavbarStyles('logoSize', e.target.value + 'px')}
+                          className="w-full accent-emerald-500"
+                        />
+                        <span className="font-mono text-[10px] text-neutral-400 w-10 text-right">
+                          {currentContent.site_settings?.navbar_styles?.logoSize || '14px'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Logo Color</label>
+                      <div className="flex gap-2 items-center">
+                        <input
+                          type="color"
+                          value={currentContent.site_settings?.navbar_styles?.logoColor || '#ffffff'}
+                          onChange={(e) => updateNavbarStyles('logoColor', e.target.value)}
+                          className="w-7 h-7 bg-transparent border-0 cursor-pointer rounded-full overflow-hidden"
+                        />
+                        <input
+                          type="text"
+                          value={currentContent.site_settings?.navbar_styles?.logoColor || '#ffffff'}
+                          onChange={(e) => updateNavbarStyles('logoColor', e.target.value)}
+                          className="w-full px-2 py-1 bg-black border border-white/10 rounded text-white font-mono text-[10px] focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Navigation Links Styling */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4">
+                <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Links Typography & Colors</h4>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Font Size</label>
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="range"
+                        min="9"
+                        max="16"
+                        value={parseInt(currentContent.site_settings?.navbar_styles?.fontSize || '12')}
+                        onChange={(e) => updateNavbarStyles('fontSize', e.target.value + 'px')}
+                        className="w-full accent-emerald-500"
+                      />
+                      <span className="font-mono text-[9px] text-neutral-400 min-w-[26px]">
+                        {currentContent.site_settings?.navbar_styles?.fontSize || '12px'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Text Color</label>
+                    <div className="flex gap-1 items-center">
+                      <input
+                        type="color"
+                        value={currentContent.site_settings?.navbar_styles?.color || '#a3a3a3'}
+                        onChange={(e) => updateNavbarStyles('color', e.target.value)}
+                        className="w-5 h-5 bg-transparent border-0 cursor-pointer rounded-full overflow-hidden"
+                      />
+                      <input
+                        type="text"
+                        value={currentContent.site_settings?.navbar_styles?.color || '#a3a3a3'}
+                        onChange={(e) => updateNavbarStyles('color', e.target.value)}
+                        className="w-full px-1.5 py-0.5 bg-black border border-white/10 rounded text-white font-mono text-[9px] focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Hover Color</label>
+                    <div className="flex gap-1 items-center">
+                      <input
+                        type="color"
+                        value={currentContent.site_settings?.navbar_styles?.hoverColor || '#ffffff'}
+                        onChange={(e) => updateNavbarStyles('hoverColor', e.target.value)}
+                        className="w-5 h-5 bg-transparent border-0 cursor-pointer rounded-full overflow-hidden"
+                      />
+                      <input
+                        type="text"
+                        value={currentContent.site_settings?.navbar_styles?.hoverColor || '#ffffff'}
+                        onChange={(e) => updateNavbarStyles('hoverColor', e.target.value)}
+                        className="w-full px-1.5 py-0.5 bg-black border border-white/10 rounded text-white font-mono text-[9px] focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Add Menu Item Form */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4">
+                <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Add New Navigation Item</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Link Label</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Services"
+                      value={newLinkName}
+                      onChange={(e) => setNewLinkName(e.target.value)}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none focus:border-white/20"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Link Type</label>
+                    <select
+                      value={newLinkType}
+                      onChange={(e) => setNewLinkType(e.target.value)}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none focus:border-white/20 cursor-pointer"
+                    >
+                      <option value="link">Simple Link</option>
+                      <option value="dropdown">Dropdown Menu</option>
+                    </select>
+                  </div>
+                </div>
+                {newLinkType === 'link' && (
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Href / Anchor Route</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. #services or /contact"
+                      value={newLinkHref}
+                      onChange={(e) => setNewLinkHref(e.target.value)}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none focus:border-white/20"
+                    />
+                  </div>
+                )}
+                <button
+                  onClick={addNavbarLink}
+                  className="w-full py-2 bg-emerald-500/20 hover:bg-emerald-500/35 border border-emerald-500/30 rounded font-mono text-[9px] uppercase tracking-widest text-emerald-400 hover:text-white cursor-pointer transition-colors"
+                >
+                  + Add Item to Navbar
+                </button>
+              </div>
+
+              {/* Navigation Links Registry */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                  <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Navigation Menu Items</h4>
+                  <span className="font-mono text-[8px] text-neutral-500 uppercase tracking-widest">
+                    Manage & Reorder
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  {(currentContent.site_settings?.navbar_links || []).map((link, idx) => (
+                    <div key={idx} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-3 relative group">
+                      
+                      {/* Link Header / Operations */}
+                      <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                        <span className="font-mono text-[9px] text-neutral-400 uppercase tracking-widest font-bold">
+                          Item #{idx + 1} {link.dropdown ? '(Dropdown)' : '(Link)'}
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          {/* Reordering */}
+                          <button
+                            onClick={() => moveNavbarLink(idx, -1)}
+                            disabled={idx === 0}
+                            className="p-1 text-neutral-500 hover:text-white disabled:opacity-30 disabled:hover:text-neutral-500 font-mono text-[9px] cursor-pointer"
+                          >
+                            ▲
+                          </button>
+                          <button
+                            onClick={() => moveNavbarLink(idx, 1)}
+                            disabled={idx === (currentContent.site_settings?.navbar_links || []).length - 1}
+                            className="p-1 text-neutral-500 hover:text-white disabled:opacity-30 disabled:hover:text-neutral-500 font-mono text-[9px] cursor-pointer"
+                          >
+                            ▼
+                          </button>
+                          
+                          {/* Show/Hide */}
+                          <button
+                            onClick={() => updateNavbarLink(idx, 'show', link.show !== false ? false : true)}
+                            className={`px-2 py-0.5 text-[8px] font-mono rounded uppercase tracking-wider border ${
+                              link.show !== false 
+                                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 font-bold' 
+                                : 'bg-neutral-800 border-transparent text-neutral-500'
+                            }`}
+                          >
+                            {link.show !== false ? 'Show' : 'Hide'}
+                          </button>
+
+                          {/* Delete */}
+                          <button
+                            onClick={() => deleteNavbarLink(idx)}
+                            className="p-1 hover:bg-red-500/10 rounded group/del cursor-pointer"
+                          >
+                            <span className="text-neutral-500 group-hover/del:text-red-400 font-mono text-[9px]">🗑️</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Link Inputs */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-0.5">
+                          <label className="font-mono text-[8px] text-neutral-500 block">Link Label</label>
+                          <input
+                            type="text"
+                            value={link.label || ''}
+                            onChange={(e) => updateNavbarLink(idx, 'label', e.target.value)}
+                            className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                          />
+                        </div>
+                        <div className="space-y-0.5">
+                          <label className="font-mono text-[8px] text-neutral-500 block">Href (Anchor/Path)</label>
+                          <input
+                            type="text"
+                            value={link.href || ''}
+                            disabled={!!link.dropdown}
+                            onChange={(e) => updateNavbarLink(idx, 'href', e.target.value)}
+                            className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none disabled:opacity-50"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Dropdown Links Editor (if nested) */}
+                      {link.dropdown ? (
+                        <div className="mt-4 p-3 bg-black/50 border border-white/5 rounded-lg space-y-3">
+                          <div className="flex items-center justify-between border-b border-white/5 pb-1">
+                            <span className="font-mono text-[8px] text-neutral-400 uppercase tracking-widest font-bold">Nested Dropdown Links</span>
+                            <button
+                              onClick={() => addNavbarSubLink(idx)}
+                              className="px-2 py-0.5 bg-white/5 hover:bg-white/10 border border-white/15 rounded text-[8px] font-mono text-neutral-300 hover:text-white cursor-pointer"
+                            >
+                              + Add Sub Link
+                            </button>
+                          </div>
+
+                          <div className="space-y-2">
+                            {link.dropdown.map((sub, subIdx) => (
+                              <div key={subIdx} className="flex items-center gap-2 p-2 bg-white/[0.01] border border-white/5 rounded-md">
+                                <input
+                                  type="text"
+                                  placeholder="Sub Label"
+                                  value={sub.label || ''}
+                                  onChange={(e) => updateNavbarSubLink(idx, subIdx, 'label', e.target.value)}
+                                  className="w-[35%] px-2 py-1 bg-black border border-white/10 rounded text-white text-[10px] focus:outline-none"
+                                />
+                                <input
+                                  type="text"
+                                  placeholder="Sub Href"
+                                  value={sub.href || ''}
+                                  onChange={(e) => updateNavbarSubLink(idx, subIdx, 'href', e.target.value)}
+                                  className="w-[35%] px-2 py-1 bg-black border border-white/10 rounded text-white text-[10px] focus:outline-none"
+                                />
+                                
+                                <div className="flex items-center gap-1 ml-auto">
+                                  {/* Sub show/hide */}
+                                  <button
+                                    onClick={() => updateNavbarSubLink(idx, subIdx, 'show', sub.show !== false ? false : true)}
+                                    className={`px-1.5 py-0.5 text-[7px] font-mono rounded border uppercase ${
+                                      sub.show !== false 
+                                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 font-bold' 
+                                        : 'bg-neutral-800 border-transparent text-neutral-500'
+                                    }`}
+                                  >
+                                    {sub.show !== false ? 'Show' : 'Hide'}
+                                  </button>
+
+                                  {/* Move Sub link */}
+                                  <button
+                                    onClick={() => moveNavbarSubLink(idx, subIdx, -1)}
+                                    disabled={subIdx === 0}
+                                    className="text-[9px] font-mono text-neutral-500 hover:text-white disabled:opacity-30 cursor-pointer"
+                                  >
+                                    ▲
+                                  </button>
+                                  <button
+                                    onClick={() => moveNavbarSubLink(idx, subIdx, 1)}
+                                    disabled={subIdx === link.dropdown.length - 1}
+                                    className="text-[9px] font-mono text-neutral-500 hover:text-white disabled:opacity-30 cursor-pointer"
+                                  >
+                                    ▼
+                                  </button>
+
+                                  {/* Delete Sub Link */}
+                                  <button
+                                    onClick={() => deleteNavbarSubLink(idx, subIdx)}
+                                    className="p-1 text-neutral-500 hover:text-red-400 cursor-pointer"
+                                  >
+                                    🗑️
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          <button
+                            onClick={() => convertToSimpleLink(idx)}
+                            className="w-full py-1 text-center bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 hover:border-red-500/20 text-red-400 font-mono text-[8px] uppercase tracking-wider rounded transition-colors cursor-pointer"
+                          >
+                            Convert to Simple Link
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => convertToDropdown(idx)}
+                          className="w-full py-1 text-center bg-white/5 hover:bg-white/10 border border-white/10 text-neutral-300 font-mono text-[8px] uppercase tracking-wider rounded transition-colors cursor-pointer"
+                        >
+                          Convert to Nested Dropdown
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* FOOTER CMS PANEL */}
+          {activeTab === 'footer' && (
+            <div className="space-y-6">
+              <h3 className="font-mono text-[10px] uppercase tracking-wider text-white">// Footer Layout Settings</h3>
+              
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4">
+                <div className="space-y-1">
+                  <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Address</label>
+                  <textarea
+                    rows={2}
+                    value={currentContent.site_settings?.footer?.address || ''}
+                    onChange={(e) => {
+                      const nextContent = JSON.parse(JSON.stringify(currentContent));
+                      if (!nextContent.site_settings) nextContent.site_settings = {};
+                      if (!nextContent.site_settings.footer) nextContent.site_settings.footer = {};
+                      nextContent.site_settings.footer.address = e.target.value;
+                      pushState(nextContent);
+                    }}
+                    className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none resize-none"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Email</label>
+                    <input
+                      type="text"
+                      value={currentContent.site_settings?.footer?.email || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.site_settings) nextContent.site_settings = {};
+                        if (!nextContent.site_settings.footer) nextContent.site_settings.footer = {};
+                        nextContent.site_settings.footer.email = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Phone</label>
+                    <input
+                      type="text"
+                      value={currentContent.site_settings?.footer?.phone || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.site_settings) nextContent.site_settings = {};
+                        if (!nextContent.site_settings.footer) nextContent.site_settings.footer = {};
+                        nextContent.site_settings.footer.phone = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Copyright Info</label>
+                  <input
+                    type="text"
+                    value={currentContent.site_settings?.footer?.copyright || ''}
+                    onChange={(e) => {
+                      const nextContent = JSON.parse(JSON.stringify(currentContent));
+                      if (!nextContent.site_settings) nextContent.site_settings = {};
+                      if (!nextContent.site_settings.footer) nextContent.site_settings.footer = {};
+                      nextContent.site_settings.footer.copyright = e.target.value;
+                      pushState(nextContent);
+                    }}
+                    className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4">
+                <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Social Media Links</h4>
+                <div className="space-y-3">
+                  {(currentContent.site_settings?.footer?.social_links || []).map((link, idx) => (
+                    <div key={idx} className="p-3 bg-black/40 border border-white/5 rounded-lg space-y-2 text-left">
+                      <div className="flex justify-between items-center border-b border-white/5 pb-1">
+                        <span className="font-mono text-[8px] text-neutral-500 uppercase tracking-widest">{link.platform}</span>
+                        <button
+                          onClick={() => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            nextContent.site_settings.footer.social_links[idx].show = link.show !== false ? false : true;
+                            pushState(nextContent);
+                          }}
+                          className={`px-2 py-0.5 text-[8px] border rounded font-mono uppercase tracking-widest ${
+                            link.show !== false ? 'bg-white text-black font-semibold' : 'bg-neutral-800 text-neutral-500 border-transparent'
+                          }`}
+                        >
+                          {link.show !== false ? 'Show' : 'Hide'}
+                        </button>
+                      </div>
+                      <input
+                        type="text"
+                        value={link.url}
+                        onChange={(e) => {
+                          const nextContent = JSON.parse(JSON.stringify(currentContent));
+                          nextContent.site_settings.footer.social_links[idx].url = e.target.value;
+                          pushState(nextContent);
+                        }}
+                        className="w-full px-3 py-1 bg-black border border-white/10 rounded text-white text-[10px] focus:outline-none"
+                        placeholder="Link URL"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* OUR STORY CMS PANEL */}
+          {activeTab === 'our_story' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Timeline Milestones ({currentContent.milestones?.length || 0})</span>
+                <button
+                  onClick={() => {
+                    const nextContent = JSON.parse(JSON.stringify(currentContent));
+                    if (!nextContent.milestones) nextContent.milestones = [];
+                    nextContent.milestones.unshift({ year: '2027', title: 'New Milestone', description: 'Description of milestone...' });
+                    pushState(nextContent);
+                  }}
+                  className="px-3 py-1.5 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors"
+                >
+                  + Add Milestone
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {(currentContent.milestones || []).map((item, index) => (
+                  <div key={index} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-3 text-left">
+                    <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                      <span className="font-mono text-[9px] text-neutral-500 font-bold">{item.year || 'New Milestone'}</span>
+                      <button
+                        onClick={() => {
+                          const nextContent = JSON.parse(JSON.stringify(currentContent));
+                          nextContent.milestones.splice(index, 1);
+                          pushState(nextContent);
+                        }}
+                        className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="col-span-1">
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Year</label>
+                        <input
+                          type="text"
+                          value={item.year}
+                          onChange={(e) => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            nextContent.milestones[index].year = e.target.value;
+                            pushState(nextContent);
+                          }}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Milestone Title</label>
+                        <input
+                          type="text"
+                          value={item.title}
+                          onChange={(e) => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            nextContent.milestones[index].title = e.target.value;
+                            pushState(nextContent);
+                          }}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Milestone Description</label>
+                      <textarea
+                        rows={3}
+                        value={item.description}
+                        onChange={(e) => {
+                          const nextContent = JSON.parse(JSON.stringify(currentContent));
+                          nextContent.milestones[index].description = e.target.value;
+                          pushState(nextContent);
+                        }}
+                        className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* SERVICES MAIN PAGE MESSAGE PANEL */}
+          {activeTab === 'services_main' && (
+            <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
+              <span className="font-mono text-[10px] uppercase tracking-wider text-emerald-400">// Services Overview Page</span>
+              <p className="text-xs text-neutral-400 font-light leading-relaxed">
+                This page displays all capabilities and service indices. You can preview it live in the viewport.
+              </p>
+              <p className="text-[10px] text-neutral-500 font-mono leading-relaxed">
+                * You can modify individual service descriptions, titles, and tags under "Services Preview Index" on the Home Page.
+              </p>
+            </div>
+          )}
+
+          {/* CAPABILITIES SUB-PAGES MSG PANEL */}
+          {['service_web', 'service_app', 'service_custom_software', 'service_digital_marketing', 'service_social_media', 'service_ai_consulting', 'service_it_consulting'].includes(activeTab) && (
+            <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
+              <span className="font-mono text-[10px] uppercase tracking-wider text-emerald-400">// Visual Interactive Page</span>
+              <p className="text-xs text-neutral-400 font-light leading-relaxed">
+                This page displays advanced visual mockups, 3D spring layouts, and client-interactive checklists designed directly in React.
+              </p>
+              <p className="text-[10px] text-neutral-500 font-mono leading-relaxed">
+                * You can modify the main index cards under "Services Preview Index" on the Home Page, and update individual service attributes in code.
+              </p>
+            </div>
+          )}
+
           {/* 13. SUBMISSIONS LOG VIEW */}
           {activeTab === 'submissions' && (
             <div className="space-y-6">
@@ -2336,7 +3163,9 @@ export default function AdminPanel() {
             </div>
           )}
 
-        </section>
+            </section>
+          </>
+        )}
 
         {/* Global Operations Panel */}
         <footer className="p-6 border-t border-white/5 bg-black/60 space-y-4">
@@ -2490,9 +3319,10 @@ export default function AdminPanel() {
             {/* Iframe element */}
             <iframe
               ref={iframeRef}
-              src={`${window.location.origin}${window.location.pathname}#preview`}
+              src={`${window.location.origin}${window.location.pathname}${iframeHash}`}
               className="flex-1 w-full border-none bg-black select-none pointer-events-auto"
               title="Live CMS Web Preview"
+              key={iframeHash}
             />
           </div>
 

@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { cn } from '../utils/cn';
+import { useContent } from '../context/ContentContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8008';
 
 export default function Navbar() {
+  const { content } = useContent();
   const [isHidden, setIsHidden] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [hoveredIndex, setHoveredIndex] = useState(null);
 
   // Logo clicking authentication state
   const [logoClicks, setLogoClicks] = useState(0);
@@ -15,6 +18,21 @@ export default function Navbar() {
   const [passwordInput, setPasswordInput] = useState('');
   const [authError, setAuthError] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
+
+  // Parse styles
+  const styles = content?.site_settings?.navbar_styles || {
+    fontSize: "12px",
+    color: "#a3a3a3",
+    hoverColor: "#ffffff",
+    logoSize: "14px",
+    logoColor: "#ffffff"
+  };
+
+  // Parse dynamic logo text
+  const logoText = content?.site_settings?.logo_text || "HariKrushn DigiVerse LLP";
+  const spaceIndex = logoText.indexOf(' ');
+  const logoTextFirst = spaceIndex > -1 ? logoText.substring(0, spaceIndex) : logoText;
+  const logoTextRest = spaceIndex > -1 ? logoText.substring(spaceIndex + 1) : "";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -112,27 +130,18 @@ export default function Navbar() {
     }
   };
 
-  const navigationItems = [
-    {
-      name: 'Company',
-      dropdown: [
-        { name: 'Our Story', href: '#our-story' },
-        { name: 'Our People', href: '#our-people' },
-        { name: 'Our Culture', href: '#our-culture' },
-        { name: 'About Us', href: '#about-us' },
-        { name: 'Awards and Achievements', href: '#awards-achievements' },
-        { name: 'Blogs', href: '#blogs' },
-        { name: 'Our Gallery', href: '#our-gallery' },
-      ],
-    },
-    { name: 'Services', href: '#services' },
-    { name: 'Industry', href: '#industry' },
-    { name: 'Career', href: '#career' },
-    { name: 'Case Study', href: '#case-study' },
-    { name: 'Portfolio', href: '#portfolio' },
-    { name: 'Ventures', href: '#ventures' },
-    { name: 'Contact Us', href: '#contact' },
-  ];
+  // Calculate active navigation items dynamically from content context navbar_links
+  const rawLinks = content?.site_settings?.navbar_links || [];
+  
+  const activeNavigationItems = rawLinks
+    .filter(item => item.show !== false)
+    .map(item => {
+      if (item.dropdown) {
+        const filteredDropdown = item.dropdown.filter(subItem => subItem.show !== false);
+        return { ...item, dropdown: filteredDropdown };
+      }
+      return item;
+    });
 
   return (
     <>
@@ -153,23 +162,29 @@ export default function Navbar() {
               alt="HK Logo" 
               className="w-9 h-9 object-contain transition-transform duration-500 group-hover:scale-110"
             />
-            <span className="font-display tracking-[0.15em] text-sm font-semibold text-white">
-              HariKrushn <span className="font-light text-neutral-400 text-xs hidden md:inline">DigiVerse LLP</span>
+            <span className="font-display tracking-[0.15em] text-sm font-semibold text-white" style={{ fontSize: styles.logoSize || '14px', color: styles.logoColor || '#ffffff' }}>
+              {logoTextFirst} <span className="font-light opacity-80 text-xs hidden md:inline" style={{ fontSize: `calc(${styles.logoSize || '14px'} - 2px)`, color: styles.logoColor || '#ffffff' }}>{logoTextRest}</span>
             </span>
           </a>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center md:gap-4 lg:gap-6 xl:gap-8">
-            {navigationItems.map((item) => {
-              if (item.dropdown) {
+            {activeNavigationItems.map((item, index) => {
+              if (item.dropdown && item.dropdown.length > 0) {
                 return (
-                  <div key={item.name} className="relative group py-1">
+                  <div key={item.label || item.name} className="relative group py-1">
                     <button 
                       aria-haspopup="true" 
                       aria-expanded="false" 
-                      className="flex items-center gap-1.5 text-xs uppercase tracking-[0.15em] font-light text-neutral-400 hover:text-white transition-colors duration-300 cursor-pointer"
+                      className="flex items-center gap-1.5 uppercase tracking-[0.15em] font-light transition-colors duration-300 cursor-pointer"
+                      style={{
+                        fontSize: styles.fontSize || '12px',
+                        color: hoveredIndex === index ? (styles.hoverColor || '#ffffff') : (styles.color || '#a3a3a3')
+                      }}
+                      onMouseEnter={() => setHoveredIndex(index)}
+                      onMouseLeave={() => setHoveredIndex(null)}
                     >
-                      <span>{item.name}</span>
+                      <span>{item.label || item.name}</span>
                       <svg className="w-2.5 h-2.5 transition-transform duration-300 group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
                       </svg>
@@ -180,12 +195,18 @@ export default function Navbar() {
                       <div className="bg-[#050505]/95 backdrop-blur-md border border-white/10 p-3 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] flex flex-col gap-1">
                         {item.dropdown.map((subItem) => (
                           <a
-                            key={subItem.name}
+                            key={subItem.label || subItem.name}
                             href={subItem.href}
                             onClick={() => handleLinkClick(subItem.href)}
-                            className="text-[11px] uppercase tracking-[0.15em] font-light text-neutral-400 hover:text-white transition-all duration-200 py-2 px-3 rounded-lg hover:bg-white/5 cursor-pointer block text-left"
+                            className="uppercase tracking-[0.15em] font-light transition-all duration-200 py-2 px-3 rounded-lg hover:bg-white/5 cursor-pointer block text-left"
+                            style={{
+                              fontSize: `calc(${styles.fontSize || '12px'} - 1px)`,
+                              color: styles.color || '#a3a3a3'
+                            }}
+                            onMouseEnter={(e) => e.target.style.color = styles.hoverColor || '#ffffff'}
+                            onMouseLeave={(e) => e.target.style.color = styles.color || '#a3a3a3'}
                           >
-                            {subItem.name}
+                            {subItem.label || subItem.name}
                           </a>
                         ))}
                       </div>
@@ -196,13 +217,19 @@ export default function Navbar() {
 
               return (
                 <a
-                  key={item.name}
+                  key={item.label || item.name}
                   href={item.href}
                   onClick={() => handleLinkClick(item.href)}
-                  className="relative text-xs uppercase tracking-[0.15em] font-light text-neutral-400 hover:text-white transition-colors duration-300 cursor-pointer group"
+                  className="relative uppercase tracking-[0.15em] font-light transition-colors duration-300 cursor-pointer group"
+                  style={{
+                    fontSize: styles.fontSize || '12px',
+                    color: hoveredIndex === index ? (styles.hoverColor || '#ffffff') : (styles.color || '#a3a3a3')
+                  }}
+                  onMouseEnter={() => setHoveredIndex(index)}
+                  onMouseLeave={() => setHoveredIndex(null)}
                 >
-                  {item.name}
-                  <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-white transition-all duration-300 group-hover:w-full" />
+                  {item.label || item.name}
+                  <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-white transition-all duration-300 group-hover:w-full" style={{ backgroundColor: styles.hoverColor }} />
                 </a>
               );
             })}
@@ -240,12 +267,12 @@ export default function Navbar() {
         )}
       >
         <div className="flex flex-col gap-6 w-full max-w-sm px-6 text-center">
-          {navigationItems.map((item, index) => {
+          {activeNavigationItems.map((item, index) => {
             if (item.dropdown) {
-              const isDropdownOpen = !!mobileDropdowns[item.name];
+              const isDropdownOpen = !!mobileDropdowns[item.label || item.name];
               return (
                 <div 
-                  key={item.name} 
+                  key={item.label || item.name} 
                   className="flex flex-col items-center"
                   style={{ 
                     transitionDelay: isMobileMenuOpen ? `${index * 50}ms` : '0ms',
@@ -255,12 +282,12 @@ export default function Navbar() {
                   }}
                 >
                   <button 
-                    onClick={() => toggleMobileDropdown(item.name)}
+                    onClick={() => toggleMobileDropdown(item.label || item.name)}
                     aria-expanded={isDropdownOpen}
                     aria-haspopup="true"
                     className="flex items-center justify-center gap-2 text-2xl uppercase tracking-[0.25em] font-light text-neutral-400 hover:text-white transition-all duration-300 cursor-pointer"
                   >
-                    <span>{item.name}</span>
+                    <span>{item.label || item.name}</span>
                     <svg 
                       className={cn(
                         "w-4 h-4 transition-transform duration-300", 
@@ -281,12 +308,12 @@ export default function Navbar() {
                   >
                     {item.dropdown.map((subItem) => (
                       <a
-                        key={subItem.name}
+                        key={subItem.label || subItem.name}
                         href={subItem.href}
                         onClick={() => handleLinkClick(subItem.href)}
                         className="text-xs uppercase tracking-[0.2em] font-light text-neutral-500 hover:text-white transition-colors duration-300 py-2 cursor-pointer block"
                       >
-                        {subItem.name}
+                        {subItem.label || subItem.name}
                       </a>
                     ))}
                   </div>
@@ -296,7 +323,7 @@ export default function Navbar() {
 
             return (
               <a
-                key={item.name}
+                key={item.label || item.name}
                 href={item.href}
                 onClick={() => handleLinkClick(item.href)}
                 style={{ 
@@ -307,7 +334,7 @@ export default function Navbar() {
                 }}
                 className="text-2xl uppercase tracking-[0.25em] font-light text-neutral-400 hover:text-white transition-all duration-500 cursor-pointer block"
               >
-                {item.name}
+                {item.label || item.name}
               </a>
             );
           })}

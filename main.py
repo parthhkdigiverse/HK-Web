@@ -55,8 +55,7 @@ class ContentUpdateRequest(BaseModel):
     password: str
     content: dict
 
-# Define the absolute path for content.json (located in backend/)
-CONTENT_FILE = os.path.join(backend_dir, "content.json")
+# All content data is stored in MongoDB. DEFAULT_CONTENT (in-memory) is the fallback.
 
 # Import defaults from seed module
 from app.db.seed import (
@@ -296,25 +295,11 @@ def load_draft() -> dict:
                     print(f"[MongoDB] Failed to write initial draft: {e}")
                 return published
         except Exception as e:
-            print(f"[MongoDB] Error loading draft: {e}. Using local fallback.")
-    
-    # Local fallback
-    draft_file = os.path.join(backend_dir, "content_draft.json")
-    if os.path.exists(draft_file):
-        try:
-            with open(draft_file, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            pass
+            print(f"[MongoDB] Error loading draft: {e}. Using DEFAULT_CONTENT fallback.")
     return load_content()
 
 def load_local_content() -> dict:
-    if os.path.exists(CONTENT_FILE):
-        try:
-            with open(CONTENT_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception as e:
-            print(f"Error reading content.json: {e}")
+    # All data now lives in MongoDB. This function returns in-memory defaults only.
     return DEFAULT_CONTENT
 
 def save_normalized_draft(data: dict):
@@ -362,16 +347,7 @@ def save_normalized_draft(data: dict):
                 mongo_db[coll_name].insert_many(data[key])
 
 def save_draft_db(data: dict):
-    # Save local backup
-    draft_file = os.path.join(backend_dir, "content_draft.json")
-    try:
-        with open(draft_file, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4, ensure_ascii=False)
-        print("[Local] Draft backup written successfully.")
-    except Exception as e:
-        print(f"[Local] Error writing local draft: {e}")
-        
-    # Save to MongoDB
+    # Save to MongoDB (single source of truth)
     collection = get_mongo_collection()
     if collection is not None:
         try:
@@ -390,12 +366,11 @@ def save_draft_db(data: dict):
             save_normalized_draft(data)
         except Exception as e:
             print(f"[MongoDB] Error saving draft: {e}")
+    else:
+        print("[WARNING] MongoDB unavailable. Draft NOT saved.")
 
 def publish_db(data: dict):
-    # 1. Save locally
-    save_local_content(data)
-    
-    # 2. Save to MongoDB
+    # Save to MongoDB (single source of truth)
     collection = get_mongo_collection()
     if collection is not None:
         try:
@@ -420,8 +395,10 @@ def publish_db(data: dict):
             print("[MongoDB] Published successfully.")
         except Exception as e:
             print(f"[MongoDB] Error publishing to db: {e}")
+    else:
+        print("[WARNING] MongoDB unavailable. Content NOT published.")
             
-    # 3. Save to version history
+    # Save to version history
     history_coll = get_mongo_history_collection()
     if history_coll is not None:
         try:
@@ -433,14 +410,6 @@ def publish_db(data: dict):
             print("[MongoDB] Version entry logged.")
         except Exception as e:
             print(f"[MongoDB] Error writing history: {e}")
-
-def save_local_content(data: dict):
-    try:
-        with open(CONTENT_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4, ensure_ascii=False)
-        print("[Local] Content backup written successfully.")
-    except Exception as e:
-        print(f"[Local] Error writing content: {e}")
 
 # schemas for API
 class AdminPasswordReq(BaseModel):

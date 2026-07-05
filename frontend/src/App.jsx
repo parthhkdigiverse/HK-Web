@@ -39,7 +39,7 @@ import ServiceItConsulting from './pages/ServiceItConsulting';
 import HomeSections from './sections/HomeSections';
 
 // Live Iframe Preview Container Component
-function PreviewContainer() {
+function PreviewContainer({ currentHash }) {
   const [previewContent, setPreviewContent] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const previewContentRef = React.useRef(previewContent);
@@ -83,13 +83,123 @@ function PreviewContainer() {
     );
   }
 
+  // Determine what page to render inside the preview container
+  const subpage = currentHash.replace('#preview', ''); // e.g. "/about-us", "/our-story" or empty/slash
+
+  const renderPreviewPage = () => {
+    switch (subpage) {
+      case '':
+      case '/':
+      case '/home':
+        return (
+          <>
+            <HeroSection isLoaded={isLoaded} overrideContent={previewContent} />
+            <HomeSections overrideContent={previewContent} />
+          </>
+        );
+      case '/our-story':
+        return <OurStory />;
+      case '/our-people':
+        return <OurPeople />;
+      case '/our-culture':
+        return <OurCulture />;
+      case '/about-us':
+        return <AboutUs />;
+      case '/awards-achievements':
+        return <Awards />;
+      case '/blogs':
+        return <Blogs />;
+      case '/our-gallery':
+        return <Gallery />;
+      case '/services':
+        return <Services />;
+      case '/industry':
+        return <Industry />;
+      case '/career':
+        return <Career />;
+      case '/case-study':
+        return <CaseStudy />;
+      case '/portfolio':
+        return <Portfolio />;
+      case '/ventures':
+        return <Ventures />;
+      case '/contact':
+        return <Contact />;
+      case '/service-web':
+        return <ServiceWeb />;
+      case '/service-app':
+        return <ServiceApp />;
+      case '/service-custom-software':
+        return <ServiceCustomSoftware />;
+      case '/service-digital-marketing':
+        return <ServiceDigitalMarketing />;
+      case '/service-social-media-management':
+        return <ServiceSocialMedia />;
+      case '/service-ai-consulting':
+        return <ServiceAiConsulting />;
+      case '/service-it-consulting':
+        return <ServiceItConsulting />;
+      default:
+        return (
+          <>
+            <HeroSection isLoaded={isLoaded} overrideContent={previewContent} />
+            <HomeSections overrideContent={previewContent} />
+          </>
+        );
+    }
+  };
+
+  const isNavbarOnly = subpage === '/navbar';
+  const isFooterOnly = subpage === '/footer';
+
+  if (isNavbarOnly) {
+    return (
+      <div className="bg-black min-h-screen w-full relative flex flex-col items-center justify-center pt-24">
+        {/* Subtle grid background */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff02_1px,transparent_1px),linear-gradient(to_bottom,#ffffff02_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
+        <Navbar overrideContent={previewContent} />
+        <div className="mt-40 text-center max-w-md px-6 z-10 select-none">
+          <p className="font-mono text-[9px] text-[#10B981] uppercase tracking-widest">// NAVBAR ISOLATION CANVAS</p>
+          <p className="text-[11px] text-neutral-400 font-sans mt-2">
+            This mode isolates the header layout. Test hovering, logo, and page links. Any font size or color settings modified in the CMS editor will propagate directly here.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isFooterOnly) {
+    return (
+      <div className="bg-black min-h-screen w-full relative flex flex-col justify-end">
+        {/* Subtle grid background */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff02_1px,transparent_1px),linear-gradient(to_bottom,#ffffff02_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
+        <div className="flex-1 flex items-center justify-center select-none z-10 p-6 text-center">
+          <div className="max-w-md">
+            <p className="font-mono text-[9px] text-[#10B981] uppercase tracking-widest">// FOOTER ISOLATION CANVAS</p>
+            <p className="text-[11px] text-neutral-400 font-sans mt-2">
+              This mode isolates the footer layout. Any changes made to addresses, contact details, social links, and copyright text in the CMS editor will render below in real time.
+            </p>
+          </div>
+        </div>
+        <Footer overrideContent={previewContent} />
+      </div>
+    );
+  }
+
+  const isHomePreview = subpage === '' || subpage === '/' || subpage === '/home';
+
   return (
     <>
       {!isLoaded && <Preloader onComplete={handlePreloadComplete} />}
       <div className={`transition-opacity duration-1000 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
         <Navbar overrideContent={previewContent} />
-        <HeroSection isLoaded={isLoaded} overrideContent={previewContent} />
-        <HomeSections overrideContent={previewContent} />
+        {isHomePreview ? (
+          renderPreviewPage()
+        ) : (
+          <main className="pt-36 sm:pt-40 lg:pt-44 xl:pt-48 pb-24 w-full mx-auto min-h-screen relative z-10">
+            {renderPreviewPage()}
+          </main>
+        )}
         <Footer overrideContent={previewContent} />
       </div>
     </>
@@ -124,15 +234,19 @@ function App() {
   // Extract base hash without query params
   const baseHash = currentHash.split('?')[0];
 
+  // Check if current hash is for preview mode
+  const isPreviewMode = baseHash.startsWith('#preview');
+
   // Check if current hash is for a subpage
-  const isSubpage = baseHash !== '#' && baseHash !== '#home' && baseHash !== '#admin' && baseHash !== '#preview';
+  const isSubpage = baseHash !== '#' && baseHash !== '#home' && baseHash !== '#admin' && !isPreviewMode;
 
   const renderPageContent = () => {
+    if (baseHash.startsWith('#preview')) {
+      return <PreviewContainer currentHash={baseHash} />;
+    }
     switch (baseHash) {
       case '#admin':
         return <AdminPanel />;
-      case '#preview':
-        return <PreviewContainer />;
       case '#our-story':
         return <OurStory />;
       case '#our-people':
@@ -180,7 +294,7 @@ function App() {
     }
   };
 
-  const isAdminOrPreview = currentHash === '#admin' || currentHash === '#preview';
+  const isAdminOrPreview = baseHash === '#admin' || isPreviewMode;
 
   return (
     <ContentProvider>

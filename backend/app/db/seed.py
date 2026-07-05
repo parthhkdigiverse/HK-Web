@@ -7,25 +7,53 @@ from dotenv import load_dotenv
 DEFAULT_SITE_SETTINGS = {
     "identifier": "global_settings",
     "logo_text": "HK DIGIVERSE",
+    "navbar_styles": {
+        "fontSize": "12px",
+        "color": "#a3a3a3",
+        "hoverColor": "#ffffff",
+        "logoSize": "14px",
+        "logoColor": "#ffffff"
+    },
     "navbar_links": [
-        {"label": "Our Story", "href": "#our-story", "show": True},
-        {"label": "Our People", "href": "#our-people", "show": True},
-        {"label": "Our Culture", "href": "#our-culture", "show": True},
-        {"label": "About Us", "href": "#about-us", "show": True},
-        {"label": "Awards", "href": "#awards-achievements", "show": True},
-        {"label": "Blogs", "href": "#blogs", "show": True},
-        {"label": "Gallery", "href": "#our-gallery", "show": True},
-        {"label": "Services", "href": "#services", "show": True},
-        {"label": "Portfolio", "href": "#portfolio", "show": True},
-        {"label": "Ventures", "href": "#ventures", "show": True},
-        {"label": "Career", "href": "#career", "show": True},
-        {"label": "Contact", "href": "#contact", "show": True}
+        {
+            "label": "Company",
+            "href": "#",
+            "show": True,
+            "dropdown": [
+                { "label": "Our Story", "href": "#our-story", "show": True },
+                { "label": "Our People", "href": "#our-people", "show": True },
+                { "label": "Our Culture", "href": "#our-culture", "show": True },
+                { "label": "About Us", "href": "#about-us", "show": True },
+                { "label": "Awards and Achievements", "href": "#awards-achievements", "show": True },
+                { "label": "Blogs", "href": "#blogs", "show": True },
+                { "label": "Our Gallery", "href": "#our-gallery", "show": True }
+            ]
+        },
+        { "label": "Services", "href": "#services", "show": True },
+        { "label": "Industry", "href": "#industry", "show": True },
+        { "label": "Career", "href": "#career", "show": True },
+        { "label": "Case Study", "href": "#case-study", "show": True },
+        { "label": "Portfolio", "href": "#portfolio", "show": True },
+        { "label": "Ventures", "href": "#ventures", "show": True },
+        { "label": "Contact", "href": "#contact", "show": True }
     ],
     "footer": {
         "address": "Silver Trade Center, 501 & 502, near Pragati IT Park, Mota Varachha, Surat, Gujarat 394101",
         "email": "contact@hkdigiverse.com",
         "phone": "+91 98765 43210",
         "copyright": "© 2026 HariKrushn DigiVerse LLP. All rights reserved.",
+        "capabilities": [
+            { "label": "Engineering", "href": "#service-web", "show": True },
+            { "label": "AI & ML", "href": "#service-ai-consulting", "show": True },
+            { "label": "Branding", "href": "#service-social-media-management", "show": True },
+            { "label": "Product Strategy", "href": "#service-custom-software", "show": True }
+        ],
+        "ecosystem": [
+            { "label": "Portfolio", "href": "#portfolio", "show": True },
+            { "label": "Ventures", "href": "#ventures", "show": True },
+            { "label": "Careers", "href": "#career", "show": True },
+            { "label": "Contact", "href": "#contact", "show": True }
+        ],
         "social_links": [
             {"platform": "LinkedIn", "url": "https://linkedin.com", "show": True},
             {"platform": "Twitter", "url": "https://twitter.com", "show": True},

@@ -109,25 +109,53 @@ export const DEFAULT_CONTENT = {
   ],
   site_settings: {
     logo_text: "HK DIGIVERSE",
+    navbar_styles: {
+      fontSize: "12px",
+      color: "#a3a3a3",
+      hoverColor: "#ffffff",
+      logoSize: "14px",
+      logoColor: "#ffffff"
+    },
     navbar_links: [
-      {label: "Our Story", href: "#our-story", show: true},
-      {label: "Our People", href: "#our-people", show: true},
-      {label: "Our Culture", href: "#our-culture", show: true},
-      {label: "About Us", href: "#about-us", show: true},
-      {label: "Awards", href: "#awards-achievements", show: true},
-      {label: "Blogs", href: "#blogs", show: true},
-      {label: "Gallery", href: "#our-gallery", show: true},
-      {label: "Services", href: "#services", show: true},
-      {label: "Portfolio", href: "#portfolio", show: true},
-      {label: "Ventures", href: "#ventures", show: true},
-      {label: "Career", href: "#career", show: true},
-      {label: "Contact", href: "#contact", show: true}
+      {
+        label: "Company",
+        href: "#",
+        show: true,
+        dropdown: [
+          { label: "Our Story", href: "#our-story", show: true },
+          { label: "Our People", href: "#our-people", show: true },
+          { label: "Our Culture", href: "#our-culture", show: true },
+          { label: "About Us", href: "#about-us", show: true },
+          { label: "Awards and Achievements", href: "#awards-achievements", show: true },
+          { label: "Blogs", href: "#blogs", show: true },
+          { label: "Our Gallery", href: "#our-gallery", show: true }
+        ]
+      },
+      { label: "Services", href: "#services", show: true },
+      { label: "Industry", href: "#industry", show: true },
+      { label: "Career", href: "#career", show: true },
+      { label: "Case Study", href: "#case-study", show: true },
+      { label: "Portfolio", href: "#portfolio", show: true },
+      { label: "Ventures", href: "#ventures", show: true },
+      { label: "Contact", href: "#contact", show: true }
     ],
     footer: {
       address: "Silver Trade Center, 501 & 502, near Pragati IT Park, Mota Varachha, Surat, Gujarat 394101",
       email: "contact@hkdigiverse.com",
       phone: "+91 98765 43210",
       copyright: "© 2026 HariKrushn DigiVerse LLP. All rights reserved.",
+      capabilities: [
+        { label: "Engineering", href: "#service-web", show: true },
+        { label: "AI & ML", href: "#service-ai-consulting", show: true },
+        { label: "Branding", href: "#service-social-media-management", show: true },
+        { label: "Product Strategy", href: "#service-custom-software", show: true }
+      ],
+      ecosystem: [
+        { label: "Portfolio", href: "#portfolio", show: true },
+        { label: "Ventures", href: "#ventures", show: true },
+        { label: "Careers", href: "#career", show: true },
+        { label: "Contact", href: "#contact", show: true }
+      ],
       social_links: [
         {platform: "LinkedIn", url: "https://linkedin.com", show: true},
         {platform: "Twitter", url: "https://twitter.com", show: true},
@@ -515,6 +543,17 @@ export function ContentProvider({ children }) {
   useEffect(() => {
     fetchContent();
   }, [fetchContent]);
+
+  useEffect(() => {
+    const handleMessage = (event) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data && event.data.type === 'UPDATE_CMS_PREVIEW') {
+        setContent(event.data.content);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   return (
     <ContentContext.Provider value={{ 
