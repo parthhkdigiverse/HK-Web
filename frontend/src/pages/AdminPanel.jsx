@@ -1227,6 +1227,116 @@ export default function AdminPanel() {
     pushState(nextContent);
   };
 
+  // Career Philosophy Cards handlers
+  const updateCareerPhilosophyCard = (index, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.career_philosophy_cards) nextContent.career_philosophy_cards = [];
+    nextContent.career_philosophy_cards[index][field] = value;
+    pushState(nextContent);
+  };
+  const addCareerPhilosophyCard = () => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.career_philosophy_cards) nextContent.career_philosophy_cards = [];
+    nextContent.career_philosophy_cards.push({
+      title: 'New Card',
+      desc: 'Description...',
+      color: 'emerald',
+      icon: 'lightning'
+    });
+    pushState(nextContent);
+  };
+  const deleteCareerPhilosophyCard = (index) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.career_philosophy_cards) nextContent.career_philosophy_cards = [];
+    nextContent.career_philosophy_cards.splice(index, 1);
+    pushState(nextContent);
+  };
+  const moveCareerPhilosophyCard = (index, direction) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    const arr = nextContent.career_philosophy_cards;
+    const nextIdx = index + direction;
+    if (nextIdx >= 0 && nextIdx < arr.length) {
+      const temp = arr[index];
+      arr[index] = arr[nextIdx];
+      arr[nextIdx] = temp;
+      pushState(nextContent);
+    }
+  };
+
+  // Job Form Fields handlers
+  const updateCareerJobFormField = (index, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.career_job_form_fields) nextContent.career_job_form_fields = [];
+    nextContent.career_job_form_fields[index][field] = value;
+    pushState(nextContent);
+  };
+  const addCareerJobFormField = () => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.career_job_form_fields) nextContent.career_job_form_fields = [];
+    nextContent.career_job_form_fields.push({
+      id: `field_${Date.now()}`,
+      label: 'New Field',
+      type: 'text',
+      placeholder: '',
+      required: false
+    });
+    pushState(nextContent);
+  };
+  const deleteCareerJobFormField = (index) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.career_job_form_fields) nextContent.career_job_form_fields = [];
+    nextContent.career_job_form_fields.splice(index, 1);
+    pushState(nextContent);
+  };
+  const moveCareerJobFormField = (index, direction) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    const arr = nextContent.career_job_form_fields;
+    const nextIdx = index + direction;
+    if (nextIdx >= 0 && nextIdx < arr.length) {
+      const temp = arr[index];
+      arr[index] = arr[nextIdx];
+      arr[nextIdx] = temp;
+      pushState(nextContent);
+    }
+  };
+
+  // Internship Form Fields handlers
+  const updateCareerInternFormField = (index, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.career_intern_form_fields) nextContent.career_intern_form_fields = [];
+    nextContent.career_intern_form_fields[index][field] = value;
+    pushState(nextContent);
+  };
+  const addCareerInternFormField = () => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.career_intern_form_fields) nextContent.career_intern_form_fields = [];
+    nextContent.career_intern_form_fields.push({
+      id: `field_${Date.now()}`,
+      label: 'New Field',
+      type: 'text',
+      placeholder: '',
+      required: false
+    });
+    pushState(nextContent);
+  };
+  const deleteCareerInternFormField = (index) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.career_intern_form_fields) nextContent.career_intern_form_fields = [];
+    nextContent.career_intern_form_fields.splice(index, 1);
+    pushState(nextContent);
+  };
+  const moveCareerInternFormField = (index, direction) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    const arr = nextContent.career_intern_form_fields;
+    const nextIdx = index + direction;
+    if (nextIdx >= 0 && nextIdx < arr.length) {
+      const temp = arr[index];
+      arr[index] = arr[nextIdx];
+      arr[nextIdx] = temp;
+      pushState(nextContent);
+    }
+  };
+
   // Upload handlers
   const handleUploadImage = async (e) => {
     const file = e.target.files[0];
@@ -4481,8 +4591,7 @@ export default function AdminPanel() {
                           type="text"
                           value={item.partners ? item.partners.join(', ') : ''}
                           onChange={(e) => {
-                            const nextContent = JSON.parse(JSON.stringify(currentContent));
-                            nextContent.ventures[index].partners = e.target.value.split(',').map(s => s.trim());
+                          nextContent.ventures[index].partners = e.target.value.split(',').map(s => s.trim());
                             pushState(nextContent);
                           }}
                           className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
@@ -4499,6 +4608,212 @@ export default function AdminPanel() {
           {activeTab === 'careers' && currentContent.careers && (
             <div className="space-y-8">
               
+              {/* SECTION 0: HERO SETTINGS */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-2xl space-y-4">
+                <div className="border-b border-white/5 pb-3">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Careers Page Header</span>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Hero Title</label>
+                    <input
+                      type="text"
+                      value={currentContent.career_settings?.title || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.career_settings) nextContent.career_settings = {};
+                        nextContent.career_settings.title = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Hero Subtitle</label>
+                    <textarea
+                      rows={2}
+                      value={currentContent.career_settings?.subtitle || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.career_settings) nextContent.career_settings = {};
+                        nextContent.career_settings.subtitle = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Philosophy Eyebrow / Label</label>
+                    <input
+                      type="text"
+                      value={currentContent.career_settings?.philosophy_eyebrow || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.career_settings) nextContent.career_settings = {};
+                        nextContent.career_settings.philosophy_eyebrow = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Philosophy Title</label>
+                    <input
+                      type="text"
+                      value={currentContent.career_settings?.philosophy_title || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.career_settings) nextContent.career_settings = {};
+                        nextContent.career_settings.philosophy_title = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Philosophy Description</label>
+                    <textarea
+                      rows={2}
+                      value={currentContent.career_settings?.philosophy_desc || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.career_settings) nextContent.career_settings = {};
+                        nextContent.career_settings.philosophy_desc = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION B: CAREER STATS */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-2xl space-y-4">
+                <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Career Page Stats ({currentContent.career_stats?.length || 0})</span>
+                  <button
+                    onClick={addCareerStat}
+                    className="px-3 py-1.5 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors cursor-pointer"
+                  >
+                    + Add Stat
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {(currentContent.career_stats || []).map((item, index) => (
+                    <div key={index} className="flex gap-3 items-center p-3 bg-white/[0.01] border border-white/5 rounded-xl">
+                      <div className="flex-1 grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Value</label>
+                          <input type="text" value={item.value || ''} onChange={(e) => updateCareerStat(index, 'value', e.target.value)} className="w-full px-3 py-1 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" />
+                        </div>
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Label</label>
+                          <input type="text" value={item.label || ''} onChange={(e) => updateCareerStat(index, 'label', e.target.value)} className="w-full px-3 py-1 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          disabled={index === 0}
+                          onClick={() => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            const arr = nextContent.career_stats;
+                            const temp = arr[index]; arr[index] = arr[index - 1]; arr[index - 1] = temp;
+                            pushState(nextContent);
+                          }}
+                          className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
+                        >▲</button>
+                        <button
+                          disabled={index === currentContent.career_stats.length - 1}
+                          onClick={() => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            const arr = nextContent.career_stats;
+                            const temp = arr[index]; arr[index] = arr[index + 1]; arr[index + 1] = temp;
+                            pushState(nextContent);
+                          }}
+                          className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
+                        >▼</button>
+                        <button
+                          onClick={() => deleteCareerStat(index)}
+                          className="text-[10px] text-red-500 hover:text-red-400 px-2 cursor-pointer font-bold"
+                        >✕</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* SECTION H: PHILOSOPHY CARDS EDITOR */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-2xl space-y-4 text-left">
+                <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                  <div>
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Philosophy Cards ({currentContent.career_philosophy_cards?.length || 0})</span>
+                    <p className="text-[8px] text-neutral-500 font-mono mt-0.5">Edit the cards in the "Why Join HariKrushn Digiverse?" section.</p>
+                  </div>
+                  <button
+                    onClick={addCareerPhilosophyCard}
+                    className="px-3 py-1.5 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors cursor-pointer"
+                  >
+                    + Add Card
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  {(currentContent.career_philosophy_cards || []).map((item, index) => (
+                    <div key={index} className="p-4 bg-white/[0.01] border border-white/5 rounded-xl space-y-3">
+                      <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                        <span className="font-mono text-[9px] text-neutral-400">Card #{index + 1}: <strong className="text-white">{item.title || 'Unnamed'}</strong></span>
+                        <div className="flex items-center gap-1">
+                          <button
+                            disabled={index === 0}
+                            onClick={() => moveCareerPhilosophyCard(index, -1)}
+                            className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
+                          >▲</button>
+                          <button
+                            disabled={index === currentContent.career_philosophy_cards.length - 1}
+                            onClick={() => moveCareerPhilosophyCard(index, 1)}
+                            className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
+                          >▼</button>
+                          <button
+                            onClick={() => deleteCareerPhilosophyCard(index)}
+                            className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded cursor-pointer ml-1"
+                          >Delete</button>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Card Title</label>
+                          <input type="text" value={item.title || ''} onChange={(e) => updateCareerPhilosophyCard(index, 'title', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Icon Symbol</label>
+                            <select value={item.icon || 'lightning'} onChange={(e) => updateCareerPhilosophyCard(index, 'icon', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none">
+                              <option value="lightning">Lightning Bolt</option>
+                              <option value="users">Users / Team</option>
+                              <option value="eye">Eye / Vision</option>
+                              <option value="bulb">Bulb / Innovation</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Theme / Glow Color</label>
+                            <select value={item.color || 'emerald'} onChange={(e) => updateCareerPhilosophyCard(index, 'color', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none">
+                              <option value="emerald">Green / Emerald</option>
+                              <option value="blue">Blue / Cyan</option>
+                              <option value="purple">Purple / Violet</option>
+                              <option value="rose">Rose / Pink</option>
+                              <option value="amber">Amber / Yellow</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Card Description</label>
+                        <textarea rows={2} value={item.desc || ''} onChange={(e) => updateCareerPhilosophyCard(index, 'desc', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* SECTION A: OPEN ROLES REGISTRY */}
               <div className="p-5 bg-white/[0.02] border border-white/5 rounded-2xl space-y-4">
                 <div className="flex justify-between items-center border-b border-white/5 pb-3">
@@ -4513,7 +4828,7 @@ export default function AdminPanel() {
 
                 <div className="space-y-4">
                   {currentContent.careers.map((item, index) => (
-                    <div key={item.slug || index} className="p-4 bg-white/[0.01] border border-white/5 rounded-xl space-y-3">
+                    <div key={item.slug || index} className="p-4 bg-white/[0.01] border border-white/5 rounded-xl space-y-3 text-left">
                       <div className="flex justify-between items-center border-b border-white/5 pb-2">
                         <span className="font-mono text-[9px] text-neutral-500 font-bold">{item.title || 'New Job Role'}</span>
                         <div className="flex items-center gap-1.5">
@@ -4584,55 +4899,208 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* SECTION B: CAREER STATS */}
-              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-2xl space-y-4">
+              {/* SECTION F: JOB FORM FIELDS EDITOR */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-2xl space-y-4 text-left">
                 <div className="flex justify-between items-center border-b border-white/5 pb-3">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Career Page Stats ({currentContent.career_stats?.length || 0})</span>
+                  <div>
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Job Application Form Fields ({currentContent.career_job_form_fields?.length || 0})</span>
+                    <p className="text-[8px] text-neutral-500 font-mono mt-0.5">Customize the fields of the Job Application form.</p>
+                  </div>
                   <button
-                    onClick={addCareerStat}
+                    onClick={addCareerJobFormField}
                     className="px-3 py-1.5 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors cursor-pointer"
                   >
-                    + Add Stat
+                    + Add Field
                   </button>
                 </div>
-                <div className="space-y-3">
-                  {(currentContent.career_stats || []).map((item, index) => (
-                    <div key={index} className="flex gap-3 items-center p-3 bg-white/[0.01] border border-white/5 rounded-xl">
-                      <div className="flex-1 grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Value</label>
-                          <input type="text" value={item.value || ''} onChange={(e) => updateCareerStat(index, 'value', e.target.value)} className="w-full px-3 py-1 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" />
-                        </div>
-                        <div>
-                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Label</label>
-                          <input type="text" value={item.label || ''} onChange={(e) => updateCareerStat(index, 'label', e.target.value)} className="w-full px-3 py-1 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" />
+                <div className="space-y-4">
+                  {(currentContent.career_job_form_fields || []).map((item, index) => (
+                    <div key={index} className="p-4 bg-white/[0.01] border border-white/5 rounded-xl space-y-3">
+                      <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                        <span className="font-mono text-[9px] text-neutral-400">Field #{index + 1}: <strong className="text-white">{item.label || 'Unnamed'}</strong></span>
+                        <div className="flex items-center gap-1">
+                          <button
+                            disabled={index === 0}
+                            onClick={() => moveCareerJobFormField(index, -1)}
+                            className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
+                          >▲</button>
+                          <button
+                            disabled={index === currentContent.career_job_form_fields.length - 1}
+                            onClick={() => moveCareerJobFormField(index, 1)}
+                            className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
+                          >▼</button>
+                          <button
+                            onClick={() => deleteCareerJobFormField(index)}
+                            className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded cursor-pointer ml-1"
+                          >Delete</button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <button
-                          disabled={index === 0}
-                          onClick={() => {
-                            const nextContent = JSON.parse(JSON.stringify(currentContent));
-                            const arr = nextContent.career_stats;
-                            const temp = arr[index]; arr[index] = arr[index - 1]; arr[index - 1] = temp;
-                            pushState(nextContent);
-                          }}
-                          className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
-                        >▲</button>
-                        <button
-                          disabled={index === currentContent.career_stats.length - 1}
-                          onClick={() => {
-                            const nextContent = JSON.parse(JSON.stringify(currentContent));
-                            const arr = nextContent.career_stats;
-                            const temp = arr[index]; arr[index] = arr[index + 1]; arr[index + 1] = temp;
-                            pushState(nextContent);
-                          }}
-                          className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
-                        >▼</button>
-                        <button
-                          onClick={() => deleteCareerStat(index)}
-                          className="text-[10px] text-red-500 hover:text-red-400 px-2 cursor-pointer font-bold"
-                        >✕</button>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Field ID (Unique Key)</label>
+                          <input type="text" value={item.id || ''} onChange={(e) => updateCareerJobFormField(index, 'id', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" placeholder="e.g. name, email, my_custom_key" />
+                        </div>
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Field Label</label>
+                          <input type="text" value={item.label || ''} onChange={(e) => updateCareerJobFormField(index, 'label', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" placeholder="e.g. Full Name" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Field Type</label>
+                          <select value={item.type || 'text'} onChange={(e) => updateCareerJobFormField(index, 'type', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none">
+                            <option value="text">Short Text</option>
+                            <option value="tel">Phone Number</option>
+                            <option value="email">Email Address</option>
+                            <option value="textarea">Paragraph Textarea</option>
+                            <option value="file">File Upload (Resume/Doc)</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Placeholder</label>
+                          <input type="text" value={item.placeholder || ''} onChange={(e) => updateCareerJobFormField(index, 'placeholder', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" placeholder="e.g. Enter your name" />
+                        </div>
+                        <div className="flex items-center pt-4 pl-2">
+                          <label className="flex items-center gap-2 cursor-pointer select-none">
+                            <input type="checkbox" checked={item.required || false} onChange={(e) => updateCareerJobFormField(index, 'required', e.target.checked)} className="w-3.5 h-3.5 bg-black border border-white/10 rounded text-emerald-500 focus:ring-0" />
+                            <span className="font-mono text-[8px] text-neutral-400">Required Field</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* SECTION G: INTERNSHIP FORM FIELDS EDITOR */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-2xl space-y-4 text-left">
+                <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                  <div>
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Internship Application Form Fields ({currentContent.career_intern_form_fields?.length || 0})</span>
+                    <p className="text-[8px] text-neutral-500 font-mono mt-0.5">Customize the fields of the Internship Application form.</p>
+                  </div>
+                  <button
+                    onClick={addCareerInternFormField}
+                    className="px-3 py-1.5 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors cursor-pointer"
+                  >
+                    + Add Field
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  {(currentContent.career_intern_form_fields || []).map((item, index) => (
+                    <div key={index} className="p-4 bg-white/[0.01] border border-white/5 rounded-xl space-y-3">
+                      <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                        <span className="font-mono text-[9px] text-neutral-400">Field #{index + 1}: <strong className="text-white">{item.label || 'Unnamed'}</strong></span>
+                        <div className="flex items-center gap-1">
+                          <button
+                            disabled={index === 0}
+                            onClick={() => moveCareerInternFormField(index, -1)}
+                            className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
+                          >▲</button>
+                          <button
+                            disabled={index === currentContent.career_intern_form_fields.length - 1}
+                            onClick={() => moveCareerInternFormField(index, 1)}
+                            className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
+                          >▼</button>
+                          <button
+                            onClick={() => deleteCareerInternFormField(index)}
+                            className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded cursor-pointer ml-1"
+                          >Delete</button>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Field ID (Unique Key)</label>
+                          <input type="text" value={item.id || ''} onChange={(e) => updateCareerInternFormField(index, 'id', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" placeholder="e.g. name, email, track" />
+                        </div>
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Field Label</label>
+                          <input type="text" value={item.label || ''} onChange={(e) => updateCareerInternFormField(index, 'label', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" placeholder="e.g. Full Name" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Field Type</label>
+                          <select value={item.type || 'text'} onChange={(e) => updateCareerInternFormField(index, 'type', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none">
+                            <option value="text">Short Text</option>
+                            <option value="tel">Phone Number</option>
+                            <option value="email">Email Address</option>
+                            <option value="textarea">Paragraph Textarea</option>
+                            <option value="file">File Upload (Resume/Doc)</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Placeholder</label>
+                          <input type="text" value={item.placeholder || ''} onChange={(e) => updateCareerInternFormField(index, 'placeholder', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" placeholder="e.g. Enter your name" />
+                        </div>
+                        <div className="flex items-center pt-4 pl-2">
+                          <label className="flex items-center gap-2 cursor-pointer select-none">
+                            <input type="checkbox" checked={item.required || false} onChange={(e) => updateCareerInternFormField(index, 'required', e.target.checked)} className="w-3.5 h-3.5 bg-black border border-white/10 rounded text-emerald-500 focus:ring-0" />
+                            <span className="font-mono text-[8px] text-neutral-400">Required Field</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* SECTION D: CAREER LADDER */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-2xl space-y-4 text-left">
+                <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Career Progression Stages ({currentContent.career_ladder?.length || 0})</span>
+                  <button
+                    onClick={addCareerLadder}
+                    className="px-3 py-1.5 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors cursor-pointer"
+                  >
+                    + Add Stage
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  {(currentContent.career_ladder || []).map((item, index) => (
+                    <div key={index} className="p-4 bg-white/[0.01] border border-white/5 rounded-xl space-y-3">
+                      <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                        <span className="font-mono text-[9px] text-neutral-500 font-bold">{item.level || 'New Level'}</span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            disabled={index === 0}
+                            onClick={() => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              const arr = nextContent.career_ladder;
+                              const temp = arr[index]; arr[index] = arr[index - 1]; arr[index - 1] = temp;
+                              pushState(nextContent);
+                            }}
+                            className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
+                          >▲</button>
+                          <button
+                            disabled={index === currentContent.career_ladder.length - 1}
+                            onClick={() => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              const arr = nextContent.career_ladder;
+                              const temp = arr[index]; arr[index] = arr[index + 1]; arr[index + 1] = temp;
+                              pushState(nextContent);
+                            }}
+                            className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
+                          >▼</button>
+                          <button
+                            onClick={() => deleteCareerLadder(index)}
+                            className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded cursor-pointer ml-1"
+                          >Delete</button>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Stage Level</label>
+                          <input type="text" value={item.level || ''} onChange={(e) => updateCareerLadder(index, 'level', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" />
+                        </div>
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Duration</label>
+                          <input type="text" value={item.duration || ''} onChange={(e) => updateCareerLadder(index, 'duration', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" placeholder="e.g. 6 months" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Responsibilities / Desc</label>
+                        <textarea rows={2} value={item.desc || ''} onChange={(e) => updateCareerLadder(index, 'desc', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed" />
                       </div>
                     </div>
                   ))}
@@ -4640,7 +5108,7 @@ export default function AdminPanel() {
               </div>
 
               {/* SECTION C: CAREER PERKS */}
-              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-2xl space-y-4">
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-2xl space-y-4 text-left">
                 <div className="flex justify-between items-center border-b border-white/5 pb-3">
                   <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Employee Perks ({currentContent.career_perks?.length || 0})</span>
                   <button
@@ -4705,70 +5173,8 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* SECTION D: CAREER LADDER */}
-              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-2xl space-y-4">
-                <div className="flex justify-between items-center border-b border-white/5 pb-3">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Career Progression Stages ({currentContent.career_ladder?.length || 0})</span>
-                  <button
-                    onClick={addCareerLadder}
-                    className="px-3 py-1.5 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors cursor-pointer"
-                  >
-                    + Add Stage
-                  </button>
-                </div>
-                <div className="space-y-4">
-                  {(currentContent.career_ladder || []).map((item, index) => (
-                    <div key={index} className="p-4 bg-white/[0.01] border border-white/5 rounded-xl space-y-3">
-                      <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                        <span className="font-mono text-[9px] text-neutral-500 font-bold">{item.level || 'New Level'}</span>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            disabled={index === 0}
-                            onClick={() => {
-                              const nextContent = JSON.parse(JSON.stringify(currentContent));
-                              const arr = nextContent.career_ladder;
-                              const temp = arr[index]; arr[index] = arr[index - 1]; arr[index - 1] = temp;
-                              pushState(nextContent);
-                            }}
-                            className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
-                          >▲</button>
-                          <button
-                            disabled={index === currentContent.career_ladder.length - 1}
-                            onClick={() => {
-                              const nextContent = JSON.parse(JSON.stringify(currentContent));
-                              const arr = nextContent.career_ladder;
-                              const temp = arr[index]; arr[index] = arr[index + 1]; arr[index + 1] = temp;
-                              pushState(nextContent);
-                            }}
-                            className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
-                          >▼</button>
-                          <button
-                            onClick={() => deleteCareerLadder(index)}
-                            className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded cursor-pointer ml-1"
-                          >Delete</button>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Stage Level</label>
-                          <input type="text" value={item.level || ''} onChange={(e) => updateCareerLadder(index, 'level', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" />
-                        </div>
-                        <div>
-                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Duration</label>
-                          <input type="text" value={item.duration || ''} onChange={(e) => updateCareerLadder(index, 'duration', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" placeholder="e.g. 6 months" />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Responsibilities / Desc</label>
-                        <textarea rows={2} value={item.desc || ''} onChange={(e) => updateCareerLadder(index, 'desc', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
               {/* SECTION E: EMPLOYEE TESTIMONIALS */}
-              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-2xl space-y-4">
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-2xl space-y-4 text-left">
                 <div className="flex justify-between items-center border-b border-white/5 pb-3">
                   <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Employee Testimonials ({currentContent.career_testimonials?.length || 0})</span>
                   <button
@@ -4887,8 +5293,8 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              {/* SECTION F: FAQs */}
-              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-2xl space-y-4">
+              {/* SECTION I: FAQs */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-2xl space-y-4 text-left font-sans">
                 <div className="flex justify-between items-center border-b border-white/5 pb-3">
                   <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Frequently Asked Questions ({currentContent.career_faqs?.length || 0})</span>
                   <button

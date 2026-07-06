@@ -590,6 +590,49 @@ export const DEFAULT_CONTENT = {
     { value: '3+', label: 'Years of Excellence' },
     { value: '30+', label: 'Team Members' }
   ],
+  career_settings: {
+    title: "Build the Future",
+    subtitle: "We are always looking for exceptional engineers, designers, and strategists obsessed with visual, motion, and backend perfection.",
+    philosophy_eyebrow: "// Our Philosophy",
+    philosophy_title: "Why Join HariKrushn Digiverse?",
+    philosophy_desc: "We don't just build software — we engineer premium digital experiences that set industry benchmarks."
+  },
+  career_philosophy_cards: [
+    {
+      title: "Cutting-Edge Technology",
+      desc: "Work with React, Next.js, Flutter, FastAPI, LLMs, Vector DBs, and cloud-native infrastructure every single day.",
+      color: "emerald",
+      icon: "lightning"
+    },
+    {
+      title: "Collaborative Culture",
+      desc: "Flat hierarchy, open communication, weekly knowledge-sharing sessions, and a team that genuinely cares about each other's growth.",
+      color: "blue",
+      icon: "users"
+    },
+    {
+      title: "Real Client Impact",
+      desc: "No throwaway projects. Every task impacts real businesses across fintech, healthcare, e-commerce, and AI platforms globally.",
+      color: "purple",
+      icon: "eye"
+    }
+  ],
+  career_job_form_fields: [
+    { id: "name", label: "Name", type: "text", placeholder: "Your name", required: true },
+    { id: "phone", label: "Phone", type: "tel", placeholder: "+91 XXXXX XXXXX", required: false },
+    { id: "email", label: "Email", type: "email", placeholder: "your@email.com", required: true },
+    { id: "role", label: "Target Role", type: "text", placeholder: "Select a role or specify", required: true },
+    { id: "resume", label: "Resume / Portfolio", type: "file", placeholder: "Or paste LinkedIn / GitHub / Portfolio URL", required: true },
+    { id: "message", label: "Cover Note", type: "textarea", placeholder: "Tell us why you'd be a great fit...", required: false }
+  ],
+  career_intern_form_fields: [
+    { id: "name", label: "Your Name", type: "text", placeholder: "Radhe Patel", required: true },
+    { id: "email", label: "Email Address", type: "email", placeholder: "radhe@example.com", required: true },
+    { id: "phone", label: "Phone Number", type: "tel", placeholder: "+91 99999 99999", required: true },
+    { id: "track", label: "Select Track", type: "text", placeholder: "React/Next.js or specify track", required: true },
+    { id: "college", label: "College Name & Current Semester", type: "text", placeholder: "SCET, Surat - Sem 6", required: true },
+    { id: "resume", label: "Resume / Portfolio", type: "file", placeholder: "Or paste link (Google Drive, GitHub, etc.)", required: true }
+  ],
   contact_settings: {
     title: "Let's Create Together",
     subtitle: "Have a project in mind, want to inquire about custom solutions, or simply want to say hello? We'd love to hear from you.",

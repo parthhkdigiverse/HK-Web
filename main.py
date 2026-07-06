@@ -197,12 +197,59 @@ DEFAULT_CAREER_LADDER = [
   { "level": "Lead / Manager", "duration": "Year 5+", "desc": "Shape company direction, manage teams, and drive innovation across verticals." }
 ]
 
+DEFAULT_JOB_FORM_FIELDS = [
+  { "id": "name", "label": "Name", "type": "text", "placeholder": "Your name", "required": True },
+  { "id": "phone", "label": "Phone", "type": "tel", "placeholder": "+91 XXXXX XXXXX", "required": False },
+  { "id": "email", "label": "Email", "type": "email", "placeholder": "your@email.com", "required": True },
+  { "id": "role", "label": "Target Role", "type": "text", "placeholder": "Select a role or specify", "required": True },
+  { "id": "resume", "label": "Resume / Portfolio", "type": "file", "placeholder": "Or paste LinkedIn / GitHub / Portfolio URL", "required": True },
+  { "id": "message", "label": "Cover Note", "type": "textarea", "placeholder": "Tell us why you'd be a great fit...", "required": False }
+]
+
+DEFAULT_INTERN_FORM_FIELDS = [
+  { "id": "name", "label": "Your Name", "type": "text", "placeholder": "Radhe Patel", "required": True },
+  { "id": "email", "label": "Email Address", "type": "email", "placeholder": "radhe@example.com", "required": True },
+  { "id": "phone", "label": "Phone Number", "type": "tel", "placeholder": "+91 99999 99999", "required": True },
+  { "id": "track", "label": "Select Track", "type": "text", "placeholder": "React/Next.js or specify track", "required": True },
+  { "id": "college", "label": "College Name & Current Semester", "type": "text", "placeholder": "SCET, Surat - Sem 6", "required": True },
+  { "id": "resume", "label": "Resume / Portfolio", "type": "file", "placeholder": "Or paste link (Google Drive, GitHub, etc.)", "required": True }
+]
+
 DEFAULT_CAREER_STATS = [
   { "value": "50+", "label": "Projects Delivered" },
   { "value": "8+", "label": "Industries Served" },
   { "value": "3+", "label": "Years of Excellence" },
   { "value": "30+", "label": "Team Members" }
 ]
+
+DEFAULT_PHILOSOPHY_CARDS = [
+  {
+    "title": "Cutting-Edge Technology",
+    "desc": "Work with React, Next.js, Flutter, FastAPI, LLMs, Vector DBs, and cloud-native infrastructure every single day.",
+    "color": "emerald",
+    "icon": "lightning"
+  },
+  {
+    "title": "Collaborative Culture",
+    "desc": "Flat hierarchy, open communication, weekly knowledge-sharing sessions, and a team that genuinely cares about each other's growth.",
+    "color": "blue",
+    "icon": "users"
+  },
+  {
+    "title": "Real Client Impact",
+    "desc": "No throwaway projects. Every task impacts real businesses across fintech, healthcare, e-commerce, and AI platforms globally.",
+    "color": "purple",
+    "icon": "eye"
+  }
+]
+
+DEFAULT_CAREER_SETTINGS = {
+    "title": "Build the Future",
+    "subtitle": "We are always looking for exceptional engineers, designers, and strategists obsessed with visual, motion, and backend perfection.",
+    "philosophy_eyebrow": "// Our Philosophy",
+    "philosophy_title": "Why Join HariKrushn Digiverse?",
+    "philosophy_desc": "We don't just build software — we engineer premium digital experiences that set industry benchmarks."
+}
 
 DEFAULT_VENTURES_SETTINGS = {
     "overline": "// Our Initiatives",
@@ -358,7 +405,11 @@ DEFAULT_CONTENT = {
     "contact_faqs": DEFAULT_CONTACT_FAQS,
     "services_subpages": DEFAULT_SERVICES_SUBPAGES,
     "contact_settings": DEFAULT_CONTACT_SETTINGS,
-    "ventures_settings": DEFAULT_VENTURES_SETTINGS
+    "ventures_settings": DEFAULT_VENTURES_SETTINGS,
+    "career_settings": DEFAULT_CAREER_SETTINGS,
+    "career_job_form_fields": DEFAULT_JOB_FORM_FIELDS,
+    "career_intern_form_fields": DEFAULT_INTERN_FORM_FIELDS,
+    "career_philosophy_cards": DEFAULT_PHILOSOPHY_CARDS
 }
 
 # MongoDB connection cache
@@ -438,7 +489,8 @@ def compile_full_content(base_content: dict) -> dict:
         "site_settings": ("site_settings", "identifier", "global_settings", DEFAULT_SITE_SETTINGS),
         "about_us": ("about_us", "identifier", "about_us_content", DEFAULT_ABOUT_US),
         "contact_settings": ("contact_settings", "identifier", "contact_page_settings", DEFAULT_CONTACT_SETTINGS),
-        "ventures_settings": ("ventures_settings", "identifier", "ventures_page_settings", DEFAULT_VENTURES_SETTINGS)
+        "ventures_settings": ("ventures_settings", "identifier", "ventures_page_settings", DEFAULT_VENTURES_SETTINGS),
+        "career_settings": ("career_settings", "identifier", "career_page_settings", DEFAULT_CAREER_SETTINGS)
     }
     
     for key, (coll_name, query_field, query_val, fallback) in collections_map.items():
@@ -465,7 +517,10 @@ def compile_full_content(base_content: dict) -> dict:
         "services_subpages": ("services_subpages", "identifier", DEFAULT_SERVICES_SUBPAGES),
         "case_studies": ("case_studies", "sort_order", DEFAULT_CASE_STUDIES),
         "career_ladder": ("career_ladder", "sort_order", DEFAULT_CAREER_LADDER),
-        "career_stats": ("career_stats", "sort_order", DEFAULT_CAREER_STATS)
+        "career_stats": ("career_stats", "sort_order", DEFAULT_CAREER_STATS),
+        "career_job_form_fields": ("career_job_form_fields", "sort_order", DEFAULT_JOB_FORM_FIELDS),
+        "career_intern_form_fields": ("career_intern_form_fields", "sort_order", DEFAULT_INTERN_FORM_FIELDS),
+        "career_philosophy_cards": ("career_philosophy_cards", "sort_order", DEFAULT_PHILOSOPHY_CARDS)
     }
     
     for key, (coll_name, sort_field, fallback) in list_collections_map.items():
@@ -573,6 +628,14 @@ def save_normalized_draft(data: dict):
             {"identifier": "ventures_page_settings", **data["ventures_settings"]},
             upsert=True
         )
+
+    # Save career_settings
+    if "career_settings" in data:
+        mongo_db["career_settings"].replace_one(
+            {"identifier": "career_page_settings"},
+            {"identifier": "career_page_settings", **data["career_settings"]},
+            upsert=True
+        )
         
     # Save list-based collections (clear and insert to keep sync)
     list_collections = {
@@ -591,7 +654,10 @@ def save_normalized_draft(data: dict):
         "services_subpages": "services_subpages",
         "case_studies": "case_studies",
         "career_ladder": "career_ladder",
-        "career_stats": "career_stats"
+        "career_stats": "career_stats",
+        "career_job_form_fields": "career_job_form_fields",
+        "career_intern_form_fields": "career_intern_form_fields",
+        "career_philosophy_cards": "career_philosophy_cards"
     }
     
     for key, coll_name in list_collections.items():
@@ -765,6 +831,29 @@ async def restore_content_version(req: RestoreRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/api/upload/resume")
+async def upload_resume(file: UploadFile = File(...)):
+    ext = os.path.splitext(file.filename)[1].lower()
+    if ext not in [".pdf", ".doc", ".docx", ".png", ".jpg", ".jpeg"]:
+        raise HTTPException(status_code=400, detail="Only PDF, Word documents (.doc/.docx), or image formats are allowed.")
+        
+    uploads_dir = os.path.join("frontend", "public", "uploads", "resumes")
+    os.makedirs(uploads_dir, exist_ok=True)
+    
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    resume_filename = f"resume_{timestamp}{ext}"
+    resume_path = os.path.join(uploads_dir, resume_filename)
+    
+    with open(resume_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    resume_url = f"/uploads/resumes/{resume_filename}"
+    return {
+        "status": "success",
+        "resumeUrl": resume_url,
+        "filename": file.filename
+    }
+
 @app.post("/api/upload/image")
 async def upload_image(file: UploadFile = File(...)):
     if not file.filename.lower().endswith((".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg")):
@@ -892,11 +981,11 @@ async def create_inquiry(req: dict):
     raise HTTPException(status_code=500, detail="Database not available")
 
 @app.post("/api/applications/job")
-async def apply_job(req: JobApplicationSubmission):
+async def apply_job(req: dict):
     coll = get_collection("career_applications")
     if coll is not None:
         try:
-            doc = req.dict()
+            doc = {**req}
             doc["type"] = "job"
             doc["applied_at"] = datetime.datetime.now().isoformat()
             coll.insert_one(doc)
@@ -906,11 +995,11 @@ async def apply_job(req: JobApplicationSubmission):
     raise HTTPException(status_code=500, detail="Database not available")
 
 @app.post("/api/applications/intern")
-async def apply_intern(req: InternApplicationSubmission):
+async def apply_intern(req: dict):
     coll = get_collection("career_applications")
     if coll is not None:
         try:
-            doc = req.dict()
+            doc = {**req}
             doc["type"] = "internship"
             doc["applied_at"] = datetime.datetime.now().isoformat()
             coll.insert_one(doc)

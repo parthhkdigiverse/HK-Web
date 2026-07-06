@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useContent } from '../context/ContentContext';
+import { useContent, DEFAULT_CONTENT } from '../context/ContentContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8008';
 
@@ -207,6 +207,29 @@ const DEFAULT_STATS = [
   { value: '30+', label: 'Team Members' }
 ];
 
+const renderPhilosophyIcon = (iconName, color) => {
+  const colorMap = {
+    emerald: 'text-emerald-400',
+    blue: 'text-blue-400',
+    purple: 'text-purple-400',
+    rose: 'text-rose-400',
+    amber: 'text-amber-400'
+  };
+  const cls = colorMap[color] || 'text-neutral-400';
+  
+  if (iconName === 'lightning') {
+    return <svg className={`w-6 h-6 ${cls}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>;
+  }
+  if (iconName === 'users') {
+    return <svg className={`w-6 h-6 ${cls}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" /></svg>;
+  }
+  if (iconName === 'eye') {
+    return <svg className={`w-6 h-6 ${cls}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>;
+  }
+  // Fallback bulb icon
+  return <svg className={`w-6 h-6 ${cls}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9.663 17h4.673M12 3v1m6.364.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>;
+};
+
 export default function Career() {
   const { content } = useContent();
   const stats = content?.career_stats || DEFAULT_STATS;
@@ -214,6 +237,14 @@ export default function Career() {
   const testimonials = content?.career_testimonials || DEFAULT_TESTIMONIALS;
   const faqs = content?.career_faqs || DEFAULT_FAQS;
   const careerLadder = content?.career_ladder || DEFAULT_LADDER;
+  const careerSettings = content?.career_settings || {
+    title: "Build the Future",
+    subtitle: "We are always looking for exceptional engineers, designers, and strategists obsessed with visual, motion, and backend perfection.",
+    philosophy_eyebrow: "// Our Philosophy",
+    philosophy_title: "Why Join HariKrushn Digiverse?",
+    philosophy_desc: "We don't just build software — we engineer premium digital experiences that set industry benchmarks."
+  };
+  const philosophyCards = content?.career_philosophy_cards || DEFAULT_CONTENT?.career_philosophy_cards || [];
 
   const jobs = (content?.careers || DEFAULT_JOBS).map(j => ({
     ...j,
@@ -222,7 +253,20 @@ export default function Career() {
 
   const [activeJob, setActiveJob] = useState(null);
   const [activeDept, setActiveDept] = useState('All');
-  const [formData, setFormData] = useState({ name: '', email: '', phone: '', role: '', resume: '', message: '' });
+  const jobFormFields = content?.career_job_form_fields || DEFAULT_CONTENT.career_job_form_fields || [];
+  const internFormFields = content?.career_intern_form_fields || DEFAULT_CONTENT.career_intern_form_fields || [];
+
+  const [formData, setFormData] = useState({});
+
+  useEffect(() => {
+    if (jobFormFields.length > 0) {
+      const initial = {};
+      jobFormFields.forEach(field => {
+        initial[field.id] = '';
+      });
+      setFormData(initial);
+    }
+  }, [content?.career_job_form_fields]);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -251,10 +295,79 @@ export default function Career() {
   }, [testimonials]);
 
   const [showInternshipForm, setShowInternshipForm] = useState(false);
-  const [internFormData, setInternFormData] = useState({ name: '', email: '', phone: '', track: 'React/Next.js', college: '', resume: '', message: '' });
+  const [internFormData, setInternFormData] = useState({});
+
+  useEffect(() => {
+    if (internFormFields.length > 0) {
+      const initial = {};
+      internFormFields.forEach(field => {
+        if (field.id === 'track') {
+          initial[field.id] = 'React/Next.js';
+        } else {
+          initial[field.id] = '';
+        }
+      });
+      setInternFormData(initial);
+    }
+  }, [content?.career_intern_form_fields]);
   const [internSubmitted, setInternSubmitted] = useState(false);
   const [internSubmitting, setInternSubmitting] = useState(false);
   const [internErrorMsg, setInternErrorMsg] = useState('');
+
+  const fileInputRef = useRef(null);
+  const [uploadingResume, setUploadingResume] = useState(false);
+  const [uploadedFilename, setUploadedFilename] = useState('');
+
+  const internFileInputRef = useRef(null);
+  const [uploadingInternResume, setUploadingInternResume] = useState(false);
+  const [uploadedInternFilename, setUploadedInternFilename] = useState('');
+
+  const uploadFile = async (file, setUploading, setFilename, updateForm) => {
+    setUploading(true);
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+      const res = await fetch(API_URL + '/api/upload/resume', {
+        method: 'POST',
+        body: fd
+      });
+      if (res.ok) {
+        const data = await res.json();
+        updateForm(data.resumeUrl);
+        setFilename(file.name);
+      } else {
+        const err = await res.json();
+        alert(err.detail || 'Failed to upload resume. Please try again.');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Error uploading file. Check your connection.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleResumeFileChange = (e, fieldId) => {
+    if (e.target.files && e.target.files[0]) {
+      uploadFile(
+        e.target.files[0],
+        setUploadingResume,
+        setUploadedFilename,
+        (url) => setFormData(p => ({ ...p, [fieldId]: url }))
+      );
+    }
+  };
+
+  const handleInternResumeFileChange = (e, fieldId) => {
+    if (e.target.files && e.target.files[0]) {
+      uploadFile(
+        e.target.files[0],
+        setUploadingInternResume,
+        setUploadedInternFilename,
+        (url) => setInternFormData(p => ({ ...p, [fieldId]: url }))
+      );
+    }
+  };
 
   const handleInternSubmit = async (e) => {
     e.preventDefault();
@@ -272,12 +385,19 @@ export default function Career() {
         setInternSubmitted(true);
         setTimeout(() => {
           setInternSubmitted(false);
-          setInternFormData({ name: '', email: '', phone: '', track: 'React/Next.js', college: '', resume: '', message: '' });
+          const initial = {};
+          internFormFields.forEach(f => {
+            if (f.id === 'track') initial[f.id] = 'React/Next.js';
+            else initial[f.id] = '';
+          });
+          setInternFormData(initial);
+          setUploadedInternFilename('');
           setShowInternshipForm(false);
         }, 4000);
       } else {
         const err = await response.json();
-        setInternErrorMsg(err.detail || 'Failed to submit application. Please try again.');
+        const detailMsg = !err.detail ? 'Failed to submit application.' : (typeof err.detail === 'string' ? err.detail : JSON.stringify(err.detail));
+        setInternErrorMsg(detailMsg);
       }
     } catch (err) {
       setInternErrorMsg('Failed to submit application. Please check your network connection.');
@@ -339,18 +459,22 @@ export default function Career() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, job_id: activeJob || 'general' }),
       });
       if (response.ok) {
         setSubmitted(true);
         setTimeout(() => {
           setSubmitted(false);
-          setFormData({ name: '', email: '', phone: '', role: '', resume: '', message: '' });
+          const initial = {};
+          jobFormFields.forEach(f => { initial[f.id] = ''; });
+          setFormData(initial);
+          setUploadedFilename('');
           setActiveJob(null);
         }, 4000);
       } else {
         const err = await response.json();
-        setErrorMsg(err.detail || 'Failed to submit application. Please try again.');
+        const detailMsg = !err.detail ? 'Failed to submit application.' : (typeof err.detail === 'string' ? err.detail : JSON.stringify(err.detail));
+        setErrorMsg(detailMsg);
       }
     } catch (err) {
       setErrorMsg('Failed to submit application. Please check your network connection.');
@@ -374,10 +498,10 @@ export default function Career() {
           // Join Our Team
         </span>
         <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-6">
-          Build the Future
+          {careerSettings.title}
         </h1>
         <p className="font-light text-neutral-400 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
-          We are always looking for exceptional engineers, designers, and strategists obsessed with visual, motion, and backend perfection.
+          {careerSettings.subtitle}
         </p>
       </div>
 
@@ -400,35 +524,48 @@ export default function Career() {
           ══════════════════════════════════════════════════ */}
       <section className="max-w-7xl mx-auto px-4 mb-28 relative z-10">
         <div className="text-center mb-14">
-          <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-500 block mb-3">// Our Philosophy</span>
-          <h2 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight mb-4">Why Join HariKrushn Digiverse?</h2>
-          <p className="font-light text-neutral-400 text-xs sm:text-sm max-w-lg mx-auto">We don't just build software — we engineer premium digital experiences that set industry benchmarks.</p>
+          <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-500 block mb-3">
+            {careerSettings.philosophy_eyebrow || '// Our Philosophy'}
+          </span>
+          <h2 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight mb-4">
+            {careerSettings.philosophy_title || 'Why Join HariKrushn Digiverse?'}
+          </h2>
+          <p className="font-light text-neutral-400 text-xs sm:text-sm max-w-lg mx-auto">
+            {careerSettings.philosophy_desc || "We don't just build software — we engineer premium digital experiences that set industry benchmarks."}
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="p-8 rounded-3xl bg-[#09090d]/60 border border-white/5 hover:border-emerald-500/20 transition-all text-center space-y-4">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto">
-              <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-            </div>
-            <h3 className="font-display font-bold text-white text-sm">Cutting-Edge Technology</h3>
-            <p className="font-light text-neutral-400 text-xs leading-relaxed">Work with React, Next.js, Flutter, FastAPI, LLMs, Vector DBs, and cloud-native infrastructure every single day.</p>
-          </div>
+          {philosophyCards.map((card, idx) => {
+            const hoverBorderCls = {
+              emerald: 'hover:border-emerald-500/20',
+              blue: 'hover:border-blue-500/20',
+              purple: 'hover:border-purple-500/20',
+              rose: 'hover:border-rose-500/20',
+              amber: 'hover:border-amber-500/20'
+            }[card.color] || 'hover:border-white/10';
 
-          <div className="p-8 rounded-3xl bg-[#09090d]/60 border border-white/5 hover:border-blue-500/20 transition-all text-center space-y-4">
-            <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto">
-              <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" /></svg>
-            </div>
-            <h3 className="font-display font-bold text-white text-sm">Collaborative Culture</h3>
-            <p className="font-light text-neutral-400 text-xs leading-relaxed">Flat hierarchy, open communication, weekly knowledge-sharing sessions, and a team that genuinely cares about each other's growth.</p>
-          </div>
+            const iconBgCls = {
+              emerald: 'bg-emerald-500/10 border-emerald-500/20',
+              blue: 'bg-blue-500/10 border-blue-500/20',
+              purple: 'bg-purple-500/10 border-purple-500/20',
+              rose: 'bg-rose-500/10 border-rose-500/20',
+              amber: 'bg-amber-500/10 border-amber-500/20'
+            }[card.color] || 'bg-white/5 border-white/10';
 
-          <div className="p-8 rounded-3xl bg-[#09090d]/60 border border-white/5 hover:border-purple-500/20 transition-all text-center space-y-4">
-            <div className="w-14 h-14 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mx-auto">
-              <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-            </div>
-            <h3 className="font-display font-bold text-white text-sm">Real Client Impact</h3>
-            <p className="font-light text-neutral-400 text-xs leading-relaxed">No throwaway projects. Every task impacts real businesses across fintech, healthcare, e-commerce, and AI platforms globally.</p>
-          </div>
+            return (
+              <div 
+                key={idx} 
+                className={`p-8 rounded-3xl bg-[#09090d]/60 border border-white/5 transition-all text-center space-y-4 ${hoverBorderCls}`}
+              >
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto border ${iconBgCls}`}>
+                  {renderPhilosophyIcon(card.icon, card.color)}
+                </div>
+                <h3 className="font-display font-bold text-white text-sm">{card.title}</h3>
+                <p className="font-light text-neutral-400 text-xs leading-relaxed">{card.desc}</p>
+              </div>
+            );
+          })}
         </div>
       </section>
 
@@ -584,40 +721,114 @@ export default function Career() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <label htmlFor="job-app-name" className="font-mono text-[9px] uppercase tracking-widest text-neutral-500 text-left">Name *</label>
-                    <input id="job-app-name" type="text" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="Your name" className="bg-black/60 border border-white/5 rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-white/30 transition-all text-left" />
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label htmlFor="job-app-phone" className="font-mono text-[9px] uppercase tracking-widest text-neutral-500 text-left">Phone</label>
-                    <input id="job-app-phone" type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="+91 XXXXX XXXXX" className="bg-black/60 border border-white/5 rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-white/30 transition-all text-left" />
-                  </div>
-                </div>
+                {jobFormFields.map((field) => {
+                  if (field.type === 'file') {
+                    return (
+                      <div key={field.id} className="flex flex-col gap-1.5">
+                        <label className="font-mono text-[9px] uppercase tracking-widest text-neutral-500 text-left">
+                          {field.label} {field.required && '*'}
+                        </label>
+                        
+                        {/* Hidden File Input */}
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          onChange={(e) => handleResumeFileChange(e, field.id)}
+                          accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                          className="hidden"
+                        />
 
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="job-app-email" className="font-mono text-[9px] uppercase tracking-widest text-neutral-500 text-left">Email *</label>
-                  <input id="job-app-email" type="email" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} placeholder="your@email.com" className="bg-black/60 border border-white/5 rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-white/30 transition-all text-left" />
-                </div>
+                        <div 
+                          onClick={() => fileInputRef.current?.click()}
+                          onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-emerald-500/50'); }}
+                          onDragLeave={(e) => { e.preventDefault(); e.currentTarget.classList.remove('border-emerald-500/50'); }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            e.currentTarget.classList.remove('border-emerald-500/50');
+                            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                              uploadFile(
+                                e.dataTransfer.files[0],
+                                setUploadingResume,
+                                setUploadedFilename,
+                                (url) => setFormData(p => ({ ...p, [field.id]: url }))
+                              );
+                            }
+                          }}
+                          className="border border-dashed border-white/10 hover:border-white/30 rounded-xl p-6 bg-black/40 text-center transition-all cursor-pointer group flex flex-col items-center justify-center gap-2"
+                        >
+                          {uploadingResume ? (
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                              <span className="font-mono text-[9px] text-white">Uploading file...</span>
+                            </div>
+                          ) : uploadedFilename ? (
+                            <div className="flex items-center gap-2 text-emerald-400 font-mono text-[9px]">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+                              <span>Uploaded: {uploadedFilename}</span>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex items-center gap-3">
+                                <svg className="w-5 h-5 text-neutral-500 group-hover:text-white transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                <span className="font-mono text-[9px] text-neutral-500 group-hover:text-white transition-all">Click to upload or drag files</span>
+                              </div>
+                              <span className="text-[8px] text-neutral-600 font-mono mt-1">Accepts PDF, DOCX, PNG, JPG</span>
+                            </>
+                          )}
+                        </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="job-app-role" className="font-mono text-[9px] uppercase tracking-widest text-neutral-500 text-left">Target Role *</label>
-                  <input id="job-app-role" type="text" required value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value })} placeholder="Select a role or specify" className="bg-black/60 border border-white/5 rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-white/30 transition-all text-left" />
-                </div>
+                        <input 
+                          id={`job-app-${field.id}`} 
+                          type="text" 
+                          required={field.required} 
+                          value={formData[field.id] || ''} 
+                          onChange={(e) => {
+                            setFormData({ ...formData, [field.id]: e.target.value });
+                            if (!e.target.value) setUploadedFilename('');
+                          }} 
+                          placeholder={field.placeholder || "Or paste URL link"} 
+                          className="bg-black/60 border border-white/5 rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-white/30 transition-all mt-1 text-left" 
+                        />
+                      </div>
+                    );
+                  }
 
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="job-app-resume" className="font-mono text-[9px] uppercase tracking-widest text-neutral-500 text-left">Resume / Portfolio *</label>
-                  <div className="border border-dashed border-white/10 hover:border-white/30 rounded-xl p-4 bg-black/40 text-center transition-all cursor-pointer group flex items-center justify-center gap-3">
-                    <svg className="w-5 h-5 text-neutral-500 group-hover:text-white transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                    <span className="font-mono text-[9px] text-neutral-500 group-hover:text-white transition-all">Click to upload or drag files</span>
-                  </div>
-                  <input id="job-app-resume" type="text" required value={formData.resume} onChange={(e) => setFormData({ ...formData, resume: e.target.value })} placeholder="Or paste LinkedIn / GitHub / Portfolio URL" className="bg-black/60 border border-white/5 rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-white/30 transition-all mt-1 text-left" />
-                </div>
+                  if (field.type === 'textarea') {
+                    return (
+                      <div key={field.id} className="flex flex-col gap-1.5">
+                        <label htmlFor={`job-app-${field.id}`} className="font-mono text-[9px] uppercase tracking-widest text-neutral-500 text-left">
+                          {field.label} {field.required && '*'}
+                        </label>
+                        <textarea 
+                          id={`job-app-${field.id}`} 
+                          required={field.required}
+                          value={formData[field.id] || ''} 
+                          onChange={(e) => setFormData({ ...formData, [field.id]: e.target.value })} 
+                          placeholder={field.placeholder} 
+                          rows={3} 
+                          className="bg-black/60 border border-white/5 rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-white/30 transition-all resize-none text-left" 
+                        />
+                      </div>
+                    );
+                  }
 
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="job-app-message" className="font-mono text-[9px] uppercase tracking-widest text-neutral-500 text-left">Cover Note (Optional)</label>
-                  <textarea id="job-app-message" value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} placeholder="Tell us why you'd be a great fit..." rows={3} className="bg-black/60 border border-white/5 rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-white/30 transition-all resize-none text-left" />
-                </div>
+                  return (
+                    <div key={field.id} className="flex flex-col gap-1.5">
+                      <label htmlFor={`job-app-${field.id}`} className="font-mono text-[9px] uppercase tracking-widest text-neutral-500 text-left">
+                        {field.label} {field.required && '*'}
+                      </label>
+                      <input 
+                        id={`job-app-${field.id}`} 
+                        type={field.type} 
+                        required={field.required} 
+                        value={formData[field.id] || ''} 
+                        onChange={(e) => setFormData({ ...formData, [field.id]: e.target.value })} 
+                        placeholder={field.placeholder} 
+                        className="bg-black/60 border border-white/5 rounded-xl px-4 py-3 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-white/30 transition-all text-left" 
+                      />
+                    </div>
+                  );
+                })}
 
                 <button type="submit" disabled={submitting} className={`bg-white text-black px-6 py-4 rounded-xl text-[10px] font-mono font-bold uppercase tracking-widest hover:bg-neutral-200 transition-all mt-2 shadow-md cursor-pointer ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}>
                   {submitting ? 'Submitting...' : 'Submit Application'}
@@ -720,86 +931,136 @@ export default function Career() {
                           </button>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label htmlFor="intern-app-name" className="font-mono text-[9px] text-neutral-400 block mb-1">YOUR NAME</label>
-                            <input 
-                              id="intern-app-name"
-                              type="text" 
-                              required
-                              value={internFormData.name}
-                              onChange={(e) => setInternFormData(p => ({ ...p, name: e.target.value }))}
-                              className="w-full bg-[#050508] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500/50" 
-                              placeholder="Radhe Patel"
-                            />
-                          </div>
-                          <div>
-                            <label htmlFor="intern-app-email" className="font-mono text-[9px] text-neutral-400 block mb-1">EMAIL ADDRESS</label>
-                            <input 
-                              id="intern-app-email"
-                              type="email" 
-                              required
-                              value={internFormData.email}
-                              onChange={(e) => setInternFormData(p => ({ ...p, email: e.target.value }))}
-                              className="w-full bg-[#050508] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500/50" 
-                              placeholder="radhe@example.com"
-                            />
-                          </div>
-                        </div>
+                        {internFormFields.map((field) => {
+                          if (field.type === 'file') {
+                            return (
+                              <div key={field.id} className="space-y-2 text-left">
+                                <label className="font-mono text-[9px] text-neutral-400 block mb-1">
+                                  {field.label} {field.required && '*'}
+                                </label>
+                                
+                                {/* Hidden File Input */}
+                                <input
+                                  type="file"
+                                  ref={internFileInputRef}
+                                  onChange={(e) => handleInternResumeFileChange(e, field.id)}
+                                  accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                                  className="hidden"
+                                />
 
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label htmlFor="intern-app-phone" className="font-mono text-[9px] text-neutral-400 block mb-1">PHONE NUMBER</label>
-                            <input 
-                              id="intern-app-phone"
-                              type="tel" 
-                              required
-                              value={internFormData.phone}
-                              onChange={(e) => setInternFormData(p => ({ ...p, phone: e.target.value }))}
-                              className="w-full bg-[#050508] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500/50" 
-                              placeholder="+91 99999 99999"
-                            />
-                          </div>
-                          <div>
-                            <label htmlFor="intern-app-track" className="font-mono text-[9px] text-neutral-400 block mb-1">SELECT TRACK</label>
-                            <select 
-                              id="intern-app-track"
-                              value={internFormData.track}
-                              onChange={(e) => setInternFormData(p => ({ ...p, track: e.target.value }))}
-                              className="w-full bg-[#050508] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500/50 appearance-none"
-                            >
-                              {['React/Next.js', 'Flutter', 'Python/FastAPI', 'UI/UX Design', 'Digital Marketing', 'Content Writing'].map(t => (
-                                <option key={t} value={t} className="bg-[#0c0c12] text-white">{t}</option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
+                                <div 
+                                  onClick={() => internFileInputRef.current?.click()}
+                                  onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-emerald-500/50'); }}
+                                  onDragLeave={(e) => { e.preventDefault(); e.currentTarget.classList.remove('border-emerald-500/50'); }}
+                                  onDrop={(e) => {
+                                    e.preventDefault();
+                                    e.currentTarget.classList.remove('border-emerald-500/50');
+                                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                                      uploadFile(
+                                        e.dataTransfer.files[0],
+                                        setUploadingInternResume,
+                                        setUploadedInternFilename,
+                                        (url) => setInternFormData(p => ({ ...p, [field.id]: url }))
+                                      );
+                                    }
+                                  }}
+                                  className="border border-dashed border-white/10 hover:border-emerald-500/30 rounded-xl p-4 bg-[#050508]/40 text-center transition-all cursor-pointer group flex flex-col items-center justify-center gap-1.5"
+                                >
+                                  {uploadingInternResume ? (
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                                      <span className="font-mono text-[8px] text-white">Uploading file...</span>
+                                    </div>
+                                  ) : uploadedInternFilename ? (
+                                    <div className="flex items-center gap-1.5 text-emerald-400 font-mono text-[8px]">
+                                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+                                      <span>Uploaded: {uploadedInternFilename}</span>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <div className="flex items-center gap-2 justify-center">
+                                        <svg className="w-4 h-4 text-neutral-500 group-hover:text-emerald-400 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                        <span className="font-mono text-[8px] text-neutral-500 group-hover:text-white transition-all">Click to upload or drag files</span>
+                                      </div>
+                                      <span className="text-[7px] text-neutral-600 font-mono">Accepts PDF, DOCX, PNG, JPG</span>
+                                    </>
+                                  )}
+                                </div>
 
-                        <div>
-                          <label htmlFor="intern-app-college" className="font-mono text-[9px] text-neutral-400 block mb-1">COLLEGE NAME & CURRENT SEMESTER</label>
-                          <input 
-                            id="intern-app-college"
-                            type="text" 
-                            required
-                            value={internFormData.college}
-                            onChange={(e) => setInternFormData(p => ({ ...p, college: e.target.value }))}
-                            className="w-full bg-[#050508] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500/50" 
-                            placeholder="SCET, Surat - Sem 6"
-                          />
-                        </div>
+                                <input 
+                                  id={`intern-app-${field.id}`}
+                                  type="text" 
+                                  required={field.required}
+                                  value={internFormData[field.id] || ''}
+                                  onChange={(e) => {
+                                    setInternFormData(p => ({ ...p, [field.id]: e.target.value }));
+                                    if (!e.target.value) setUploadedInternFilename('');
+                                  }}
+                                  className="w-full bg-[#050508] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500/50 text-left" 
+                                  placeholder={field.placeholder || "Or paste link"}
+                                />
+                              </div>
+                            );
+                          }
 
-                        <div>
-                          <label htmlFor="intern-app-resume" className="font-mono text-[9px] text-neutral-400 block mb-1">RESUME / PORTFOLIO LINK</label>
-                          <input 
-                            id="intern-app-resume"
-                            type="url" 
-                            required
-                            value={internFormData.resume}
-                            onChange={(e) => setInternFormData(p => ({ ...p, resume: e.target.value }))}
-                            className="w-full bg-[#050508] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500/50" 
-                            placeholder="https://drive.google.com/... or github.com/..."
-                          />
-                        </div>
+                          if (field.type === 'textarea') {
+                            return (
+                              <div key={field.id} className="space-y-2 text-left">
+                                <label htmlFor={`intern-app-${field.id}`} className="font-mono text-[9px] text-neutral-400 block mb-1">
+                                  {field.label} {field.required && '*'}
+                                </label>
+                                <textarea 
+                                  id={`intern-app-${field.id}`}
+                                  required={field.required}
+                                  value={internFormData[field.id] || ''}
+                                  onChange={(e) => setInternFormData(p => ({ ...p, [field.id]: e.target.value }))}
+                                  rows={3}
+                                  className="w-full bg-[#050508] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500/50 resize-none leading-relaxed text-left" 
+                                  placeholder={field.placeholder}
+                                />
+                              </div>
+                            );
+                          }
+
+                          if (field.id === 'track') {
+                            return (
+                              <div key={field.id} className="space-y-2 text-left">
+                                <label htmlFor={`intern-app-${field.id}`} className="font-mono text-[9px] text-neutral-400 block mb-1">
+                                  {field.label} {field.required && '*'}
+                                </label>
+                                <div className="relative">
+                                  <select 
+                                    id={`intern-app-${field.id}`}
+                                    value={internFormData[field.id] || 'React/Next.js'}
+                                    onChange={(e) => setInternFormData(p => ({ ...p, [field.id]: e.target.value }))}
+                                    className="w-full bg-[#050508] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500/50 appearance-none text-left"
+                                  >
+                                    {['React/Next.js', 'Flutter', 'Python/FastAPI', 'UI/UX Design', 'Digital Marketing', 'Content Writing'].map(t => (
+                                      <option key={t} value={t} className="bg-[#0c0c12] text-white">{t}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div key={field.id} className="space-y-2 text-left">
+                              <label htmlFor={`intern-app-${field.id}`} className="font-mono text-[9px] text-neutral-400 block mb-1">
+                                {field.label} {field.required && '*'}
+                              </label>
+                              <input 
+                                id={`intern-app-${field.id}`}
+                                type={field.type} 
+                                required={field.required}
+                                value={internFormData[field.id] || ''}
+                                onChange={(e) => setInternFormData(p => ({ ...p, [field.id]: e.target.value }))}
+                                className="w-full bg-[#050508] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500/50 text-left" 
+                                placeholder={field.placeholder}
+                              />
+                            </div>
+                          );
+                        })}
 
                         <button 
                           type="submit"
@@ -1047,28 +1308,7 @@ export default function Career() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════
-          X. OFFICE LOCATION
-          ══════════════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-4 mb-20 relative z-10">
-        <div className="text-center mb-14">
-          <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-500 block mb-3">// Visit Us</span>
-          <h2 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight mb-4">Our Office</h2>
-          <p className="font-light text-neutral-400 text-xs sm:text-sm">HariKrushn Digiverse LLP — Surat, Gujarat, India</p>
-        </div>
-        <div className="rounded-3xl overflow-hidden border border-white/10 shadow-2xl h-72 sm:h-96 relative bg-neutral-900">
-          <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d238133.28819724956!2d72.6518849!3d21.159427449999998!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04e59411d1563%3A0xfe4558290938b042!2sSurat%2C%20Gujarat!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"
-            width="100%"
-            height="100%"
-            style={{ border: 0, filter: 'invert(90%) hue-rotate(180deg) saturate(0.3)' }}
-            allowFullScreen=""
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            title="HK Digiverse Office Location"
-          />
-        </div>
-      </section>
+
 
     </div>
   );
