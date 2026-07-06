@@ -66,6 +66,25 @@ from app.db.seed import (
     DEFAULT_SERVICES_SUBPAGES
 )
 
+DEFAULT_VENTURES_SETTINGS = {
+    "overline": "// Our Initiatives",
+    "title": "Digiverse Ventures",
+    "subtitle": "Beyond client work, we build, incubate, and run initiatives that create lasting social and economic impact across India."
+}
+
+DEFAULT_CONTACT_SETTINGS = {
+    "title": "Let's Create Together",
+    "subtitle": "Have a project in mind, want to inquire about custom solutions, or simply want to say hello? We'd love to hear from you.",
+    "email_hello": "hello@harikrushndigiverse.com",
+    "email_join": "join@harikrushndigiverse.com",
+    "phone": "+91 98765 43210",
+    "stats": [
+        {"label": "2-4 Hour Response", "value": "Mon — Sat", "icon": "time"},
+        {"label": "Global Clients", "value": "India • USA • UK • UAE", "icon": "globe"},
+        {"label": "Free Consultation", "value": "No obligation quote", "icon": "shield"}
+    ]
+}
+
 # Default hardcoded content representing original site data
 DEFAULT_CONTENT = {
     "hero": {
@@ -199,7 +218,9 @@ DEFAULT_CONTENT = {
     "career_faqs": DEFAULT_CAREER_FAQS,
     "contact_offices": DEFAULT_CONTACT_OFFICES,
     "contact_faqs": DEFAULT_CONTACT_FAQS,
-    "services_subpages": DEFAULT_SERVICES_SUBPAGES
+    "services_subpages": DEFAULT_SERVICES_SUBPAGES,
+    "contact_settings": DEFAULT_CONTACT_SETTINGS,
+    "ventures_settings": DEFAULT_VENTURES_SETTINGS
 }
 
 # MongoDB connection cache
@@ -275,10 +296,11 @@ def compile_full_content(base_content: dict) -> dict:
         
     compiled = {**base_content}
     
-    # 1. Key-value based collections to compile
     collections_map = {
         "site_settings": ("site_settings", "identifier", "global_settings", DEFAULT_SITE_SETTINGS),
-        "about_us": ("about_us", "identifier", "about_us_content", DEFAULT_ABOUT_US)
+        "about_us": ("about_us", "identifier", "about_us_content", DEFAULT_ABOUT_US),
+        "contact_settings": ("contact_settings", "identifier", "contact_page_settings", DEFAULT_CONTACT_SETTINGS),
+        "ventures_settings": ("ventures_settings", "identifier", "ventures_page_settings", DEFAULT_VENTURES_SETTINGS)
     }
     
     for key, (coll_name, query_field, query_val, fallback) in collections_map.items():
@@ -394,6 +416,22 @@ def save_normalized_draft(data: dict):
             {"identifier": "about_us_content", **data["about_us"]},
             upsert=True
         )
+
+    # Save contact_settings
+    if "contact_settings" in data:
+        mongo_db["contact_settings"].replace_one(
+            {"identifier": "contact_page_settings"},
+            {"identifier": "contact_page_settings", **data["contact_settings"]},
+            upsert=True
+        )
+
+    # Save ventures_settings
+    if "ventures_settings" in data:
+        mongo_db["ventures_settings"].replace_one(
+            {"identifier": "ventures_page_settings"},
+            {"identifier": "ventures_page_settings", **data["ventures_settings"]},
+            upsert=True
+        )
         
     # Save list-based collections (clear and insert to keep sync)
     list_collections = {
@@ -416,6 +454,10 @@ def save_normalized_draft(data: dict):
         if key in data and isinstance(data[key], list):
             mongo_db[coll_name].delete_many({})
             if data[key]:
+                # Assign sort_order dynamically to preserve order during fetch sorting
+                for idx, item in enumerate(data[key]):
+                    if isinstance(item, dict):
+                        item["sort_order"] = idx
                 mongo_db[coll_name].insert_many(data[key])
 
 def save_draft_db(data: dict):
@@ -693,11 +735,11 @@ def get_collection(name: str):
     return None
 
 @app.post("/api/inquiries")
-async def create_inquiry(req: InquirySubmission):
+async def create_inquiry(req: dict):
     coll = get_collection("inquiries")
     if coll is not None:
         try:
-            doc = req.dict()
+            doc = {**req}
             doc["created_at"] = datetime.datetime.now().isoformat()
             coll.insert_one(doc)
             return {"status": "success", "message": "Inquiry submitted successfully"}

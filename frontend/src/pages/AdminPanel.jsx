@@ -146,6 +146,18 @@ export default function AdminPanel() {
             ...DEFAULT_CONTENT.bottomCta,
             ...(draft.bottomCta || {})
           },
+          contact_settings: {
+            ...DEFAULT_CONTENT.contact_settings,
+            ...(draft.contact_settings || {}),
+            stats: draft.contact_settings?.stats || DEFAULT_CONTENT.contact_settings.stats,
+            business_hours: draft.contact_settings?.business_hours || DEFAULT_CONTENT.contact_settings.business_hours,
+            whatsapp_numbers: draft.contact_settings?.whatsapp_numbers || DEFAULT_CONTENT.contact_settings.whatsapp_numbers,
+            contact_map: {
+              ...DEFAULT_CONTENT.contact_settings.contact_map,
+              ...(draft.contact_settings?.contact_map || {})
+            },
+            form_fields: draft.contact_settings?.form_fields || DEFAULT_CONTENT.contact_settings.form_fields
+          },
           stats: (draft.stats || DEFAULT_CONTENT.stats).map(s => ({ show: true, ...s })),
           services: (draft.services || DEFAULT_CONTENT.services).map((s, idx) => {
             const defaults = getServiceDefaultPreview(s.num, idx);
@@ -183,6 +195,7 @@ export default function AdminPanel() {
           gallery: draft.gallery || DEFAULT_CONTENT.gallery,
           portfolio: draft.portfolio || DEFAULT_CONTENT.portfolio,
           ventures: draft.ventures || DEFAULT_CONTENT.ventures,
+          ventures_settings: draft.ventures_settings || DEFAULT_CONTENT.ventures_settings,
           careers: draft.careers || DEFAULT_CONTENT.careers
         };
         setHistory([sanitized]);
@@ -981,7 +994,7 @@ export default function AdminPanel() {
     const nextContent = JSON.parse(JSON.stringify(currentContent));
     if (!nextContent.ventures) nextContent.ventures = [];
     nextContent.ventures.push({
-      slug: 'new-venture',
+      slug: 'new-venture-' + Date.now(),
       name: 'New Venture Name',
       tagline: 'Venture Tagline',
       status: 'Active',
@@ -992,7 +1005,15 @@ export default function AdminPanel() {
       shortDesc: 'Short description...',
       fullDescription: 'Full detailed description...',
       mission: 'Venture mission...',
-      vision: 'Venture vision...'
+      vision: 'Venture vision...',
+      keyInitiatives: [
+        { title: 'First Initiative', desc: 'Describe the initiative here...' }
+      ],
+      impactStats: [
+        { label: 'Stat Label', value: '10k+' }
+      ],
+      techStack: ['React', 'Python'],
+      partners: ['Partner Org']
     });
     pushState(nextContent);
   };
@@ -1133,6 +1154,73 @@ export default function AdminPanel() {
     loadDraft(password);
     setSaveStatus({ type: 'success', message: 'Discarded workspace changes.' });
     setTimeout(() => setSaveStatus({ type: '', message: '' }), 3000);
+  };
+
+  // Contact page helpers
+  const updateOfficeItem = (index, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.contact_offices) nextContent.contact_offices = [];
+    nextContent.contact_offices[index][field] = value;
+    pushState(nextContent);
+  };
+
+  const addOfficeItem = () => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.contact_offices) nextContent.contact_offices = [];
+    nextContent.contact_offices.push({
+      slug: "office-" + Date.now(),
+      city: "New City",
+      country: "INDIA",
+      role: "Branch Office",
+      address: "Address details...",
+      phone: "+91 99999 88888",
+      timeZone: "Asia/Kolkata",
+      isHQ: false,
+      color: "border-blue-500/10 hover:border-blue-500/40 hover:shadow-[0_0_30px_rgba(59,130,246,0.15)]",
+      badge: "bg-blue-500/10 text-blue-400 border-blue-500/20"
+    });
+    pushState(nextContent);
+  };
+
+  const deleteOfficeItem = (index) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    nextContent.contact_offices.splice(index, 1);
+    pushState(nextContent);
+  };
+
+  const moveOfficeItem = (index, direction) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.contact_offices) return;
+    const items = nextContent.contact_offices;
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= items.length) return;
+    const temp = items[index];
+    items[index] = items[targetIndex];
+    items[targetIndex] = temp;
+    pushState(nextContent);
+  };
+
+  const updateFaqItem = (index, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.contact_faqs) nextContent.contact_faqs = [];
+    nextContent.contact_faqs[index][field] = value;
+    pushState(nextContent);
+  };
+
+  const addFaqItem = () => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.contact_faqs) nextContent.contact_faqs = [];
+    nextContent.contact_faqs.push({
+      q: "New Question?",
+      a: "Answer content goes here..."
+    });
+    pushState(nextContent);
+  };
+
+  const deleteFaqItem = (index) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    nextContent.contact_faqs.splice(index, 1);
+    pushState(nextContent);
   };
 
   // Resets
@@ -3557,11 +3645,60 @@ export default function AdminPanel() {
           {/* 11. VENTURES CMS PANEL */}
           {activeTab === 'ventures' && currentContent.ventures && (
             <div className="space-y-6">
+              {/* Ventures Main Header/Banner Customizer */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
+                <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Ventures Page Title & Subtitle</h4>
+                <div className="space-y-3">
+                  <div>
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Overline</label>
+                    <input
+                      type="text"
+                      value={currentContent.ventures_settings?.overline || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.ventures_settings) nextContent.ventures_settings = {};
+                        nextContent.ventures_settings.overline = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Title</label>
+                    <input
+                      type="text"
+                      value={currentContent.ventures_settings?.title || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.ventures_settings) nextContent.ventures_settings = {};
+                        nextContent.ventures_settings.title = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Subtitle</label>
+                    <textarea
+                      rows={2}
+                      value={currentContent.ventures_settings?.subtitle || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.ventures_settings) nextContent.ventures_settings = {};
+                        nextContent.ventures_settings.subtitle = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed"
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div className="flex justify-between items-center">
                 <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Ventures Registry ({currentContent.ventures.length})</span>
                 <button
                   onClick={addVentureItem}
-                  className="px-3 py-1.5 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors"
+                  className="px-3 py-1.5 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors cursor-pointer"
                 >
                   + Add Venture
                 </button>
@@ -3569,16 +3706,47 @@ export default function AdminPanel() {
 
               <div className="space-y-4">
                 {currentContent.ventures.map((item, index) => (
-                  <div key={index} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-3 text-left">
+                  <div key={item.slug || index} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
                     <div className="flex justify-between items-center border-b border-white/5 pb-2">
                       <span className="font-mono text-[9px] text-neutral-500 font-bold">{item.name || 'New Venture'}</span>
-                      <button
-                        onClick={() => deleteVentureItem(index)}
-                        className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded"
-                      >
-                        Delete
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          disabled={index === 0}
+                          onClick={() => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            const arr = nextContent.ventures;
+                            const temp = arr[index];
+                            arr[index] = arr[index - 1];
+                            arr[index - 1] = temp;
+                            pushState(nextContent);
+                          }}
+                          className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
+                        >
+                          ▲
+                        </button>
+                        <button
+                          disabled={index === currentContent.ventures.length - 1}
+                          onClick={() => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            const arr = nextContent.ventures;
+                            const temp = arr[index];
+                            arr[index] = arr[index + 1];
+                            arr[index + 1] = temp;
+                            pushState(nextContent);
+                          }}
+                          className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
+                        >
+                          ▼
+                        </button>
+                        <button
+                          onClick={() => deleteVentureItem(index)}
+                          className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded cursor-pointer ml-1"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
+
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Venture Name</label>
@@ -3599,6 +3767,7 @@ export default function AdminPanel() {
                         />
                       </div>
                     </div>
+
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Tagline</label>
@@ -3619,16 +3788,56 @@ export default function AdminPanel() {
                         />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Logo/Poster URL</label>
+
+                    {/* Logo/Poster Image with Preview and Upload */}
+                    <div className="space-y-2">
+                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Logo/Poster Image</label>
+                      {item.img && (
+                        <div className="w-full h-32 bg-black rounded-lg overflow-hidden border border-white/10 relative group mb-2">
+                          <img src={API_URL + item.img} alt="Venture Poster" className="w-full h-full object-cover" onError={(e) => {
+                            e.target.src = item.img;
+                          }} />
+                        </div>
+                      )}
+                      <div className="flex gap-2">
                         <input
                           type="text"
-                          value={item.img}
+                          value={item.img || ''}
                           onChange={(e) => updateVentureItem(index, 'img', e.target.value)}
+                          placeholder="/images/ventures/..."
                           className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
                         />
+                        <label className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded text-[9px] font-mono text-emerald-400 hover:text-emerald-300 transition-colors flex items-center justify-center shrink-0 cursor-pointer">
+                          <span>Upload</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async (e) => {
+                              if (e.target.files && e.target.files[0]) {
+                                const file = e.target.files[0];
+                                const formData = new FormData();
+                                formData.append('file', file);
+                                try {
+                                  const res = await fetch(API_URL + '/api/upload/image', {
+                                    method: 'POST',
+                                    body: formData
+                                  });
+                                  if (res.ok) {
+                                    const data = await res.json();
+                                    updateVentureItem(index, 'img', data.imageUrl);
+                                  }
+                                } catch (err) {
+                                  console.error("Upload error:", err);
+                                }
+                              }
+                            }}
+                          />
+                        </label>
                       </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Theme Color (cyan, amber, emerald, etc)</label>
                         <input
@@ -3638,7 +3847,31 @@ export default function AdminPanel() {
                           className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
                         />
                       </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Accent Color (Hex Code)</label>
+                        <input
+                          type="text"
+                          value={item.accentColor || ''}
+                          onChange={(e) => updateVentureItem(index, 'accentColor', e.target.value)}
+                          placeholder="#06b6d4"
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
                     </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Glow Color (RGBA shadow)</label>
+                        <input
+                          type="text"
+                          value={item.glowColor || ''}
+                          onChange={(e) => updateVentureItem(index, 'glowColor', e.target.value)}
+                          placeholder="rgba(6,182,212,0.20)"
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
                     <div>
                       <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Short Summary Description</label>
                       <textarea
@@ -3674,6 +3907,156 @@ export default function AdminPanel() {
                           value={item.vision}
                           onChange={(e) => updateVentureItem(index, 'vision', e.target.value)}
                           className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Collapsible Key Initiatives */}
+                    <div className="border border-white/5 rounded-lg p-3 space-y-2 bg-white/[0.01]">
+                      <div className="flex justify-between items-center">
+                        <span className="font-mono text-[8px] text-neutral-400 uppercase tracking-widest font-bold">Key Initiatives</span>
+                        <button
+                          onClick={() => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            if (!nextContent.ventures[index].keyInitiatives) nextContent.ventures[index].keyInitiatives = [];
+                            nextContent.ventures[index].keyInitiatives.push({ title: "New Initiative", desc: "Initiative details..." });
+                            pushState(nextContent);
+                          }}
+                          className="px-2 py-0.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded text-[7px] font-mono text-emerald-400 cursor-pointer"
+                        >
+                          + Add Initiative
+                        </button>
+                      </div>
+                      <div className="space-y-2">
+                        {(item.keyInitiatives || []).map((init, initIdx) => (
+                          <div key={initIdx} className="p-2.5 bg-black/30 border border-white/5 rounded space-y-2 relative">
+                            <button
+                              onClick={() => {
+                                const nextContent = JSON.parse(JSON.stringify(currentContent));
+                                nextContent.ventures[index].keyInitiatives.splice(initIdx, 1);
+                                pushState(nextContent);
+                              }}
+                              className="absolute top-2 right-2 text-red-500 hover:text-red-400 text-[8px] font-mono cursor-pointer"
+                            >
+                              ✕
+                            </button>
+                            <div>
+                              <label className="font-mono text-[7px] text-neutral-500 block mb-0.5">Title</label>
+                              <input
+                                type="text"
+                                value={init.title || ''}
+                                onChange={(e) => {
+                                  const nextContent = JSON.parse(JSON.stringify(currentContent));
+                                  nextContent.ventures[index].keyInitiatives[initIdx].title = e.target.value;
+                                  pushState(nextContent);
+                                }}
+                                className="w-full px-2 py-1 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="font-mono text-[7px] text-neutral-500 block mb-0.5">Description</label>
+                              <textarea
+                                rows={2}
+                                value={init.desc || ''}
+                                onChange={(e) => {
+                                  const nextContent = JSON.parse(JSON.stringify(currentContent));
+                                  nextContent.ventures[index].keyInitiatives[initIdx].desc = e.target.value;
+                                  pushState(nextContent);
+                                }}
+                                className="w-full px-2 py-1 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed"
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Collapsible Impact Stats */}
+                    <div className="border border-white/5 rounded-lg p-3 space-y-2 bg-white/[0.01]">
+                      <div className="flex justify-between items-center">
+                        <span className="font-mono text-[8px] text-neutral-400 uppercase tracking-widest font-bold">Impact Stats</span>
+                        <button
+                          onClick={() => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            if (!nextContent.ventures[index].impactStats) nextContent.ventures[index].impactStats = [];
+                            nextContent.ventures[index].impactStats.push({ label: "Stat Label", value: "10k+" });
+                            pushState(nextContent);
+                          }}
+                          className="px-2 py-0.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded text-[7px] font-mono text-emerald-400 cursor-pointer"
+                        >
+                          + Add Stat
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {(item.impactStats || []).map((stat, statIdx) => (
+                          <div key={statIdx} className="p-2.5 bg-black/30 border border-white/5 rounded relative space-y-1">
+                            <button
+                              onClick={() => {
+                                const nextContent = JSON.parse(JSON.stringify(currentContent));
+                                nextContent.ventures[index].impactStats.splice(statIdx, 1);
+                                pushState(nextContent);
+                              }}
+                              className="absolute top-1 right-1.5 text-red-500 hover:text-red-400 text-[8px] font-mono cursor-pointer"
+                            >
+                              ✕
+                            </button>
+                            <div>
+                              <label className="font-mono text-[7px] text-neutral-500 block mb-0.5">Value</label>
+                              <input
+                                type="text"
+                                value={stat.value || ''}
+                                onChange={(e) => {
+                                  const nextContent = JSON.parse(JSON.stringify(currentContent));
+                                  nextContent.ventures[index].impactStats[statIdx].value = e.target.value;
+                                  pushState(nextContent);
+                                }}
+                                className="w-full px-2 py-0.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="font-mono text-[7px] text-neutral-500 block mb-0.5">Label</label>
+                              <input
+                                type="text"
+                                value={stat.label || ''}
+                                onChange={(e) => {
+                                  const nextContent = JSON.parse(JSON.stringify(currentContent));
+                                  nextContent.ventures[index].impactStats[statIdx].label = e.target.value;
+                                  pushState(nextContent);
+                                }}
+                                className="w-full px-2 py-0.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Tech Stack & Partners */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Tech Stack (comma separated)</label>
+                        <input
+                          type="text"
+                          value={item.techStack ? item.techStack.join(', ') : ''}
+                          onChange={(e) => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            nextContent.ventures[index].techStack = e.target.value.split(',').map(s => s.trim());
+                            pushState(nextContent);
+                          }}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Partners (comma separated)</label>
+                        <input
+                          type="text"
+                          value={item.partners ? item.partners.join(', ') : ''}
+                          onChange={(e) => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            nextContent.ventures[index].partners = e.target.value.split(',').map(s => s.trim());
+                            pushState(nextContent);
+                          }}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
                         />
                       </div>
                     </div>
@@ -3782,6 +4165,872 @@ export default function AdminPanel() {
                         value={item.steps ? item.steps.join(', ') : ''}
                         onChange={(e) => updateCareerItem(index, 'steps', e.target.value)}
                         className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* CONTACT PAGE CMS PANEL */}
+          {activeTab === 'contact' && (
+            <div className="space-y-6">
+              <div className="flex justify-end">
+                <button
+                  onClick={() => {
+                    setActiveTab('submissions');
+                    loadSubmissions();
+                  }}
+                  className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded-lg text-[9px] font-mono text-emerald-400 hover:text-emerald-300 cursor-pointer transition-all flex items-center gap-1.5 font-semibold"
+                >
+                  <span>✉ View Form Submissions Log</span>
+                </button>
+              </div>
+
+              {/* General Contact Info & Hero */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
+                <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Hero Header & Info Details</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Hero Title */}
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Hero Title</label>
+                    <input
+                      type="text"
+                      value={currentContent.contact_settings?.title || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.contact_settings) nextContent.contact_settings = {};
+                        nextContent.contact_settings.title = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                    />
+                  </div>
+
+                  {/* Phone */}
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Direct Phone Number</label>
+                    <input
+                      type="text"
+                      value={currentContent.contact_settings?.phone || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.contact_settings) nextContent.contact_settings = {};
+                        nextContent.contact_settings.phone = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Hero Subtitle */}
+                <div className="space-y-1">
+                  <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Hero Subtitle</label>
+                  <textarea
+                    rows={2}
+                    value={currentContent.contact_settings?.subtitle || ''}
+                    onChange={(e) => {
+                      const nextContent = JSON.parse(JSON.stringify(currentContent));
+                      if (!nextContent.contact_settings) nextContent.contact_settings = {};
+                      nextContent.contact_settings.subtitle = e.target.value;
+                      pushState(nextContent);
+                    }}
+                    className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none resize-none leading-relaxed"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Hello Email */}
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Hello/Business Email</label>
+                    <input
+                      type="text"
+                      value={currentContent.contact_settings?.email_hello || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.contact_settings) nextContent.contact_settings = {};
+                        nextContent.contact_settings.email_hello = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                    />
+                  </div>
+
+                  {/* Careers Email */}
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Careers/Join Email</label>
+                    <input
+                      type="text"
+                      value={currentContent.contact_settings?.email_join || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.contact_settings) nextContent.contact_settings = {};
+                        nextContent.contact_settings.email_join = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Stat Cards Editor */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
+                <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Response Promise Badges / Stats</h4>
+                <div className="space-y-4">
+                  {(currentContent.contact_settings?.stats || [
+                    { label: "2-4 Hour Response", value: "Mon — Sat", icon: "time" },
+                    { label: "Global Clients", value: "India • USA • UK • UAE", icon: "globe" },
+                    { label: "Free Consultation", value: "No obligation quote", icon: "shield" }
+                  ]).map((stat, index) => (
+                    <div key={index} className="p-4 bg-black/40 border border-white/5 rounded-lg grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Badge Title</label>
+                        <input
+                          type="text"
+                          value={stat.label || ''}
+                          onChange={(e) => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            if (!nextContent.contact_settings) nextContent.contact_settings = {};
+                            if (!nextContent.contact_settings.stats) nextContent.contact_settings.stats = [];
+                            nextContent.contact_settings.stats[index].label = e.target.value;
+                            pushState(nextContent);
+                          }}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Value Subtext</label>
+                        <input
+                          type="text"
+                          value={stat.value || ''}
+                          onChange={(e) => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            if (!nextContent.contact_settings) nextContent.contact_settings = {};
+                            if (!nextContent.contact_settings.stats) nextContent.contact_settings.stats = [];
+                            nextContent.contact_settings.stats[index].value = e.target.value;
+                            pushState(nextContent);
+                          }}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Icon Class (time, globe, shield)</label>
+                        <select
+                          value={stat.icon || 'time'}
+                          onChange={(e) => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            if (!nextContent.contact_settings) nextContent.contact_settings = {};
+                            if (!nextContent.contact_settings.stats) nextContent.contact_settings.stats = [];
+                            nextContent.contact_settings.stats[index].icon = e.target.value;
+                            pushState(nextContent);
+                          }}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        >
+                          <option value="time">Time / Clock Icon</option>
+                          <option value="globe">Globe Icon</option>
+                          <option value="shield">Shield / Check Icon</option>
+                        </select>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Contact Form Fields Editor */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Contact Form Fields Builder</h4>
+                  <button
+                    onClick={() => {
+                      const nextContent = JSON.parse(JSON.stringify(currentContent));
+                      if (!nextContent.contact_settings) nextContent.contact_settings = {};
+                      if (!nextContent.contact_settings.form_fields) nextContent.contact_settings.form_fields = [];
+                      const id = "field_" + Date.now();
+                      nextContent.contact_settings.form_fields.push({
+                        id: id,
+                        label: "Custom Field",
+                        type: "text",
+                        placeholder: "Enter details...",
+                        required: false,
+                        halfWidth: true
+                      });
+                      pushState(nextContent);
+                    }}
+                    className="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded text-[8px] font-mono text-emerald-400 cursor-pointer"
+                  >
+                    + Add Field
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {(currentContent.contact_settings?.form_fields || []).map((field, index) => (
+                    <div key={field.id || index} className="p-4 bg-black/40 border border-white/5 rounded-lg space-y-3 relative">
+                      <div className="flex justify-between items-center pb-2 border-b border-white/5">
+                        <span className="font-mono text-[8px] text-neutral-400">Form Field #{index + 1}</span>
+                        <div className="flex items-center gap-1">
+                          <button
+                            disabled={index === 0}
+                            onClick={() => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              const arr = nextContent.contact_settings.form_fields;
+                              const temp = arr[index];
+                              arr[index] = arr[index - 1];
+                              arr[index - 1] = temp;
+                              pushState(nextContent);
+                            }}
+                            className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
+                          >
+                            ▲
+                          </button>
+                          <button
+                            disabled={index === (currentContent.contact_settings?.form_fields || []).length - 1}
+                            onClick={() => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              const arr = nextContent.contact_settings.form_fields;
+                              const temp = arr[index];
+                              arr[index] = arr[index + 1];
+                              arr[index + 1] = temp;
+                              pushState(nextContent);
+                            }}
+                            className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
+                          >
+                            ▼
+                          </button>
+                          <button
+                            onClick={() => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              nextContent.contact_settings.form_fields.splice(index, 1);
+                              pushState(nextContent);
+                            }}
+                            className="w-5 h-5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded flex items-center justify-center text-[8px] cursor-pointer"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Field Unique Key (ID)</label>
+                          <input
+                            type="text"
+                            value={field.id || ''}
+                            onChange={(e) => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              nextContent.contact_settings.form_fields[index].id = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+                              pushState(nextContent);
+                            }}
+                            className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Field Label / Title</label>
+                          <input
+                            type="text"
+                            value={field.label || ''}
+                            onChange={(e) => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              nextContent.contact_settings.form_fields[index].label = e.target.value;
+                              pushState(nextContent);
+                            }}
+                            className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Field Placeholder</label>
+                          <input
+                            type="text"
+                            value={field.placeholder || ''}
+                            onChange={(e) => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              nextContent.contact_settings.form_fields[index].placeholder = e.target.value;
+                              pushState(nextContent);
+                            }}
+                            className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Input Type</label>
+                          <select
+                            value={field.type || 'text'}
+                            onChange={(e) => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              nextContent.contact_settings.form_fields[index].type = e.target.value;
+                              if (e.target.value === 'select' && !nextContent.contact_settings.form_fields[index].options) {
+                                nextContent.contact_settings.form_fields[index].options = ["Option 1", "Option 2"];
+                              }
+                              pushState(nextContent);
+                            }}
+                            className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                          >
+                            <option value="text">Text Input</option>
+                            <option value="email">Email Input</option>
+                            <option value="tel">Telephone / Phone</option>
+                            <option value="select">Dropdown (Select)</option>
+                            <option value="textarea">Textarea (Long Message)</option>
+                          </select>
+                        </div>
+
+                        <div className="flex gap-4 pt-3 col-span-2 md:col-span-1">
+                          <label className="flex items-center gap-1.5 text-[10px] text-neutral-400 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={field.required === true}
+                              onChange={(e) => {
+                                const nextContent = JSON.parse(JSON.stringify(currentContent));
+                                nextContent.contact_settings.form_fields[index].required = e.target.checked;
+                                pushState(nextContent);
+                              }}
+                              className="w-3 h-3 accent-emerald-500 rounded"
+                            />
+                            <span>Required</span>
+                          </label>
+
+                          <label className="flex items-center gap-1.5 text-[10px] text-neutral-400 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={field.halfWidth === true}
+                              onChange={(e) => {
+                                const nextContent = JSON.parse(JSON.stringify(currentContent));
+                                nextContent.contact_settings.form_fields[index].halfWidth = e.target.checked;
+                                pushState(nextContent);
+                              }}
+                              className="w-3 h-3 accent-emerald-500 rounded"
+                            />
+                            <span>Half Width (50%)</span>
+                          </label>
+                        </div>
+
+                        {field.type === 'select' && (
+                          <div>
+                            <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Dropdown Options (comma separated)</label>
+                            <input
+                              type="text"
+                              value={field.options ? field.options.join(', ') : ''}
+                              onChange={(e) => {
+                                const nextContent = JSON.parse(JSON.stringify(currentContent));
+                                nextContent.contact_settings.form_fields[index].options = e.target.value.split(',').map(s => s.trim());
+                                pushState(nextContent);
+                              }}
+                              className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Offices Section */}
+              <div className="flex justify-between items-center">
+                <h3 className="font-mono text-[10px] uppercase tracking-wider text-white">// Contact Offices & Branches</h3>
+                <button
+                  onClick={addOfficeItem}
+                  className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/15 rounded-lg text-[9px] font-mono text-neutral-300 hover:text-white cursor-pointer transition-all flex items-center gap-1.5 font-semibold"
+                >
+                  <span>+ Add Office</span>
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {(currentContent.contact_offices || []).map((office, index) => (
+                  <div key={office.slug || index} className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left relative">
+                    <div className="flex justify-between items-center pb-3 border-b border-white/5">
+                      <span className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Office Branch #{index + 1}</span>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          disabled={index === 0}
+                          onClick={() => moveOfficeItem(index, 'up')}
+                          className="w-6 h-6 border border-white/10 hover:border-white/20 rounded flex items-center justify-center text-[9px] text-neutral-400 hover:text-white bg-white/5 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="Move Up"
+                        >
+                          ▲
+                        </button>
+                        <button
+                          disabled={index === (currentContent.contact_offices || []).length - 1}
+                          onClick={() => moveOfficeItem(index, 'down')}
+                          className="w-6 h-6 border border-white/10 hover:border-white/20 rounded flex items-center justify-center text-[9px] text-neutral-400 hover:text-white bg-white/5 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="Move Down"
+                        >
+                          ▼
+                        </button>
+                        <button
+                          onClick={() => deleteOfficeItem(index)}
+                          className="w-6 h-6 border border-red-500/10 hover:border-red-500/30 rounded flex items-center justify-center text-[9px] text-red-500 bg-red-500/5 hover:bg-red-500/10 cursor-pointer ml-1"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* City */}
+                      <div className="space-y-1">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">City Name</label>
+                        <input
+                          type="text"
+                          value={office.city || ''}
+                          onChange={(e) => updateOfficeItem(index, 'city', e.target.value)}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                        />
+                      </div>
+
+                      {/* Country */}
+                      <div className="space-y-1">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Country</label>
+                        <input
+                          type="text"
+                          value={office.country || ''}
+                          onChange={(e) => updateOfficeItem(index, 'country', e.target.value)}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                        />
+                      </div>
+
+                      {/* Role */}
+                      <div className="space-y-1">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Office Role (e.g. Headquarters)</label>
+                        <input
+                          type="text"
+                          value={office.role || ''}
+                          onChange={(e) => updateOfficeItem(index, 'role', e.target.value)}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Address & Phone */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Address</label>
+                        <input
+                          type="text"
+                          value={office.address || ''}
+                          onChange={(e) => updateOfficeItem(index, 'address', e.target.value)}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Phone</label>
+                        <input
+                          type="text"
+                          value={office.phone || ''}
+                          onChange={(e) => updateOfficeItem(index, 'phone', e.target.value)}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Timezone */}
+                      <div className="space-y-1">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">TimeZone (e.g. Asia/Kolkata)</label>
+                        <input
+                          type="text"
+                          value={office.timeZone || ''}
+                          onChange={(e) => updateOfficeItem(index, 'timeZone', e.target.value)}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                        />
+                      </div>
+
+                      {/* HQ status */}
+                      <div className="space-y-1">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">HQ status</label>
+                        <button
+                          type="button"
+                          onClick={() => updateOfficeItem(index, 'isHQ', !office.isHQ)}
+                          className={`w-full py-2 border rounded-lg text-[8px] uppercase tracking-widest font-mono cursor-pointer transition-all duration-300 ${
+                            office.isHQ 
+                              ? 'bg-white text-black font-semibold' 
+                              : 'bg-neutral-800 text-neutral-500 border-transparent'
+                          }`}
+                        >
+                          {office.isHQ ? 'Is Headquarters' : 'Not Headquarters'}
+                        </button>
+                      </div>
+
+                      {/* Slug */}
+                      <div className="space-y-1">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Slug / Unique ID</label>
+                        <input
+                          type="text"
+                          value={office.slug || ''}
+                          onChange={(e) => updateOfficeItem(index, 'slug', e.target.value)}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Styling properties */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Border / Hover Glow classes</label>
+                        <input
+                          type="text"
+                          value={office.color || ''}
+                          onChange={(e) => updateOfficeItem(index, 'color', e.target.value)}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white font-mono text-xs focus:outline-none"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Badge Style classes</label>
+                        <input
+                          type="text"
+                          value={office.badge || ''}
+                          onChange={(e) => updateOfficeItem(index, 'badge', e.target.value)}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white font-mono text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* WhatsApp Numbers Editor */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">WhatsApp Help Lines / Chats</h4>
+                  <button
+                    onClick={() => {
+                      const nextContent = JSON.parse(JSON.stringify(currentContent));
+                      if (!nextContent.contact_settings) nextContent.contact_settings = {};
+                      if (!nextContent.contact_settings.whatsapp_numbers) nextContent.contact_settings.whatsapp_numbers = [];
+                      nextContent.contact_settings.whatsapp_numbers.push({
+                        label: "Support Desk",
+                        subtext: "Usually replies in under 15 minutes",
+                        number: "919876543210"
+                      });
+                      pushState(nextContent);
+                    }}
+                    className="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 rounded text-[8px] font-mono text-emerald-400 cursor-pointer"
+                  >
+                    + Add WhatsApp
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {(currentContent.contact_settings?.whatsapp_numbers || []).map((wa, index) => (
+                    <div key={index} className="p-4 bg-black/40 border border-white/5 rounded-lg space-y-3">
+                      <div className="flex justify-between items-center pb-2 border-b border-white/5">
+                        <span className="font-mono text-[8px] text-neutral-400">WhatsApp Channel #{index + 1}</span>
+                        <div className="flex items-center gap-1">
+                          <button
+                            disabled={index === 0}
+                            onClick={() => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              const arr = nextContent.contact_settings.whatsapp_numbers;
+                              const temp = arr[index];
+                              arr[index] = arr[index - 1];
+                              arr[index - 1] = temp;
+                              pushState(nextContent);
+                            }}
+                            className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
+                          >
+                            ▲
+                          </button>
+                          <button
+                            disabled={index === (currentContent.contact_settings?.whatsapp_numbers || []).length - 1}
+                            onClick={() => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              const arr = nextContent.contact_settings.whatsapp_numbers;
+                              const temp = arr[index];
+                              arr[index] = arr[index + 1];
+                              arr[index + 1] = temp;
+                              pushState(nextContent);
+                            }}
+                            className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
+                          >
+                            ▼
+                          </button>
+                          <button
+                            onClick={() => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              nextContent.contact_settings.whatsapp_numbers.splice(index, 1);
+                              pushState(nextContent);
+                            }}
+                            className="w-5 h-5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded flex items-center justify-center text-[8px] cursor-pointer"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Label / Title</label>
+                          <input
+                            type="text"
+                            value={wa.label || ''}
+                            onChange={(e) => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              nextContent.contact_settings.whatsapp_numbers[index].label = e.target.value;
+                              pushState(nextContent);
+                            }}
+                            className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Subtext / Availability</label>
+                          <input
+                            type="text"
+                            value={wa.subtext || ''}
+                            onChange={(e) => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              nextContent.contact_settings.whatsapp_numbers[index].subtext = e.target.value;
+                              pushState(nextContent);
+                            }}
+                            className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">WhatsApp Number (e.g. 919876543210)</label>
+                          <input
+                            type="text"
+                            value={wa.number || ''}
+                            onChange={(e) => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              nextContent.contact_settings.whatsapp_numbers[index].number = e.target.value;
+                              pushState(nextContent);
+                            }}
+                            className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Business Hours Editor */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
+                <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Business Hours Schedule</h4>
+                <div className="space-y-3">
+                  {(currentContent.contact_settings?.business_hours || []).map((hours, index) => (
+                    <div key={index} className="p-4 bg-black/40 border border-white/5 rounded-lg grid grid-cols-1 md:grid-cols-4 gap-3 items-center">
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Day range</label>
+                        <input
+                          type="text"
+                          value={hours.day || ''}
+                          onChange={(e) => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            nextContent.contact_settings.business_hours[index].day = e.target.value;
+                            pushState(nextContent);
+                          }}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Timing details</label>
+                        <input
+                          type="text"
+                          value={hours.time || ''}
+                          onChange={(e) => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            nextContent.contact_settings.business_hours[index].time = e.target.value;
+                            pushState(nextContent);
+                          }}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Card Color Style</label>
+                        <input
+                          type="text"
+                          value={hours.color || ''}
+                          onChange={(e) => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            nextContent.contact_settings.business_hours[index].color = e.target.value;
+                            pushState(nextContent);
+                          }}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div className="flex items-center pt-4 justify-end">
+                        <label className="flex items-center gap-2 cursor-pointer text-xs text-neutral-400">
+                          <input
+                            type="checkbox"
+                            checked={hours.active !== false}
+                            onChange={(e) => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              nextContent.contact_settings.business_hours[index].active = e.target.checked;
+                              pushState(nextContent);
+                            }}
+                            className="w-3.5 h-3.5 rounded border-white/10 accent-emerald-500"
+                          />
+                          <span>Show on page</span>
+                        </label>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Map Location Section Editor */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Google Map Block & directions</h4>
+                  <label className="flex items-center gap-1.5 text-[10px] text-neutral-400 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={currentContent.contact_settings?.contact_map?.show !== false}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.contact_settings.contact_map) nextContent.contact_settings.contact_map = {};
+                        nextContent.contact_settings.contact_map.show = e.target.checked;
+                        pushState(nextContent);
+                      }}
+                      className="w-3 h-3 accent-emerald-500 rounded"
+                    />
+                    <span>Visible</span>
+                  </label>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Section Title</label>
+                    <input
+                      type="text"
+                      value={currentContent.contact_settings?.contact_map?.title || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.contact_settings.contact_map) nextContent.contact_settings.contact_map = {};
+                        nextContent.contact_settings.contact_map.title = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Section Subtitle</label>
+                    <input
+                      type="text"
+                      value={currentContent.contact_settings?.contact_map?.subtitle || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.contact_settings.contact_map) nextContent.contact_settings.contact_map = {};
+                        nextContent.contact_settings.contact_map.subtitle = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Card Company/HQ name</label>
+                    <input
+                      type="text"
+                      value={currentContent.contact_settings?.contact_map?.card_title || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.contact_settings.contact_map) nextContent.contact_settings.contact_map = {};
+                        nextContent.contact_settings.contact_map.card_title = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Google Maps Embed URL (iframe src)</label>
+                    <input
+                      type="text"
+                      value={currentContent.contact_settings?.contact_map?.map_iframe_url || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.contact_settings.contact_map) nextContent.contact_settings.contact_map = {};
+                        nextContent.contact_settings.contact_map.map_iframe_url = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Full Office Address</label>
+                  <input
+                    type="text"
+                    value={currentContent.contact_settings?.contact_map?.address || ''}
+                    onChange={(e) => {
+                      const nextContent = JSON.parse(JSON.stringify(currentContent));
+                      if (!nextContent.contact_settings.contact_map) nextContent.contact_settings.contact_map = {};
+                      nextContent.contact_settings.contact_map.address = e.target.value;
+                      pushState(nextContent);
+                    }}
+                    className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Get Directions Link / URL</label>
+                  <input
+                    type="text"
+                    value={currentContent.contact_settings?.contact_map?.directions_url || ''}
+                    onChange={(e) => {
+                      const nextContent = JSON.parse(JSON.stringify(currentContent));
+                      if (!nextContent.contact_settings.contact_map) nextContent.contact_settings.contact_map = {};
+                      nextContent.contact_settings.contact_map.directions_url = e.target.value;
+                      pushState(nextContent);
+                    }}
+                    className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* FAQs Section */}
+              <div className="flex justify-between items-center pt-6 border-t border-white/5">
+                <h3 className="font-mono text-[10px] uppercase tracking-wider text-white">// Contact FAQ List</h3>
+                <button
+                  onClick={addFaqItem}
+                  className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/15 rounded-lg text-[9px] font-mono text-neutral-300 hover:text-white cursor-pointer transition-all flex items-center gap-1.5 font-semibold"
+                >
+                  <span>+ Add FAQ</span>
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {(currentContent.contact_faqs || []).map((faq, index) => (
+                  <div key={index} className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left relative">
+                    <div className="flex justify-between items-center pb-3 border-b border-white/5">
+                      <span className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">FAQ Question #{index + 1}</span>
+                      <button
+                        onClick={() => deleteFaqItem(index)}
+                        className="w-6 h-6 border border-red-500/10 hover:border-red-500/30 rounded flex items-center justify-center text-[9px] text-red-500 bg-red-500/5 hover:bg-red-500/10 cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    {/* Question */}
+                    <div className="space-y-1">
+                      <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Question</label>
+                      <input
+                        type="text"
+                        value={faq.q || ''}
+                        onChange={(e) => updateFaqItem(index, 'q', e.target.value)}
+                        className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Answer */}
+                    <div className="space-y-1">
+                      <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Answer Description</label>
+                      <textarea
+                        rows={3}
+                        value={faq.a || ''}
+                        onChange={(e) => updateFaqItem(index, 'a', e.target.value)}
+                        className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none resize-none leading-relaxed"
                       />
                     </div>
                   </div>
@@ -4611,19 +5860,31 @@ export default function AdminPanel() {
                   <div className="space-y-3">
                     <h4 className="font-mono text-[10px] uppercase tracking-widest text-emerald-400">// Client Inquiries ({inquiries.length})</h4>
                     <div className="space-y-3">
-                      {inquiries.map((inq, idx) => (
-                        <div key={idx} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-2 text-left">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <span className="text-white font-bold text-xs">{inq.name}</span>
-                              <span className="text-neutral-500 text-[10px] font-mono ml-2">({inq.email})</span>
+                      {inquiries.map((inq, idx) => {
+                        const inqNum = inquiries.length - idx;
+                        const dateStr = inq.created_at ? new Date(inq.created_at).toLocaleString() : 'N/A';
+                        const dynamicFields = Object.entries(inq).filter(
+                          ([k]) => !['created_at', '_id'].includes(k)
+                        );
+                        return (
+                          <div key={idx} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-3.5 text-left relative hover:border-white/10 transition-all duration-300">
+                            <div className="flex justify-between items-center pb-2 border-b border-white/[0.04]">
+                              <span className="font-mono text-[9px] text-emerald-400 font-bold uppercase tracking-wider">// Inquiry #{inqNum}</span>
+                              <span className="font-mono text-[8px] text-neutral-500 bg-neutral-900 border border-white/5 px-2 py-0.5 rounded">
+                                {dateStr}
+                              </span>
                             </div>
-                            <span className="font-mono text-[8px] text-neutral-400 bg-white/5 border border-white/10 px-2 py-0.5 rounded">{inq.budget}</span>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-xs">
+                              {dynamicFields.map(([key, val]) => (
+                                <div key={key} className="flex flex-col gap-0.5">
+                                  <span className="font-mono text-[8px] uppercase tracking-widest text-neutral-500">{key}:</span>
+                                  <span className="text-neutral-200 font-light whitespace-pre-wrap">{String(val || 'N/A')}</span>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                          <p className="text-xs text-neutral-300 leading-relaxed font-light">{inq.message}</p>
-                          <div className="font-mono text-[8px] text-neutral-500">Service: {inq.service} | Date: {inq.created_at ? new Date(inq.created_at).toLocaleString() : 'N/A'}</div>
-                        </div>
-                      ))}
+                        );
+                      })}
                       {inquiries.length === 0 && <div className="text-center py-6 text-neutral-500 font-mono text-[10px]">No inquiries received yet.</div>}
                     </div>
                   </div>

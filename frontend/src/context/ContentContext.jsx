@@ -439,6 +439,11 @@ export const DEFAULT_CONTENT = {
       status: "published"
     }
   ],
+  ventures_settings: {
+    overline: "// Our Initiatives",
+    title: "Digiverse Ventures",
+    subtitle: "Beyond client work, we build, incubate, and run initiatives that create lasting social and economic impact across India."
+  },
   ventures: [
     {
       slug: "aisetu",
@@ -506,6 +511,18 @@ export const DEFAULT_CONTENT = {
     {q: "What is the interview process like?", a: "Our process typically involves 3 stages: an initial resume/portfolio screening, a technical or creative assessment, and a final culture-fit discussion with the founders. The entire process takes 5-7 business days."},
     {q: "Is remote work allowed?", a: "Yes! Several roles support full remote work. For hybrid roles, we follow a flexible 3-days-in-office model at our Surat headquarters."}
   ],
+  contact_settings: {
+    title: "Let's Create Together",
+    subtitle: "Have a project in mind, want to inquire about custom solutions, or simply want to say hello? We'd love to hear from you.",
+    email_hello: "hello@harikrushndigiverse.com",
+    email_join: "join@harikrushndigiverse.com",
+    phone: "+91 98765 43210",
+    stats: [
+      { label: "2-4 Hour Response", value: "Mon — Sat", icon: "time" },
+      { label: "Global Clients", value: "India • USA • UK • UAE", icon: "globe" },
+      { label: "Free Consultation", value: "No obligation quote", icon: "shield" }
+    ]
+  },
   contact_offices: [
     {
       slug: "surat",

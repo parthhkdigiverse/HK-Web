@@ -125,16 +125,16 @@ export default function Ventures() {
             exit={{ opacity: 0, x: -30 }}
             transition={{ duration: 0.3 }}
           >
-            {/* Header */}
+             {/* Header */}
             <div className="text-center mb-20 pt-8 relative z-10">
               <span className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.4em] text-neutral-500 font-light block mb-3">
-                // Our Initiatives
+                {content?.ventures_settings?.overline || "// Our Initiatives"}
               </span>
               <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-6">
-                Digiverse Ventures
+                {content?.ventures_settings?.title || "Digiverse Ventures"}
               </h1>
               <p className="font-light text-neutral-400 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-                Beyond client work, we build, incubate, and run initiatives that create lasting social and economic impact across India.
+                {content?.ventures_settings?.subtitle || "Beyond client work, we build, incubate, and run initiatives that create lasting social and economic impact across India."}
               </p>
             </div>
 

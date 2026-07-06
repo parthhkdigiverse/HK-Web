@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useContent } from '../context/ContentContext';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8008';
+
 /* ────────────────────────── JOBS DATA ────────────────────────── */
 const DEFAULT_JOBS = [
   {
@@ -236,7 +238,7 @@ export default function Career() {
     setInternSubmitting(true);
     setInternErrorMsg('');
     try {
-      const response = await fetch('/api/applications/intern', {
+      const response = await fetch(API_URL + '/api/applications/intern', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -308,7 +310,7 @@ export default function Career() {
     setSubmitting(true);
     setErrorMsg('');
     try {
-      const response = await fetch('/api/applications/job', {
+      const response = await fetch(API_URL + '/api/applications/job', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
