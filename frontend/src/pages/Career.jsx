@@ -102,7 +102,7 @@ const DEFAULT_JOBS = [
 const departments = ['All', 'Engineering', 'Design', 'Marketing', 'Operations', 'AI & Data'];
 
 /* ────────────────────────── PERKS DATA ────────────────────────── */
-const perks = [
+const DEFAULT_PERKS = [
   { title: 'Elite Hardware', desc: 'M3 Max MacBook Pro setups, dual 4K monitors, and custom layouts tailored to engineering speed.', color: 'emerald' },
   { title: 'Hybrid Autonomy', desc: 'Flexible hours and fluid work-from-home options to support creative focus and lifestyle flow.', color: 'blue' },
   { title: '20% R&D Labs', desc: 'Dedicate every Friday afternoon exclusively to experimental tools, personal projects, or open source.', color: 'purple' },
@@ -112,7 +112,7 @@ const perks = [
 ];
 
 /* ────────────────────────── TESTIMONIALS ────────────────────────── */
-const testimonials = [
+const DEFAULT_TESTIMONIALS = [
   {
     id: 1,
     name: 'Ravi Patel',
@@ -181,7 +181,7 @@ const testimonials = [
 ];
 
 /* ────────────────────────── FAQ DATA ────────────────────────── */
-const faqs = [
+const DEFAULT_FAQS = [
   { q: 'What is the interview process like?', a: 'Our process typically involves 3 stages: an initial resume/portfolio screening, a technical or creative assessment, and a final culture-fit discussion with the founders. The entire process takes 5-7 business days.' },
   { q: 'Is remote work allowed?', a: 'Yes! Several roles support full remote work. For hybrid roles, we follow a flexible 3-days-in-office model at our Surat headquarters, with the remaining days being work-from-home.' },
   { q: 'What tech stack does HK use?', a: 'We primarily work with React, Next.js, FastAPI (Python), PostgreSQL, Docker, Flutter, and various AI/ML frameworks including LangChain, OpenAI APIs, and vector databases.' },
@@ -191,7 +191,7 @@ const faqs = [
 ];
 
 /* ────────────────────────── CAREER LADDER ────────────────────────── */
-const careerLadder = [
+const DEFAULT_LADDER = [
   { level: 'Intern', duration: '3-6 months', desc: 'Learn fundamentals, shadow senior team members, and contribute to live projects.' },
   { level: 'Junior', duration: 'Year 1', desc: 'Own small features independently, participate in code reviews, and build domain expertise.' },
   { level: 'Mid-Level', duration: 'Year 2-3', desc: 'Lead feature development, mentor juniors, and make architectural decisions.' },
@@ -200,7 +200,7 @@ const careerLadder = [
 ];
 
 /* ────────────────────────── STATS ────────────────────────── */
-const stats = [
+const DEFAULT_STATS = [
   { value: '50+', label: 'Projects Delivered' },
   { value: '8+', label: 'Industries Served' },
   { value: '3+', label: 'Years of Excellence' },
@@ -209,6 +209,12 @@ const stats = [
 
 export default function Career() {
   const { content } = useContent();
+  const stats = content?.career_stats || DEFAULT_STATS;
+  const perks = content?.career_perks || DEFAULT_PERKS;
+  const testimonials = content?.career_testimonials || DEFAULT_TESTIMONIALS;
+  const faqs = content?.career_faqs || DEFAULT_FAQS;
+  const careerLadder = content?.career_ladder || DEFAULT_LADDER;
+
   const jobs = (content?.careers || DEFAULT_JOBS).map(j => ({
     ...j,
     id: j.slug || j.id
@@ -222,8 +228,16 @@ export default function Career() {
   const [errorMsg, setErrorMsg] = useState('');
   const [highlightForm, setHighlightForm] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
-  const [counters, setCounters] = useState(stats.map(() => 0));
+  const [counters, setCounters] = useState([]);
   const statsRef = useRef(null);
+
+  // Sync counters size with dynamic stats list
+  useEffect(() => {
+    if (stats) {
+      setCounters(stats.map(() => 0));
+      setStatsAnimated(false);
+    }
+  }, [stats]);
   const [statsAnimated, setStatsAnimated] = useState(false);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
 
@@ -274,14 +288,15 @@ export default function Career() {
 
   // Animated counter on scroll
   useEffect(() => {
+    if (!stats || stats.length === 0) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !statsAnimated) {
           setStatsAnimated(true);
           stats.forEach((stat, idx) => {
-            const target = parseInt(stat.value);
+            const target = parseInt(stat.value) || 0;
             let current = 0;
-            const increment = Math.ceil(target / 40);
+            const increment = Math.ceil(target / 40) || 1;
             const timer = setInterval(() => {
               current += increment;
               if (current >= target) {
@@ -297,11 +312,11 @@ export default function Career() {
           });
         }
       },
-      { threshold: 0.3 }
+      { threshold: 0.2 }
     );
     if (statsRef.current) observer.observe(statsRef.current);
     return () => observer.disconnect();
-  }, [statsAnimated]);
+  }, [stats, statsAnimated]);
 
   const filteredJobs = activeDept === 'All' ? jobs : jobs.filter(j => j.department === activeDept);
 

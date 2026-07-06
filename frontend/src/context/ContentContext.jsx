@@ -500,16 +500,95 @@ export const DEFAULT_CONTENT = {
     }
   ],
   career_perks: [
-    {title: "Elite Hardware", desc: "M3 Max MacBook Pro setups, dual 4K monitors, and custom layouts tailored to engineering speed.", color: "emerald"},
-    {title: "Hybrid Autonomy", desc: "Flexible hours and fluid work-from-home options to support creative focus and lifestyle flow.", color: "blue"},
-    {title: "20% R&D Labs", desc: "Dedicate every Friday afternoon exclusively to experimental tools, personal projects, or open source.", color: "purple"}
+    { title: 'Elite Hardware', desc: 'M3 Max MacBook Pro setups, dual 4K monitors, and custom layouts tailored to engineering speed.', color: 'emerald' },
+    { title: 'Hybrid Autonomy', desc: 'Flexible hours and fluid work-from-home options to support creative focus and lifestyle flow.', color: 'blue' },
+    { title: '20% R&D Labs', desc: 'Dedicate every Friday afternoon exclusively to experimental tools, personal projects, or open source.', color: 'purple' },
+    { title: 'Elite Workspace', desc: 'Ergonomic seating, unlimited custom beans, and a high-frequency architectural design culture.', color: 'amber' },
+    { title: 'Health Insurance', desc: 'Comprehensive medical insurance coverage for you and your family from day one of joining.', color: 'rose' },
+    { title: 'Learning Budget', desc: '₹50,000 annual budget for courses, conferences, certifications, and technical book subscriptions.', color: 'cyan' }
   ],
   career_testimonials: [
-    {name: "Ravi Patel", role: "Frontend Developer", tenure: "2 years", quote: "The engineering culture here is unmatched. Every day I get to push the boundaries of what's possible with web animations and performance.", rating: 5, color: "from-emerald-500/10 to-teal-500/5", glowColor: "rgba(16,185,129,0.25)", tag: "ENGINEERING", tagClass: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20", starClass: "text-emerald-500"}
+    {
+      name: 'Ravi Patel',
+      role: 'Frontend Developer',
+      tenure: '2 years',
+      quote: "The engineering culture here is unmatched. Every day I get to push the boundaries of what's possible with web animations and performance. The team genuinely supports innovation.",
+      rating: 5,
+      color: 'from-emerald-500/10 to-teal-500/5',
+      glowColor: 'rgba(16,185,129,0.25)',
+      tag: 'ENGINEERING',
+      tagClass: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+      starClass: 'text-emerald-500'
+    },
+    {
+      name: 'Priya Shah',
+      role: 'UI/UX Designer',
+      tenure: '1.5 years',
+      quote: "I've grown more in 18 months here than in 4 years at my previous company. The design standards are world-class and inspiring. Every project is a new creative challenge.",
+      rating: 5,
+      color: 'from-purple-500/10 to-indigo-500/5',
+      glowColor: 'rgba(168,85,247,0.25)',
+      tag: 'DESIGN',
+      tagClass: 'text-purple-400 bg-purple-500/10 border-purple-500/20',
+      starClass: 'text-purple-500'
+    },
+    {
+      name: 'Arjun Mehta',
+      role: 'AI Engineer',
+      tenure: '1 year',
+      quote: 'Building autonomous agent systems with cutting-edge LLM frameworks every day — this is the future of software engineering. HK gives you the freedom to experiment and innovate.',
+      rating: 5,
+      color: 'from-amber-500/10 to-orange-500/5',
+      glowColor: 'rgba(245,158,11,0.25)',
+      tag: 'AI & DATA',
+      tagClass: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
+      starClass: 'text-amber-500'
+    },
+    {
+      name: 'Neha Desai',
+      role: 'Project Manager',
+      tenure: '2.5 years',
+      quote: 'The collaborative environment and flat hierarchy make every day exciting. I get to work directly with founders, coordinate global projects, and shape product strategy from the ground up.',
+      rating: 5,
+      color: 'from-sky-500/10 to-cyan-500/5',
+      glowColor: 'rgba(14,165,233,0.25)',
+      tag: 'OPERATIONS',
+      tagClass: 'text-sky-400 bg-sky-500/10 border-sky-500/20',
+      starClass: 'text-sky-500'
+    },
+    {
+      name: 'Karan Joshi',
+      role: 'Full-Stack Developer',
+      tenure: '1.5 years',
+      quote: 'From day one, I was trusted with real client projects. The mentorship program, code review culture, and Friday R&D labs have accelerated my career beyond anything I imagined.',
+      rating: 5,
+      color: 'from-rose-500/10 to-pink-500/5',
+      glowColor: 'rgba(244,63,94,0.25)',
+      tag: 'ENGINEERING',
+      tagClass: 'text-rose-400 bg-rose-500/10 border-rose-500/20',
+      starClass: 'text-rose-500'
+    }
   ],
   career_faqs: [
-    {q: "What is the interview process like?", a: "Our process typically involves 3 stages: an initial resume/portfolio screening, a technical or creative assessment, and a final culture-fit discussion with the founders. The entire process takes 5-7 business days."},
-    {q: "Is remote work allowed?", a: "Yes! Several roles support full remote work. For hybrid roles, we follow a flexible 3-days-in-office model at our Surat headquarters."}
+    { q: 'What is the interview process like?', a: 'Our process typically involves 3 stages: an initial resume/portfolio screening, a technical or creative assessment, and a final culture-fit discussion with the founders. The entire process takes 5-7 business days.' },
+    { q: 'Is remote work allowed?', a: 'Yes! Several roles support full remote work. For hybrid roles, we follow a flexible 3-days-in-office model at our Surat headquarters, with the remaining days being work-from-home.' },
+    { q: 'What tech stack does HK use?', a: 'We primarily work with React, Next.js, FastAPI (Python), PostgreSQL, Docker, Flutter, and various AI/ML frameworks including LangChain, OpenAI APIs, and vector databases.' },
+    { q: 'Do you offer internships?', a: 'Absolutely! We run 3-month and 6-month internship programs for college students. Interns work on real client projects alongside senior engineers and designers.' },
+    { q: 'What is the salary range?', a: 'Compensation is competitive and depends on role, experience, and skills. We also offer performance bonuses, equity participation for senior roles, and annual increments.' },
+    { q: 'How do I prepare for the interview?', a: 'Review our website portfolio, understand our design philosophy, and be ready to discuss your past projects in depth. For technical roles, practice system design and coding challenges.' }
+  ],
+  career_ladder: [
+    { level: 'Intern', duration: '3-6 months', desc: 'Learn fundamentals, shadow senior team members, and contribute to live projects.' },
+    { level: 'Junior', duration: 'Year 1', desc: 'Own small features independently, participate in code reviews, and build domain expertise.' },
+    { level: 'Mid-Level', duration: 'Year 2-3', desc: 'Lead feature development, mentor juniors, and make architectural decisions.' },
+    { level: 'Senior', duration: 'Year 3-5', desc: 'Drive technical strategy, lead client engagements, and define engineering standards.' },
+    { level: 'Lead / Manager', duration: 'Year 5+', desc: 'Shape company direction, manage teams, and drive innovation across verticals.' }
+  ],
+  career_stats: [
+    { value: '50+', label: 'Projects Delivered' },
+    { value: '8+', label: 'Industries Served' },
+    { value: '3+', label: 'Years of Excellence' },
+    { value: '30+', label: 'Team Members' }
   ],
   contact_settings: {
     title: "Let's Create Together",
@@ -698,6 +777,7 @@ export function ContentProvider({ children }) {
       const res = await fetch(API_URL + '/api/content');
       if (res.ok) {
         const data = await res.json();
+        if (data.career_jobs) data.careers = data.career_jobs;
         setContent(data);
       }
     } catch (e) {
@@ -711,7 +791,9 @@ export function ContentProvider({ children }) {
     try {
       const res = await fetch(API_URL + '/api/content/draft');
       if (res.ok) {
-        return await res.json();
+        const data = await res.json();
+        if (data.career_jobs) data.careers = data.career_jobs;
+        return data;
       }
     } catch (e) {
       console.error("Failed to fetch draft:", e);
@@ -721,10 +803,12 @@ export function ContentProvider({ children }) {
 
   const saveDraft = useCallback(async (contentData, password) => {
     try {
+      const payload = { ...contentData };
+      if (payload.careers) payload.career_jobs = payload.careers;
       const res = await fetch(API_URL + '/api/content/draft', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password, content: contentData })
+        body: JSON.stringify({ password, content: payload })
       });
       return res.ok;
     } catch (e) {
@@ -735,10 +819,12 @@ export function ContentProvider({ children }) {
 
   const publishDraft = useCallback(async (contentData, password) => {
     try {
+      const payload = { ...contentData };
+      if (payload.careers) payload.career_jobs = payload.careers;
       const res = await fetch(API_URL + '/api/content/publish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password, content: contentData })
+        body: JSON.stringify({ password, content: payload })
       });
       if (res.ok) {
         fetchContent();

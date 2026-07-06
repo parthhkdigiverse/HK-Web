@@ -189,6 +189,21 @@ DEFAULT_CASE_STUDIES = [
   }
 ]
 
+DEFAULT_CAREER_LADDER = [
+  { "level": "Intern", "duration": "3-6 months", "desc": "Learn fundamentals, shadow senior team members, and contribute to live projects." },
+  { "level": "Junior", "duration": "Year 1", "desc": "Own small features independently, participate in code reviews, and build domain expertise." },
+  { "level": "Mid-Level", "duration": "Year 2-3", "desc": "Lead feature development, mentor juniors, and make architectural decisions." },
+  { "level": "Senior", "duration": "Year 3-5", "desc": "Drive technical strategy, lead client engagements, and define engineering standards." },
+  { "level": "Lead / Manager", "duration": "Year 5+", "desc": "Shape company direction, manage teams, and drive innovation across verticals." }
+]
+
+DEFAULT_CAREER_STATS = [
+  { "value": "50+", "label": "Projects Delivered" },
+  { "value": "8+", "label": "Industries Served" },
+  { "value": "3+", "label": "Years of Excellence" },
+  { "value": "30+", "label": "Team Members" }
+]
+
 DEFAULT_VENTURES_SETTINGS = {
     "overline": "// Our Initiatives",
     "title": "Digiverse Ventures",
@@ -448,7 +463,9 @@ def compile_full_content(base_content: dict) -> dict:
         "contact_offices": ("contact_offices", "slug", DEFAULT_CONTACT_OFFICES),
         "contact_faqs": ("contact_faqs", "q", DEFAULT_CONTACT_FAQS),
         "services_subpages": ("services_subpages", "identifier", DEFAULT_SERVICES_SUBPAGES),
-        "case_studies": ("case_studies", "sort_order", DEFAULT_CASE_STUDIES)
+        "case_studies": ("case_studies", "sort_order", DEFAULT_CASE_STUDIES),
+        "career_ladder": ("career_ladder", "sort_order", DEFAULT_CAREER_LADDER),
+        "career_stats": ("career_stats", "sort_order", DEFAULT_CAREER_STATS)
     }
     
     for key, (coll_name, sort_field, fallback) in list_collections_map.items():
@@ -572,7 +589,9 @@ def save_normalized_draft(data: dict):
         "contact_offices": "contact_offices",
         "contact_faqs": "contact_faqs",
         "services_subpages": "services_subpages",
-        "case_studies": "case_studies"
+        "case_studies": "case_studies",
+        "career_ladder": "career_ladder",
+        "career_stats": "career_stats"
     }
     
     for key, coll_name in list_collections.items():
