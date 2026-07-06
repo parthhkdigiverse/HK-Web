@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useContent } from '../context/ContentContext';
 
@@ -140,6 +140,113 @@ export default function CaseStudy() {
 
   const [selectedCase, setSelectedCase] = useState(null);
 
+  useEffect(() => {
+    const handleHash = () => {
+      const hash = window.location.hash;
+      if (hash.includes('?case=')) {
+        const caseId = hash.split('?case=')[1];
+        if (caseId) {
+          setSelectedCase(caseId);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      } else {
+        setSelectedCase(null);
+      }
+    };
+    handleHash();
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
+
+  if (selectedCase) {
+    const item = cases.find(c => c.id === selectedCase);
+    if (item) {
+      return (
+        <motion.div
+          key="detail-page"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.4 }}
+          className="relative text-neutral-300 font-sans max-w-6xl mx-auto px-4 py-16 text-left min-h-screen"
+        >
+          {/* Background ambience */}
+          <div className="absolute top-[10%] right-1/4 w-[35vw] h-[35vw] rounded-full bg-blue-500/5 blur-[120px] pointer-events-none" />
+          <div className="absolute top-[60%] left-1/4 w-[30vw] h-[30vw] rounded-full bg-purple-500/5 blur-[100px] pointer-events-none" />
+
+          {/* Back button */}
+          <button
+            onClick={() => {
+              window.location.hash = '#case-study';
+            }}
+            className="group flex items-center gap-2 mb-10 text-xs font-mono uppercase tracking-widest text-neutral-400 hover:text-white cursor-pointer transition-colors"
+          >
+            <span>← Back to Case Studies</span>
+          </button>
+
+          {/* Hero Header */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16 relative z-10">
+            <div className="space-y-6">
+              <div className="flex gap-2">
+                <span className={`font-mono text-[9px] uppercase tracking-widest px-3 py-1.5 rounded-lg border bg-${item.color}-500/10 text-${item.color}-400 border-${item.color}-500/20`}>
+                  {item.industry}
+                </span>
+                <span className="font-mono text-[9px] uppercase tracking-widest px-3 py-1.5 rounded-lg border bg-white/5 text-neutral-400 border-white/10">
+                  {item.duration}
+                </span>
+              </div>
+              <div className="space-y-2">
+                <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 block">{item.client}</span>
+                <h1 className="font-display text-4xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">{item.title}</h1>
+              </div>
+              <p className="font-light text-neutral-400 text-sm sm:text-base leading-relaxed">{item.summary}</p>
+            </div>
+            
+            {/* Poster / Cover Image */}
+            <div className="relative aspect-video lg:aspect-[4/3] rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+              <img src={item.img} alt={item.title} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Metrics Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 border-t border-b border-white/5 py-10 relative z-10">
+            {(item.metrics || []).map((metric) => (
+              <div key={metric.label} className="p-6 rounded-2xl bg-white/[0.01] border border-white/5 hover:border-white/10 transition-colors text-center">
+                <span className={`font-display text-3xl sm:text-4xl font-extrabold text-${item.color}-400 block`}>{metric.value}</span>
+                <span className="font-mono text-[9px] uppercase tracking-wider text-neutral-500 mt-2 block">{metric.label}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Detailed Narrative */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 mb-16 relative z-10">
+            <div className="space-y-4">
+              <h3 className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 font-bold">// The Challenge</h3>
+              <p className="font-light text-neutral-300 text-sm leading-relaxed whitespace-pre-wrap">{item.challenge}</p>
+            </div>
+            <div className="space-y-4">
+              <h3 className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 font-bold">// Our Solution</h3>
+              <p className="font-light text-neutral-300 text-sm leading-relaxed whitespace-pre-wrap">{item.solution}</p>
+            </div>
+          </div>
+
+          {/* Tech Stack Used */}
+          <div className="space-y-4 border-t border-white/5 pt-10 relative z-10">
+            <h3 className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 font-bold">// Technologies Utilized</h3>
+            <div className="flex flex-wrap gap-2.5">
+              {(item.tech || []).map(t => (
+                <span key={t} className={`font-mono text-[10px] uppercase tracking-widest text-${item.color}-400 bg-${item.color}-500/5 border border-${item.color}-500/15 px-4 py-2 rounded-xl`}>
+                  {t}
+                </span>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+      );
+    }
+  }
+
   return (
     <div className="relative text-neutral-300 font-sans">
       {/* Background ambience */}
@@ -171,11 +278,14 @@ export default function CaseStudy() {
             className="group"
           >
             <div 
-              className={`bg-[#050508]/60 backdrop-blur-md border border-white/5 rounded-3xl overflow-hidden hover:border-white/15 transition-all duration-500 shadow-2xl relative`}
+              onClick={() => {
+                window.location.hash = '#case-study?case=' + item.id;
+              }}
+              className="bg-[#050508]/60 backdrop-blur-md border border-white/5 rounded-3xl overflow-hidden hover:border-white/15 transition-all duration-500 shadow-2xl relative cursor-pointer text-left"
               style={{ boxShadow: `0 20px 60px -20px ${item.glowColor}` }}
             >
               {/* Image + Overlay */}
-              <div className={`relative h-64 sm:h-80 overflow-hidden`}>
+              <div className="relative h-64 sm:h-80 overflow-hidden">
                 <img 
                   src={item.img} 
                   alt={item.title}
@@ -202,7 +312,7 @@ export default function CaseStudy() {
 
                 {/* Metrics Row */}
                 <div className="grid grid-cols-3 gap-4">
-                  {item.metrics.map((metric) => (
+                  {(item.metrics || []).map((metric) => (
                     <div key={metric.label} className="text-center p-4 rounded-xl bg-white/[0.02] border border-white/5">
                       <span className={`font-display text-xl sm:text-2xl font-extrabold text-${item.color}-400 block`}>{metric.value}</span>
                       <span className="font-mono text-[8px] uppercase tracking-wider text-neutral-500 mt-1 block">{metric.label}</span>
@@ -211,51 +321,12 @@ export default function CaseStudy() {
                 </div>
 
                 {/* Expand Button */}
-                <button
-                  onClick={() => setSelectedCase(selectedCase === item.id ? null : item.id)}
-                  className="font-mono text-[10px] uppercase tracking-widest text-white/60 hover:text-white transition-all cursor-pointer flex items-center gap-2"
+                <div
+                  className="font-mono text-[10px] uppercase tracking-widest text-white/60 hover:text-white transition-all flex items-center gap-2"
                 >
-                  <span>{selectedCase === item.id ? '[ Hide Details ]' : '[ View Full Case Study ]'}</span>
-                  <motion.span animate={{ rotate: selectedCase === item.id ? 180 : 0 }} className="text-xs">▼</motion.span>
-                </button>
-
-                {/* Expanded Details */}
-                <AnimatePresence>
-                  {selectedCase === item.id && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="overflow-hidden"
-                    >
-                      <div className="border-t border-white/5 pt-6 space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                          <div className="space-y-3">
-                            <h4 className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">// The Challenge</h4>
-                            <p className="font-light text-neutral-400 text-xs sm:text-sm leading-relaxed">{item.challenge}</p>
-                          </div>
-                          <div className="space-y-3">
-                            <h4 className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">// Our Solution</h4>
-                            <p className="font-light text-neutral-400 text-xs sm:text-sm leading-relaxed">{item.solution}</p>
-                          </div>
-                        </div>
-
-                        {/* Tech Stack */}
-                        <div className="space-y-3">
-                          <h4 className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">// Tech Stack Used</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {item.tech.map(t => (
-                              <span key={t} className={`font-mono text-[9px] uppercase tracking-widest text-${item.color}-400 bg-${item.color}-500/5 border border-${item.color}-500/15 px-3 py-1.5 rounded-lg`}>
-                                {t}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                  <span>[ View Full Case Study ]</span>
+                  <span className="text-xs">→</span>
+                </div>
               </div>
             </div>
           </motion.div>

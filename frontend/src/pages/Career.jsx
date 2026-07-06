@@ -227,6 +227,15 @@ export default function Career() {
   const [statsAnimated, setStatsAnimated] = useState(false);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
 
+  // Auto-rotate testimonials every 6 seconds (same as Home page)
+  useEffect(() => {
+    if (!testimonials || !testimonials.length) return;
+    const interval = setInterval(() => {
+      setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [testimonials]);
+
   const [showInternshipForm, setShowInternshipForm] = useState(false);
   const [internFormData, setInternFormData] = useState({ name: '', email: '', phone: '', track: 'React/Next.js', college: '', resume: '', message: '' });
   const [internSubmitted, setInternSubmitted] = useState(false);
