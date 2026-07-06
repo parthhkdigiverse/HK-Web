@@ -48,6 +48,24 @@ function PreviewContainer({ currentHash }) {
     setIsLoaded(true);
   }, []);
 
+  const scrollToActiveTab = useCallback((tab) => {
+    if (tab === 'hero' || tab === 'navbar') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (tab === 'footer') {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    } else {
+      const targetId = tab === 'stats' ? 'stats-section' : tab === 'services' ? 'services-section' : tab === 'brands' ? 'brands-section' : null;
+      if (targetId) {
+        setTimeout(() => {
+          const el = document.getElementById(targetId);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 150);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     previewContentRef.current = previewContent;
   }, [previewContent]);
@@ -63,6 +81,11 @@ function PreviewContainer({ currentHash }) {
         if (currentContent && currentContent.hero && nextContent.hero && nextContent.hero.videoUrl !== currentContent.hero.videoUrl) {
           setIsLoaded(false);
         }
+        if (event.data.activeTab) {
+          scrollToActiveTab(event.data.activeTab);
+        }
+      } else if (event.data && event.data.type === 'CMS_SCROLL_TO') {
+        scrollToActiveTab(event.data.section);
       }
     };
 
@@ -73,7 +96,7 @@ function PreviewContainer({ currentHash }) {
     }
 
     return () => window.removeEventListener('message', handleMessage);
-  }, []);
+  }, [scrollToActiveTab]);
 
   if (!previewContent) {
     return (

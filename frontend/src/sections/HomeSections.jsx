@@ -116,12 +116,14 @@ const getServicePreview = (num, idx) => {
   return servicePreviews[fallbackKey];
 };
 
-const BrandLogo = ({ name }) => {
+const BrandLogo = ({ logo, name, size }) => {
+  if (!logo) return null;
   return (
     <img 
-      src={`/images/logos/${name.toLowerCase()}_logo.png`} 
+      src={logo} 
       alt={`${name} Logo`} 
-      className="w-14 h-14 object-contain mr-3 mix-blend-screen opacity-70" 
+      style={{ width: size, height: size, filter: 'grayscale(100%)' }}
+      className="object-contain mr-3 mix-blend-screen opacity-70" 
       onError={(e) => {
         // Fallback in case image is missing
         e.target.style.display = 'none';
@@ -133,7 +135,26 @@ const BrandLogo = ({ name }) => {
 export default function HomeSections({ overrideContent }) {
   const { content: globalContent } = useContent();
   const activeContent = overrideContent || globalContent;
-  const { stats, services, sectors } = activeContent;
+  const { stats, services, sectors, brands } = activeContent;
+
+  const defaultBrands = {
+    show: true,
+    fontSize: "36px",
+    imageSize: "56px",
+    list: [
+      { name: "SAPHIRA", logo: "/images/logos/saphira_logo.png" },
+      { name: "NOVA", logo: "/images/logos/nova_logo.png" },
+      { name: "CORE", logo: "/images/logos/core_logo.png" },
+      { name: "AETHER", logo: "/images/logos/aether_logo.png" },
+      { name: "QUANTUM", logo: "/images/logos/quantum_logo.png" },
+      { name: "VERTEX", logo: "/images/logos/vertex_logo.png" },
+      { name: "HELIOS", logo: "/images/logos/helios_logo.png" },
+      { name: "ORION", logo: "/images/logos/orion_logo.png" },
+      { name: "AXIOM", logo: "/images/logos/axiom_logo.png" }
+    ]
+  };
+  const activeBrands = brands || defaultBrands;
+  const brandList = activeBrands.list || defaultBrands.list;
 
   const [activeImage, setActiveImage] = useState(null);
   const [mouseCoords, setMouseCoords] = useState({ x: 0, y: 0 });
@@ -254,7 +275,7 @@ export default function HomeSections({ overrideContent }) {
     <div className="bg-[#0c0c0c] text-[#e5e2e1] font-sans relative z-10 border-t border-white/5">
       {/* Stats Row */}
       {visibleStats.length > 0 && (
-        <section className={`border-b border-white/5 grid ${gridColsClass} max-w-[1600px] w-full mx-auto`}>
+        <section id="stats-section" className={`border-b border-white/5 grid ${gridColsClass} max-w-[1600px] w-full mx-auto`}>
           {visibleStats.map((stat, i) => (
             <div 
               key={stat.label || i} 
@@ -274,29 +295,40 @@ export default function HomeSections({ overrideContent }) {
       )}
 
       {/* Brand Ticker */}
-      <div className="py-12 border-b border-white/5 overflow-hidden bg-black/40">
-        <div className="flex whitespace-nowrap animate-scroll">
-          <div className="flex gap-24 items-center px-12">
-            {['SAPHIRA', 'NOVA', 'CORE', 'AETHER', 'QUANTUM', 'VERTEX', 'HELIOS', 'ORION', 'AXIOM'].map((brand) => (
-              <span key={brand} className="inline-flex items-center font-display text-4xl font-extrabold text-white tracking-wider">
-                <BrandLogo name={brand} />
-                <span className="opacity-25">{brand}</span>
-              </span>
-            ))}
-          </div>
-          <div className="flex gap-24 items-center px-12" aria-hidden="true">
-            {['SAPHIRA', 'NOVA', 'CORE', 'AETHER', 'QUANTUM', 'VERTEX', 'HELIOS', 'ORION', 'AXIOM'].map((brand) => (
-              <span key={brand + '-clone'} className="inline-flex items-center font-display text-4xl font-extrabold text-white tracking-wider">
-                <BrandLogo name={brand} />
-                <span className="opacity-25">{brand}</span>
-              </span>
-            ))}
+      {activeBrands.show !== false && brandList.length > 0 && (
+        <div id="brands-section" className="py-12 border-b border-white/5 overflow-hidden bg-black/40">
+          <div className="flex whitespace-nowrap animate-scroll">
+            <div className="flex gap-24 items-center px-12">
+              {brandList.map((brand, idx) => (
+                <span 
+                  key={idx} 
+                  style={{ fontSize: activeBrands.fontSize || '36px' }}
+                  className="inline-flex items-center font-display font-extrabold text-white tracking-wider"
+                >
+                  <BrandLogo logo={brand.logo} name={brand.name} size={activeBrands.imageSize || '56px'} />
+                  <span className="opacity-25">{brand.name}</span>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-24 items-center px-12" aria-hidden="true">
+              {brandList.map((brand, idx) => (
+                <span 
+                  key={idx + '-clone'} 
+                  style={{ fontSize: activeBrands.fontSize || '36px' }}
+                  className="inline-flex items-center font-display font-extrabold text-white tracking-wider"
+                >
+                  <BrandLogo logo={brand.logo} name={brand.name} size={activeBrands.imageSize || '56px'} />
+                  <span className="opacity-25">{brand.name}</span>
+                </span>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Service Index */}
       <section 
+        id="services-section"
         className="py-32 px-4 sm:px-6 md:px-8 lg:px-12 max-w-[1600px] w-full mx-auto relative"
         onMouseMove={handleMouseMove}
       >

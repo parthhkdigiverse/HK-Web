@@ -74,6 +74,22 @@ DEFAULT_CONTENT = {
         "title2": "infinite digital.",
         "desc": "HariKrushn DigiVerse is an engineering & design partnership building custom software, AI systems and digital brand presence for ambitious global teams."
     },
+    "brands": {
+        "show": True,
+        "fontSize": "36px",
+        "imageSize": "56px",
+        "list": [
+            { "name": "SAPHIRA", "logo": "/images/logos/saphira_logo.png" },
+            { "name": "NOVA", "logo": "/images/logos/nova_logo.png" },
+            { "name": "CORE", "logo": "/images/logos/core_logo.png" },
+            { "name": "AETHER", "logo": "/images/logos/aether_logo.png" },
+            { "name": "QUANTUM", "logo": "/images/logos/quantum_logo.png" },
+            { "name": "VERTEX", "logo": "/images/logos/vertex_logo.png" },
+            { "name": "HELIOS", "logo": "/images/logos/helios_logo.png" },
+            { "name": "ORION", "logo": "/images/logos/orion_logo.png" },
+            { "name": "AXIOM", "logo": "/images/logos/axiom_logo.png" }
+        ]
+    },
     "stats": [
         { "value": "140+", "label": "Projects Shipped" },
         { "value": "46", "label": "Engineers" },
@@ -352,7 +368,7 @@ def save_draft_db(data: dict):
     if collection is not None:
         try:
             # 1. Save base content draft
-            base_keys = ["hero", "stats", "services", "caseStudy", "sectors", "milestones", "gallery"]
+            base_keys = ["hero", "stats", "services", "caseStudy", "sectors", "milestones", "gallery", "brands"]
             base_doc = {k: data.get(k) for k in base_keys if k in data}
             
             result = collection.replace_one(
@@ -375,7 +391,7 @@ def publish_db(data: dict):
     if collection is not None:
         try:
             # Save base content published
-            base_keys = ["hero", "stats", "services", "caseStudy", "sectors", "milestones", "gallery"]
+            base_keys = ["hero", "stats", "services", "caseStudy", "sectors", "milestones", "gallery", "brands"]
             base_doc = {k: data.get(k) for k in base_keys if k in data}
             
             collection.replace_one(

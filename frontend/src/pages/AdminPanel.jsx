@@ -129,6 +129,11 @@ export default function AdminPanel() {
               ...(draft.site_settings?.footer || {})
             }
           },
+          brands: {
+            ...DEFAULT_CONTENT.brands,
+            ...(draft.brands || {}),
+            list: draft.brands?.list || DEFAULT_CONTENT.brands.list
+          },
           our_culture: draft.our_culture || DEFAULT_CONTENT.our_culture,
           people: draft.people || DEFAULT_CONTENT.people,
           awards: draft.awards || DEFAULT_CONTENT.awards,
@@ -182,7 +187,7 @@ export default function AdminPanel() {
   const syncIframe = (contentToSend) => {
     if (iframeRef.current && iframeRef.current.contentWindow) {
       iframeRef.current.contentWindow.postMessage(
-        { type: 'UPDATE_CMS_PREVIEW', content: contentToSend },
+        { type: 'UPDATE_CMS_PREVIEW', content: contentToSend, activeTab: activeTab },
         window.location.origin
       );
     }
@@ -200,6 +205,16 @@ export default function AdminPanel() {
     window.addEventListener('message', handlePreviewMessages);
     return () => window.removeEventListener('message', handlePreviewMessages);
   }, [currentContent]);
+
+  // Send a message to scroll the iframe when the active tab changes
+  useEffect(() => {
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      iframeRef.current.contentWindow.postMessage(
+        { type: 'CMS_SCROLL_TO', section: activeTab },
+        window.location.origin
+      );
+    }
+  }, [activeTab]);
 
   // CMS state modifiers
   const updateHeroField = (field, value) => {
@@ -487,6 +502,83 @@ export default function AdminPanel() {
         nextContent.site_settings.footer.logo_img = data.imageUrl;
         pushState(nextContent);
         setSaveStatus({ type: 'success', message: 'Footer logo uploaded successfully!' });
+      } else {
+        const err = await res.json();
+        setSaveStatus({ type: 'error', message: err.detail || 'Upload failed' });
+      }
+    } catch {
+      setSaveStatus({ type: 'error', message: 'Network error uploading image' });
+    } finally {
+      setIsUploadingImage(false);
+      setTimeout(() => setSaveStatus({ type: '', message: '' }), 3000);
+    }
+  };
+
+  const updateBrandsConfig = (field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.brands) nextContent.brands = { show: true, fontSize: "36px", imageSize: "56px", list: [] };
+    nextContent.brands[field] = value;
+    pushState(nextContent);
+  };
+
+  const addBrandItem = () => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.brands) nextContent.brands = { show: true, fontSize: "36px", imageSize: "56px", list: [] };
+    if (!nextContent.brands.list) nextContent.brands.list = [];
+    nextContent.brands.list.push({ name: "NEW PARTNER", logo: "/images/logos/saphira_logo.png" });
+    pushState(nextContent);
+  };
+
+  const deleteBrandItem = (index) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (nextContent.brands && nextContent.brands.list) {
+      nextContent.brands.list.splice(index, 1);
+      pushState(nextContent);
+    }
+  };
+
+  const moveBrandItem = (index, direction) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (nextContent.brands && nextContent.brands.list) {
+      const list = nextContent.brands.list;
+      const targetIdx = index + direction;
+      if (targetIdx >= 0 && targetIdx < list.length) {
+        const temp = list[index];
+        list[index] = list[targetIdx];
+        list[targetIdx] = temp;
+        pushState(nextContent);
+      }
+    }
+  };
+
+  const updateBrandItemField = (index, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (nextContent.brands && nextContent.brands.list) {
+      nextContent.brands.list[index][field] = value;
+      pushState(nextContent);
+    }
+  };
+
+  const handleUploadBrandLogo = async (index, e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setIsUploadingImage(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch(API_URL + '/api/upload/image', {
+        method: 'POST',
+        body: formData
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const nextContent = JSON.parse(JSON.stringify(currentContent));
+        if (!nextContent.brands) nextContent.brands = { show: true, fontSize: "36px", imageSize: "56px", list: [] };
+        if (!nextContent.brands.list) nextContent.brands.list = [];
+        nextContent.brands.list[index].logo = data.imageUrl;
+        pushState(nextContent);
+        setSaveStatus({ type: 'success', message: 'Partner logo uploaded successfully!' });
       } else {
         const err = await res.json();
         setSaveStatus({ type: 'error', message: err.detail || 'Upload failed' });
@@ -1094,7 +1186,8 @@ export default function AdminPanel() {
       items: [
         { label: "Hero Canvas Section", tab: "hero", route: "#preview/home", icon: "⚡", badge: "LIVE", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
         { label: "Statistics & Metrics", tab: "stats", route: "#preview/home", icon: "📊", badge: "LIVE", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
-        { label: "Services Preview Index", tab: "services", route: "#preview/home", icon: "💼", badge: "LIVE", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" }
+        { label: "Services Preview Index", tab: "services", route: "#preview/home", icon: "💼", badge: "LIVE", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
+        { label: "Partner Brand Ticker", tab: "brands", route: "#preview/home", icon: "🤝", badge: "LIVE", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" }
       ]
     },
     {
@@ -1733,6 +1826,156 @@ export default function AdminPanel() {
                 ))}
               </div>
 
+            </div>
+          )}
+
+          {/* PARTNER BRAND TICKER CMS PANEL */}
+          {activeTab === 'brands' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="font-mono text-[10px] uppercase tracking-wider text-white">// Partner Brand Ticker Settings</h3>
+                <button
+                  onClick={addBrandItem}
+                  className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/15 rounded-lg text-[9px] font-mono text-neutral-300 hover:text-white cursor-pointer transition-all flex items-center gap-1.5 font-semibold"
+                >
+                  <span>+ Add Partner</span>
+                </button>
+              </div>
+
+              {/* General Ticker Configuration */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
+                <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">General Display Config</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Show/Hide Ticker */}
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Show Ticker</label>
+                    <button
+                      type="button"
+                      onClick={() => updateBrandsConfig('show', (currentContent.brands?.show !== false ? false : true))}
+                      className={`w-full py-2 border rounded-lg text-[8px] uppercase tracking-widest font-mono cursor-pointer transition-all duration-300 ${
+                        (currentContent.brands?.show !== false) 
+                          ? 'bg-white text-black font-semibold' 
+                          : 'bg-neutral-800 text-neutral-500 border-transparent'
+                      }`}
+                    >
+                      {(currentContent.brands?.show !== false) ? 'Show' : 'Hide'}
+                    </button>
+                  </div>
+
+                  {/* Name Font Size */}
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Name Font Size (e.g. 36px, 2rem)</label>
+                    <input
+                      type="text"
+                      value={currentContent.brands?.fontSize ?? '36px'}
+                      onChange={(e) => updateBrandsConfig('fontSize', e.target.value)}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white font-mono text-xs focus:outline-none focus:border-white/20"
+                      placeholder="36px"
+                    />
+                  </div>
+
+                  {/* Logo Image Size */}
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Logo Image Size (e.g. 56px, 3.5rem)</label>
+                    <input
+                      type="text"
+                      value={currentContent.brands?.imageSize ?? '56px'}
+                      onChange={(e) => updateBrandsConfig('imageSize', e.target.value)}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white font-mono text-xs focus:outline-none focus:border-white/20"
+                      placeholder="56px"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Partners List */}
+              <div className="space-y-4">
+                {(currentContent.brands?.list || []).map((brand, index) => (
+                  <div 
+                    key={index} 
+                    className="p-5 bg-white/[0.01] border border-white/5 rounded-xl space-y-4 hover:border-white/10 transition-colors"
+                  >
+                    {/* Header with Control Buttons */}
+                    <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                      <span className="font-mono text-[9px] uppercase tracking-wider text-neutral-500">Partner #{index + 1}</span>
+                      
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => moveBrandItem(index, -1)}
+                          disabled={index === 0}
+                          className="w-6 h-6 border border-white/10 hover:border-white/20 rounded flex items-center justify-center text-[10px] text-neutral-400 hover:text-white disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                          title="Move Up"
+                        >
+                          ▲
+                        </button>
+                        <button
+                          onClick={() => moveBrandItem(index, 1)}
+                          disabled={index === (currentContent.brands?.list || []).length - 1}
+                          className="w-6 h-6 border border-white/10 hover:border-white/20 rounded flex items-center justify-center text-[10px] text-neutral-400 hover:text-white disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                          title="Move Down"
+                        >
+                          ▼
+                        </button>
+                        <button
+                          onClick={() => deleteBrandItem(index)}
+                          className="w-6 h-6 border border-red-500/10 hover:border-red-500/30 rounded flex items-center justify-center text-[9px] text-red-500 bg-red-500/5 hover:bg-red-500/10 cursor-pointer"
+                          title="Delete Partner"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Inputs */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Name input */}
+                      <div className="space-y-1 text-left">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Partner Name</label>
+                        <input
+                          type="text"
+                          value={brand.name || ''}
+                          onChange={(e) => updateBrandItemField(index, 'name', e.target.value)}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                          placeholder="Name next to logo"
+                        />
+                      </div>
+
+                      {/* Logo URL input */}
+                      <div className="space-y-1 text-left">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Logo Image URL</label>
+                        <input
+                          type="text"
+                          value={brand.logo || ''}
+                          onChange={(e) => updateBrandItemField(index, 'logo', e.target.value)}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                          placeholder="Logo URL"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Image Preview & Upload */}
+                    <div className="flex gap-4 items-center pt-2 border-t border-white/[0.03]">
+                      <div className="w-12 h-12 bg-black/40 border border-white/10 rounded-lg flex items-center justify-center p-1.5">
+                        <img 
+                          src={brand.logo || "/images/logos/saphira_logo.png"} 
+                          alt="Logo Preview" 
+                          className="w-full h-full object-contain mix-blend-screen opacity-80"
+                        />
+                      </div>
+                      <label className="flex-1 max-w-[200px] py-2 border border-white/10 hover:border-white/30 text-center rounded-xl bg-white/5 text-[9px] uppercase tracking-widest font-mono cursor-pointer hover:bg-white/10 transition-all text-white font-semibold">
+                        {isUploadingImage ? 'Uploading...' : 'Upload Logo'}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleUploadBrandLogo(index, e)}
+                          disabled={isUploadingImage}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
