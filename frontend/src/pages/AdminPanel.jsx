@@ -1337,6 +1337,155 @@ export default function AdminPanel() {
     }
   };
 
+  // Industries handlers
+  const updateIndustry = (index, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.industries) nextContent.industries = [];
+    nextContent.industries[index][field] = value;
+    pushState(nextContent);
+  };
+  const addIndustry = () => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.industries) nextContent.industries = [];
+    const newId = `industry_${Date.now()}`;
+    nextContent.industries.push({
+      id: newId,
+      slug: newId,
+      title: 'New Industry Vertical',
+      description: 'Short description of the vertical.',
+      detailDescription: 'Bespoke detailed description of the custom engineering, databases, and pipelines we build for this industry.',
+      accentColor: '#10b981',
+      listImg: '/images/industries/fintech.png',
+      detailImg: '/images/industries/fintech.png',
+      metrics: [
+        { label: 'Metric One', value: 'Value' }
+      ]
+    });
+    pushState(nextContent);
+  };
+  const deleteIndustry = (index) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.industries) nextContent.industries = [];
+    nextContent.industries.splice(index, 1);
+    pushState(nextContent);
+  };
+  const moveIndustry = (index, direction) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    const arr = nextContent.industries;
+    const nextIdx = index + direction;
+    if (nextIdx >= 0 && nextIdx < arr.length) {
+      const temp = arr[index];
+      arr[index] = arr[nextIdx];
+      arr[nextIdx] = temp;
+      pushState(nextContent);
+    }
+  };
+
+  // Industry Metrics handlers
+  const addIndustryMetric = (indIdx) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    const ind = nextContent.industries[indIdx];
+    if (!ind.metrics) ind.metrics = [];
+    ind.metrics.push({ label: 'New Metric', value: '0%' });
+    pushState(nextContent);
+  };
+  const deleteIndustryMetric = (indIdx, metricIdx) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    const ind = nextContent.industries[indIdx];
+    if (!ind.metrics) ind.metrics = [];
+    ind.metrics.splice(metricIdx, 1);
+    pushState(nextContent);
+  };
+  const updateIndustryMetric = (indIdx, metricIdx, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    const ind = nextContent.industries[indIdx];
+    if (!ind.metrics) ind.metrics = [];
+    ind.metrics[metricIdx][field] = value;
+    pushState(nextContent);
+  };
+
+  // Industry Projects handlers
+  const updateIndustryProject = (index, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.industry_projects) nextContent.industry_projects = [];
+    nextContent.industry_projects[index][field] = value;
+    pushState(nextContent);
+  };
+  const addIndustryProject = () => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.industry_projects) nextContent.industry_projects = [];
+    const firstInd = (nextContent.industries && nextContent.industries[0]) ? (nextContent.industries[0].slug || nextContent.industries[0].id) : 'fintech';
+    nextContent.industry_projects.push({
+      title: 'New Project Case Brief',
+      industryId: firstInd,
+      description: 'Short technical brief or description of the delivered solution.',
+      tech: ['React', 'Node.js'],
+      client: 'Client Name'
+    });
+    pushState(nextContent);
+  };
+  const deleteIndustryProject = (index) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.industry_projects) nextContent.industry_projects = [];
+    nextContent.industry_projects.splice(index, 1);
+    pushState(nextContent);
+  };
+  const moveIndustryProject = (index, direction) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    const arr = nextContent.industry_projects;
+    const nextIdx = index + direction;
+    if (nextIdx >= 0 && nextIdx < arr.length) {
+      const temp = arr[index];
+      arr[index] = arr[nextIdx];
+      arr[nextIdx] = temp;
+      pushState(nextContent);
+    }
+  };
+  const addIndustryProjectForIndustry = (industryId) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.industry_projects) nextContent.industry_projects = [];
+    nextContent.industry_projects.push({
+      title: 'New Project Case Brief',
+      industryId: industryId,
+      description: 'Short technical brief or description of the delivered solution.',
+      tech: ['React', 'Node.js'],
+      client: 'Client Name'
+    });
+    pushState(nextContent);
+  };
+  const moveIndustryProjectWithinIndustry = (globalIdx, direction) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    const arr = nextContent.industry_projects;
+    
+    // Find the project's current industry ID
+    const targetProj = arr[globalIdx];
+    if (!targetProj) return;
+    const indId = targetProj.industryId;
+    
+    // Find all global indices of projects belonging to the same industry
+    const siblingIndices = [];
+    arr.forEach((p, idx) => {
+      if (p.industryId === indId) {
+        siblingIndices.push(idx);
+      }
+    });
+    
+    // Find the position in the sibling indices list
+    const siblingPos = siblingIndices.indexOf(globalIdx);
+    if (siblingPos === -1) return;
+    
+    const swapSiblingPos = siblingPos + direction;
+    if (swapSiblingPos >= 0 && swapSiblingPos < siblingIndices.length) {
+      const swapGlobalIdx = siblingIndices[swapSiblingPos];
+      // Swap the projects at globalIdx and swapGlobalIdx
+      const temp = arr[globalIdx];
+      arr[globalIdx] = arr[swapGlobalIdx];
+      arr[swapGlobalIdx] = temp;
+      pushState(nextContent);
+    }
+  };
+
+
   // Upload handlers
   const handleUploadImage = async (e) => {
     const file = e.target.files[0];
@@ -1648,6 +1797,7 @@ export default function AdminPanel() {
         { label: "Portfolio Work", tab: "portfolio", route: "#preview/portfolio", icon: "🚀", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
         { label: "Case Studies List", tab: "case_studies_list", route: "#preview/case-study", icon: "📄", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
         { label: "Ventures", tab: "ventures", route: "#preview/ventures", icon: "💡", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
+        { label: "Industries Served", tab: "industry", route: "#preview/industry", icon: "🌐", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
         { label: "Careers & Jobs", tab: "careers", route: "#preview/career", icon: "🤝", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
         { label: "Contact Us", tab: "contact", route: "#preview/contact", icon: "✉️", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" }
       ]
@@ -5349,6 +5499,265 @@ export default function AdminPanel() {
                 </div>
               </div>
 
+            </div>
+          )}
+
+          {/* INDUSTRIES SERVED CMS PANEL */}
+          {activeTab === 'industry' && (
+            <div className="space-y-8">
+              
+              {/* SECTION 1: INDUSTRIES LIST */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-2xl space-y-4 text-left">
+                <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Industry Verticals ({currentContent.industries?.length || 0})</span>
+                  <button
+                    onClick={addIndustry}
+                    className="px-3 py-1.5 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors cursor-pointer"
+                  >
+                    + Add Industry Vertical
+                  </button>
+                </div>
+                <div className="space-y-6">
+                  {(currentContent.industries || []).map((item, index) => (
+                    <div key={index} className="p-5 bg-white/[0.01] border border-white/5 rounded-xl space-y-4">
+                      
+                      {/* Title & actions */}
+                      <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                        <span className="font-mono text-[9px] text-neutral-500 font-bold">{item.title || 'New Industry'}</span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            disabled={index === 0}
+                            onClick={() => moveIndustry(index, -1)}
+                            className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
+                          >▲</button>
+                          <button
+                            disabled={index === currentContent.industries.length - 1}
+                            onClick={() => moveIndustry(index, 1)}
+                            className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
+                          >▼</button>
+                          <button
+                            onClick={() => deleteIndustry(index)}
+                            className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded cursor-pointer ml-1"
+                          >Delete</button>
+                        </div>
+                      </div>
+
+                      {/* Main fields */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Unique ID / Slug</label>
+                          <input type="text" value={item.slug || item.id || ''} onChange={(e) => updateIndustry(index, 'slug', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" />
+                        </div>
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Vertical Title</label>
+                          <input type="text" value={item.title || ''} onChange={(e) => updateIndustry(index, 'title', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" />
+                        </div>
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Accent Color (HEX)</label>
+                          <input type="text" value={item.accentColor || ''} onChange={(e) => updateIndustry(index, 'accentColor', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" placeholder="#10b981" />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Sidebar / List Description</label>
+                          <textarea rows={2} value={item.description || ''} onChange={(e) => updateIndustry(index, 'description', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed" />
+                        </div>
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Detail Panel Description</label>
+                          <textarea rows={3} value={item.detailDescription || ''} onChange={(e) => updateIndustry(index, 'detailDescription', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed" />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">List Image Path / URL</label>
+                          <input type="text" value={item.listImg || ''} onChange={(e) => updateIndustry(index, 'listImg', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none mb-2" />
+                          <div className="flex gap-3 items-center">
+                            {item.listImg && (
+                              <div className="w-10 h-10 rounded-lg border border-white/10 bg-black/40 overflow-hidden shrink-0 flex items-center justify-center p-0.5">
+                                <img src={item.listImg} alt="Preview" className="w-full h-full object-cover rounded-md" onError={(e) => { e.target.style.display = 'none'; }} />
+                              </div>
+                            )}
+                            <label className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[9px] font-mono text-neutral-400 hover:text-white cursor-pointer transition-all shrink-0">
+                              Upload
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const formData = new FormData();
+                                    formData.append('file', file);
+                                    fetch(API_URL + '/api/upload/image', {
+                                      method: 'POST',
+                                      body: formData
+                                    })
+                                    .then(res => res.json())
+                                    .then(data => {
+                                      if (data.imageUrl) {
+                                        updateIndustry(index, 'listImg', data.imageUrl);
+                                      }
+                                    });
+                                  }
+                                }}
+                                className="hidden"
+                              />
+                            </label>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Detail Panel Image Path / URL</label>
+                          <input type="text" value={item.detailImg || ''} onChange={(e) => updateIndustry(index, 'detailImg', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none mb-2" />
+                          <div className="flex gap-3 items-center">
+                            {item.detailImg && (
+                              <div className="w-10 h-10 rounded-lg border border-white/10 bg-black/40 overflow-hidden shrink-0 flex items-center justify-center p-0.5">
+                                <img src={item.detailImg} alt="Preview" className="w-full h-full object-cover rounded-md" onError={(e) => { e.target.style.display = 'none'; }} />
+                              </div>
+                            )}
+                            <label className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[9px] font-mono text-neutral-400 hover:text-white cursor-pointer transition-all shrink-0">
+                              Upload
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const formData = new FormData();
+                                    formData.append('file', file);
+                                    fetch(API_URL + '/api/upload/image', {
+                                      method: 'POST',
+                                      body: formData
+                                    })
+                                    .then(res => res.json())
+                                    .then(data => {
+                                      if (data.imageUrl) {
+                                        updateIndustry(index, 'detailImg', data.imageUrl);
+                                      }
+                                    });
+                                  }
+                                }}
+                                className="hidden"
+                              />
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Industry Metrics nested editor */}
+                      <div className="border border-white/5 rounded-xl p-4 bg-black/20 space-y-3 text-left">
+                        <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                          <span className="font-mono text-[8px] uppercase tracking-wider text-neutral-400">// Metrics & Key Numbers</span>
+                          <button
+                            onClick={() => addIndustryMetric(index)}
+                            className="px-2 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-[7px] uppercase tracking-widest rounded transition-colors cursor-pointer animate-none"
+                          >
+                            + Add Metric
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {(item.metrics || []).map((m, mIdx) => (
+                            <div key={mIdx} className="flex gap-2 items-center bg-black/40 p-2 rounded-lg border border-white/5">
+                              <div className="flex-1 grid grid-cols-2 gap-2">
+                                <div>
+                                  <label className="font-mono text-[7px] text-neutral-500 block mb-0.5">Label</label>
+                                  <input type="text" value={m.label || ''} onChange={(e) => updateIndustryMetric(index, mIdx, 'label', e.target.value)} className="w-full px-2 py-1 bg-black border border-white/10 rounded text-white text-[10px] focus:outline-none" />
+                                </div>
+                                <div>
+                                  <label className="font-mono text-[7px] text-neutral-500 block mb-0.5">Value</label>
+                                  <input type="text" value={m.value || ''} onChange={(e) => updateIndustryMetric(index, mIdx, 'value', e.target.value)} className="w-full px-2 py-1 bg-black border border-white/10 rounded text-white text-[10px] focus:outline-none" />
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => deleteIndustryMetric(index, mIdx)}
+                                className="w-5 h-5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded flex items-center justify-center text-red-500 hover:text-red-400 text-[8px] cursor-pointer mt-3"
+                              >✕</button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Nested Case Briefs (Projects) */}
+                      <div className="border border-white/5 rounded-xl p-4 bg-black/20 space-y-3 text-left">
+                        <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                          <span className="font-mono text-[8px] uppercase tracking-wider text-neutral-400">// Technical Case Briefs ({
+                            (currentContent.industry_projects || []).filter(p => p.industryId === (item.slug || item.id)).length
+                          })</span>
+                          <button
+                            onClick={() => addIndustryProjectForIndustry(item.slug || item.id)}
+                            className="px-2 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-[7px] uppercase tracking-widest rounded transition-colors cursor-pointer animate-none"
+                          >
+                            + Add Case Brief
+                          </button>
+                        </div>
+                        <div className="space-y-4">
+                          {(currentContent.industry_projects || [])
+                            .map((proj, projIdx) => ({ ...proj, globalIdx: projIdx }))
+                            .filter(proj => proj.industryId === (item.slug || item.id))
+                            .map((proj, subIdx, filteredArr) => (
+                              <div key={proj.globalIdx} className="p-3 bg-black/40 border border-white/5 rounded-lg space-y-3">
+                                
+                                {/* Title & Actions */}
+                                <div className="flex justify-between items-center border-b border-white/5 pb-1">
+                                  <span className="font-mono text-[8px] text-neutral-500 font-bold">{proj.title || 'New Project'}</span>
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      disabled={subIdx === 0}
+                                      onClick={() => moveIndustryProjectWithinIndustry(proj.globalIdx, -1)}
+                                      className="w-4 h-4 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[7px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
+                                    >▲</button>
+                                    <button
+                                      disabled={subIdx === filteredArr.length - 1}
+                                      onClick={() => moveIndustryProjectWithinIndustry(proj.globalIdx, 1)}
+                                      className="w-4 h-4 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[7px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
+                                    >▼</button>
+                                    <button
+                                      onClick={() => deleteIndustryProject(proj.globalIdx)}
+                                      className="px-1.5 py-0.5 text-[7px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded cursor-pointer"
+                                    >✕</button>
+                                  </div>
+                                </div>
+
+                                {/* Inputs */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="font-mono text-[7px] text-neutral-500 block mb-0.5">Project Title</label>
+                                    <input type="text" value={proj.title || ''} onChange={(e) => updateIndustryProject(proj.globalIdx, 'title', e.target.value)} className="w-full px-2 py-1 bg-black border border-white/10 rounded text-white text-[10px] focus:outline-none" />
+                                  </div>
+                                  <div>
+                                    <label className="font-mono text-[7px] text-neutral-500 block mb-0.5">Client Partner</label>
+                                    <input type="text" value={proj.client || ''} onChange={(e) => updateIndustryProject(proj.globalIdx, 'client', e.target.value)} className="w-full px-2 py-1 bg-black border border-white/10 rounded text-white text-[10px] focus:outline-none" />
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <label className="font-mono text-[7px] text-neutral-500 block mb-0.5">Technical Solution Brief</label>
+                                  <textarea rows={2} value={proj.description || ''} onChange={(e) => updateIndustryProject(proj.globalIdx, 'description', e.target.value)} className="w-full px-2 py-1 bg-black border border-white/10 rounded text-white text-[10px] focus:outline-none resize-none leading-relaxed" />
+                                </div>
+
+                                <div>
+                                  <label className="font-mono text-[7px] text-neutral-500 block mb-0.5">Tech Stack Tags (Comma separated)</label>
+                                  <input
+                                    type="text"
+                                    value={Array.isArray(proj.tech) ? proj.tech.join(', ') : (proj.tech || '')}
+                                    onChange={(e) => {
+                                      const arr = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+                                      updateIndustryProject(proj.globalIdx, 'tech', arr);
+                                    }}
+                                    className="w-full px-2 py-1 bg-black border border-white/10 rounded text-white text-[10px] focus:outline-none"
+                                    placeholder="React, Next.js, Node.js"
+                                  />
+                                </div>
+
+                              </div>
+                          ))}
+                        </div>
+                      </div>
+
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 

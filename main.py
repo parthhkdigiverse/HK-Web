@@ -215,6 +215,284 @@ DEFAULT_INTERN_FORM_FIELDS = [
   { "id": "resume", "label": "Resume / Portfolio", "type": "file", "placeholder": "Or paste link (Google Drive, GitHub, etc.)", "required": True }
 ]
 
+DEFAULT_INDUSTRIES = [
+  {
+    "slug": "fintech",
+    "title": "Fintech & Banking",
+    "description": "Securing transaction ledgers, analytics engines, and automated KYC pipelines.",
+    "detailDescription": "We build high-concurrency ledger databases, encrypted trading platforms, and automated compliance routing networks capable of processing millions of transactions securely. We implement zero-latency transaction locking and strict audit logs.",
+    "listImg": "/images/industries/fintech.png",
+    "detailImg": "/images/industries/fintech.png",
+    "bg": "from-emerald-500/10 to-teal-500/10",
+    "colorClass": "text-emerald-400",
+    "borderClass": "border-emerald-500/20",
+    "glowClass": "rgba(16,185,129,0.06)",
+    "accentColor": "#10b981",
+    "metrics": [
+      { "label": "Volume Secured", "value": "$50M+" },
+      { "label": "KYC Compliance Rate", "value": "100%" }
+    ],
+    "sort_order": 1
+  },
+  {
+    "slug": "realestate",
+    "title": "Real Estate & Properties",
+    "description": "Virtual walkthrough platforms, interactive mapping, and organizer systems.",
+    "detailDescription": "We craft immersive digital walkthrough experiences, responsive vector-based property maps, and centralized CRM dashboards to streamline buyer-agent interactions and automate lead pipelines.",
+    "listImg": "/images/industries/realestate.png",
+    "detailImg": "/images/industries/realestate.png",
+    "bg": "from-blue-500/10 to-indigo-500/10",
+    "colorClass": "text-blue-400",
+    "borderClass": "border-blue-500/20",
+    "glowClass": "rgba(59,130,246,0.06)",
+    "accentColor": "#3b82f6",
+    "metrics": [
+      { "label": "3D Renderings Served", "value": "2,500+" },
+      { "label": "Agent Efficiency Boost", "value": "85%" }
+    ],
+    "sort_order": 2
+  },
+  {
+    "slug": "ecommerce",
+    "title": "Luxury E-Commerce",
+    "description": "Immersive branding layouts, high-performance checkouts, and custom payment systems.",
+    "detailDescription": "We develop ultra-premium headless shopping environments featuring 3D product previews, optimized image pipelines, and customized multi-currency Stripe checkouts that eliminate cart drop-offs.",
+    "listImg": "/images/industries/ecommerce.png",
+    "detailImg": "/images/industries/ecommerce.png",
+    "bg": "from-amber-500/10 to-orange-500/10",
+    "colorClass": "text-amber-400",
+    "borderClass": "border-amber-500/20",
+    "glowClass": "rgba(245,158,11,0.06)",
+    "accentColor": "#f59e0b",
+    "metrics": [
+      { "label": "Checkout Load Time", "value": "0.8s" },
+      { "label": "Cart Conversion Lift", "value": "32%" }
+    ],
+    "sort_order": 3
+  },
+  {
+    "slug": "healthcare",
+    "title": "Healthcare & Biotech",
+    "description": "Doctor-patient portals, digital records grids, and encrypted backups.",
+    "detailDescription": "We construct secure clinical dashboards, HIPAA-compliant patient communication networks, and end-to-end encrypted backup systems to protect patient data pipelines.",
+    "listImg": "/images/industries/healthcare.png",
+    "detailImg": "/images/industries/healthcare.png",
+    "bg": "from-sky-500/10 to-cyan-500/10",
+    "colorClass": "text-sky-400",
+    "borderClass": "border-sky-500/20",
+    "glowClass": "rgba(14,165,233,0.06)",
+    "accentColor": "#0ea5e9",
+    "metrics": [
+      { "label": "HIPAA Encrypted Records", "value": "5M+" },
+      { "label": "Portal Booking Uptime", "value": "100%" }
+    ],
+    "sort_order": 4
+  },
+  {
+    "slug": "aisaas",
+    "title": "AI SaaS Platforms",
+    "description": "SaaS landing structures, multi-tenant databases, and custom agent integrations.",
+    "detailDescription": "We engineer multi-tenant workspaces, custom semantic search caching networks, and automated prompt monitoring pipelines designed to reduce token cost overheads and scale agent runtimes.",
+    "listImg": "/images/industries/aisaas.png",
+    "detailImg": "/images/industries/aisaas.png",
+    "bg": "from-purple-500/10 to-indigo-500/10",
+    "colorClass": "text-purple-400",
+    "borderClass": "border-purple-500/20",
+    "glowClass": "rgba(168,85,247,0.06)",
+    "accentColor": "#a855f7",
+    "metrics": [
+      { "label": "Inference Tokens Tracked", "value": "2B+" },
+      { "label": "Multi-Tenant Scale", "value": "Unlimited" }
+    ],
+    "sort_order": 5
+  },
+  {
+    "slug": "education",
+    "title": "Education & EdTech",
+    "description": "Learning management systems, live classroom portals, and student analytics dashboards.",
+    "detailDescription": "We build scalable LMS platforms with real-time video streaming, adaptive quiz engines, progress tracking dashboards, and automated certificate generation pipelines for universities and coaching institutes.",
+    "listImg": "/images/industries/education.png",
+    "detailImg": "/images/industries/education.png",
+    "bg": "from-rose-500/10 to-pink-500/10",
+    "colorClass": "text-rose-400",
+    "borderClass": "border-rose-500/20",
+    "glowClass": "rgba(244,63,94,0.06)",
+    "accentColor": "#f43f5e",
+    "metrics": [
+      { "label": "Students Onboarded", "value": "50K+" },
+      { "label": "Course Completion Rate", "value": "94%" }
+    ],
+    "sort_order": 6
+  },
+  {
+    "slug": "logistics",
+    "title": "Logistics & Supply Chain",
+    "description": "Fleet tracking systems, warehouse automation, and shipment routing optimizers.",
+    "detailDescription": "We develop GPS-integrated fleet monitoring dashboards, automated warehouse inventory scanners, and intelligent route optimization engines that cut delivery times and fuel costs across distribution networks.",
+    "listImg": "/images/industries/logistics.png",
+    "detailImg": "/images/industries/logistics.png",
+    "bg": "from-orange-500/10 to-red-500/10",
+    "colorClass": "text-orange-400",
+    "borderClass": "border-orange-500/20",
+    "glowClass": "rgba(249,115,22,0.06)",
+    "accentColor": "#f97316",
+    "metrics": [
+      { "label": "Shipments Tracked", "value": "1.2M+" },
+      { "label": "Delivery Time Reduction", "value": "38%" }
+    ],
+    "sort_order": 7
+  },
+  {
+    "slug": "hospitality",
+    "title": "Hospitality & Travel",
+    "description": "Hotel booking engines, guest experience apps, and revenue management tools.",
+    "detailDescription": "We craft elegant reservation platforms, guest concierge mobile applications, dynamic pricing engines, and review aggregation dashboards that help hospitality brands deliver five-star digital experiences.",
+    "listImg": "/images/industries/hospitality.png",
+    "detailImg": "/images/industries/hospitality.png",
+    "bg": "from-teal-500/10 to-emerald-500/10",
+    "colorClass": "text-teal-400",
+    "borderClass": "border-teal-500/20",
+    "glowClass": "rgba(20,184,166,0.06)",
+    "accentColor": "#14b8a6",
+    "metrics": [
+      { "label": "Bookings Processed", "value": "200K+" },
+      { "label": "Guest Satisfaction Score", "value": "4.9/5" }
+    ],
+    "sort_order": 8
+  }
+]
+
+DEFAULT_INDUSTRY_PROJECTS = [
+  {
+    "title": "Solis Trading Portal",
+    "industryId": "fintech",
+    "description": "A responsive fintech dashboard delivering rapid metric updates, instant payment gates, and multi-tenant scaling.",
+    "tech": ["React", "Stripe API", "AWS"],
+    "client": "Solis Ltd",
+    "sort_order": 1
+  },
+  {
+    "title": "Apex Ledger Engine",
+    "industryId": "fintech",
+    "description": "High-throughput transaction processing ledger built for institutional digital banking, handling 10k transactions/sec securely.",
+    "tech": ["FastAPI", "Redis", "Docker"],
+    "client": "Apex Capital",
+    "sort_order": 2
+  },
+  {
+    "title": "Vesper Luxury Homes",
+    "industryId": "realestate",
+    "description": "An immersive cinematic web experience built for high-end properties in London. Features high-frame-rate scroll scrub.",
+    "tech": ["Canvas API", "GSAP", "Vite"],
+    "client": "Vesper Estates",
+    "sort_order": 3
+  },
+  {
+    "title": "EstatesHub CRM",
+    "industryId": "realestate",
+    "description": "A virtual walkthrough dashboard and workflow coordinator built to align property metrics with agent pipelines.",
+    "tech": ["Next.js", "Tailwind", "PostgreSQL"],
+    "client": "EstatesHub Group",
+    "sort_order": 4
+  },
+  {
+    "title": "Aura Bespoke Checkout",
+    "industryId": "ecommerce",
+    "description": "Designing bespoke product layouts, high-performance checkout funnels, immersive branding pages, and robust Stripe payment logic.",
+    "tech": ["React", "Stripe", "Framer Motion"],
+    "client": "Aura Lifestyle",
+    "sort_order": 5
+  },
+  {
+    "title": "LuxeCart Engine",
+    "industryId": "ecommerce",
+    "description": "Tailor-made headless ecommerce store with multi-currency checkout, optimized product image load, and admin controls.",
+    "tech": ["Node.js", "GraphQL", "Shopify API"],
+    "client": "LuxeCart Global",
+    "sort_order": 6
+  },
+  {
+    "title": "Pulse Health Portal",
+    "industryId": "healthcare",
+    "description": "Constructing secure doctor-patient portals, digital record grids, automated booking queues, and encrypted data backups.",
+    "tech": ["React", "Express", "MongoDB"],
+    "client": "Pulse Medtech",
+    "sort_order": 7
+  },
+  {
+    "title": "GeneData Analyzer",
+    "industryId": "healthcare",
+    "description": "High-performance sequence visualization grid and encrypted biometric data storage complying with healthcare privacy standards.",
+    "tech": ["Python", "Django", "PostgreSQL"],
+    "client": "GeneData Labs",
+    "sort_order": 8
+  },
+  {
+    "title": "DevPulse Agentic System",
+    "industryId": "aisaas",
+    "description": "An automated developer metrics platform powered by custom LLM pipelines, pulling analytics directly from vector search.",
+    "tech": ["Python", "Vector DB", "FastAPI"],
+    "client": "DevPulse Inc",
+    "sort_order": 9
+  },
+  {
+    "title": "NeuroSaaS Grid",
+    "industryId": "aisaas",
+    "description": "Multi-tenant SaaS workspace integrated with custom agent orchestration, context management, and real-time usage metrics.",
+    "tech": ["React", "FastAPI", "PostgreSQL"],
+    "client": "NeuroSaaS Co",
+    "sort_order": 10
+  },
+  {
+    "title": "LearnVerse LMS",
+    "industryId": "education",
+    "description": "Full-stack learning management system with live video classrooms, adaptive quizzes, and automated progress certificates.",
+    "tech": ["Next.js", "WebRTC", "PostgreSQL"],
+    "client": "LearnVerse Academy",
+    "sort_order": 11
+  },
+  {
+    "title": "SkillPath Analytics",
+    "industryId": "education",
+    "description": "Student performance analytics dashboard tracking engagement metrics, quiz scores, and personalized learning recommendations.",
+    "tech": ["React", "D3.js", "FastAPI"],
+    "client": "SkillPath Institute",
+    "sort_order": 12
+  },
+  {
+    "title": "FreightPulse Tracker",
+    "industryId": "logistics",
+    "description": "Real-time GPS fleet monitoring dashboard with geofence alerts, driver performance logs, and fuel consumption analytics.",
+    "tech": ["React", "Node.js", "Google Maps API"],
+    "client": "FreightPulse Corp",
+    "sort_order": 13
+  },
+  {
+    "title": "ChainFlow Optimizer",
+    "industryId": "logistics",
+    "description": "AI-powered route optimization engine that reduces delivery times by analyzing traffic patterns, weather data, and load capacity.",
+    "tech": ["Python", "TensorFlow", "Redis"],
+    "client": "ChainFlow Logistics",
+    "sort_order": 14
+  },
+  {
+    "title": "StayLux Booking Engine",
+    "industryId": "hospitality",
+    "description": "Premium hotel reservation platform with dynamic pricing algorithms, room inventory sync, and multi-channel distribution.",
+    "tech": ["Next.js", "Stripe", "PostgreSQL"],
+    "client": "StayLux Resorts",
+    "sort_order": 15
+  },
+  {
+    "title": "GuestWave Concierge",
+    "industryId": "hospitality",
+    "description": "Mobile concierge application enabling guests to order room service, book spa sessions, and chat with hotel staff in real-time.",
+    "tech": ["Flutter", "Firebase", "Node.js"],
+    "client": "GuestWave Hotels",
+    "sort_order": 16
+  }
+]
+
 DEFAULT_CAREER_STATS = [
   { "value": "50+", "label": "Projects Delivered" },
   { "value": "8+", "label": "Industries Served" },
@@ -409,7 +687,9 @@ DEFAULT_CONTENT = {
     "career_settings": DEFAULT_CAREER_SETTINGS,
     "career_job_form_fields": DEFAULT_JOB_FORM_FIELDS,
     "career_intern_form_fields": DEFAULT_INTERN_FORM_FIELDS,
-    "career_philosophy_cards": DEFAULT_PHILOSOPHY_CARDS
+    "career_philosophy_cards": DEFAULT_PHILOSOPHY_CARDS,
+    "industries": DEFAULT_INDUSTRIES,
+    "industry_projects": DEFAULT_INDUSTRY_PROJECTS
 }
 
 # MongoDB connection cache
@@ -460,7 +740,7 @@ def get_mongo_history_collection():
     if mongo_db is not None:
         return mongo_db["content_history"]
     coll = get_mongo_collection()
-    if coll is not None:
+    if coll is not None and mongo_db is not None:
         return mongo_db["content_history"]
     return None
 
@@ -520,7 +800,9 @@ def compile_full_content(base_content: dict) -> dict:
         "career_stats": ("career_stats", "sort_order", DEFAULT_CAREER_STATS),
         "career_job_form_fields": ("career_job_form_fields", "sort_order", DEFAULT_JOB_FORM_FIELDS),
         "career_intern_form_fields": ("career_intern_form_fields", "sort_order", DEFAULT_INTERN_FORM_FIELDS),
-        "career_philosophy_cards": ("career_philosophy_cards", "sort_order", DEFAULT_PHILOSOPHY_CARDS)
+        "career_philosophy_cards": ("career_philosophy_cards", "sort_order", DEFAULT_PHILOSOPHY_CARDS),
+        "industries": ("industries", "sort_order", DEFAULT_INDUSTRIES),
+        "industry_projects": ("industry_projects", "sort_order", DEFAULT_INDUSTRY_PROJECTS)
     }
     
     for key, (coll_name, sort_field, fallback) in list_collections_map.items():
@@ -657,7 +939,9 @@ def save_normalized_draft(data: dict):
         "career_stats": "career_stats",
         "career_job_form_fields": "career_job_form_fields",
         "career_intern_form_fields": "career_intern_form_fields",
-        "career_philosophy_cards": "career_philosophy_cards"
+        "career_philosophy_cards": "career_philosophy_cards",
+        "industries": "industries",
+        "industry_projects": "industry_projects"
     }
     
     for key, coll_name in list_collections.items():
@@ -727,7 +1011,7 @@ def publish_db(data: dict):
     if history_coll is not None:
         try:
             version_doc = {
-                "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).isoformat() + "Z",
                 "content": data
             }
             history_coll.insert_one(version_doc)
@@ -833,7 +1117,8 @@ async def restore_content_version(req: RestoreRequest):
 
 @app.post("/api/upload/resume")
 async def upload_resume(file: UploadFile = File(...)):
-    ext = os.path.splitext(file.filename)[1].lower()
+    filename = file.filename or ""
+    ext = os.path.splitext(filename)[1].lower()
     if ext not in [".pdf", ".doc", ".docx", ".png", ".jpg", ".jpeg"]:
         raise HTTPException(status_code=400, detail="Only PDF, Word documents (.doc/.docx), or image formats are allowed.")
         
@@ -851,19 +1136,20 @@ async def upload_resume(file: UploadFile = File(...)):
     return {
         "status": "success",
         "resumeUrl": resume_url,
-        "filename": file.filename
+        "filename": filename
     }
 
 @app.post("/api/upload/image")
 async def upload_image(file: UploadFile = File(...)):
-    if not file.filename.lower().endswith((".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg")):
+    filename = file.filename or ""
+    if not filename.lower().endswith((".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg")):
         raise HTTPException(status_code=400, detail="Only standard image files are allowed.")
         
     uploads_dir = os.path.join("frontend", "public", "images", "uploads")
     os.makedirs(uploads_dir, exist_ok=True)
     
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    ext = os.path.splitext(file.filename)[1]
+    ext = os.path.splitext(filename)[1]
     image_filename = f"img_{timestamp}{ext}"
     image_path = os.path.join(uploads_dir, image_filename)
     
@@ -878,7 +1164,8 @@ async def upload_image(file: UploadFile = File(...)):
 
 @app.post("/api/upload/video")
 async def upload_video(file: UploadFile = File(...)):
-    if not file.filename.lower().endswith(".mp4"):
+    filename = file.filename or ""
+    if not filename.lower().endswith(".mp4"):
         raise HTTPException(status_code=400, detail="Only MP4 video files are allowed.")
         
     uploads_dir = os.path.join("frontend", "public", "images", "uploads")
@@ -920,7 +1207,7 @@ async def upload_video(file: UploadFile = File(...)):
             break
         frame_name = f"frame_{frame_count:04d}.jpg"
         frame_path = os.path.join(frames_dir, frame_name)
-        cv2.imwrite(frame_path, frame, [int(cv2.IMWRITE_JPEG_QUALITY), 90])
+        cv2.imwrite(frame_path, frame, [cv2.IMWRITE_JPEG_QUALITY, 90])
         frame_count += 1
         
     cap.release()
@@ -1134,8 +1421,8 @@ async def update_site_content(req: ContentUpdateRequest):
 @app.get("/api/collections/{collection_name}")
 async def get_collection_items(
     collection_name: str,
-    search: str = None,
-    status: str = None,
+    search: str | None = None,
+    status: str | None = None,
     page: int = 1,
     limit: int = 100,
     user: dict = Depends(get_current_user)
@@ -1185,8 +1472,8 @@ async def create_collection_item(
         raise HTTPException(status_code=404, detail="Collection not found")
         
     try:
-        item["created_at"] = datetime.datetime.utcnow().isoformat() + "Z"
-        item["updated_at"] = datetime.datetime.utcnow().isoformat() + "Z"
+        item["created_at"] = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).isoformat() + "Z"
+        item["updated_at"] = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).isoformat() + "Z"
         item["created_by"] = user["username"]
         item["updated_by"] = user["username"]
         item["deleted_at"] = None
@@ -1222,7 +1509,7 @@ async def update_collection_item(
         
     try:
         item.pop("_id", None)
-        item["updated_at"] = datetime.datetime.utcnow().isoformat() + "Z"
+        item["updated_at"] = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).isoformat() + "Z"
         item["updated_by"] = user["username"]
         
         original = coll.find_one({key_field: key_value, "deleted_at": None})
@@ -1323,15 +1610,16 @@ async def upload_media_file(
         raise HTTPException(status_code=403, detail="Permission denied")
         
     allowed = (".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg", ".mp4", ".pdf", ".zip", ".doc", ".docx")
-    if not file.filename.lower().endswith(allowed):
+    filename = file.filename or ""
+    if not filename.lower().endswith(allowed):
         raise HTTPException(status_code=400, detail="Unsupported file format.")
         
     uploads_dir = os.path.join("frontend", "public", "images", "uploads")
     os.makedirs(uploads_dir, exist_ok=True)
     
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    ext = os.path.splitext(file.filename)[1]
-    clean_name = "".join(c for c in os.path.splitext(file.filename)[0] if c.isalnum() or c in ("-", "_")).strip()
+    ext = os.path.splitext(filename)[1]
+    clean_name = "".join(c for c in os.path.splitext(filename)[0] if c.isalnum() or c in ("-", "_")).strip()
     saved_filename = f"{clean_name}_{timestamp}{ext}"
     saved_path = os.path.join(uploads_dir, saved_filename)
     
@@ -1345,14 +1633,14 @@ async def upload_media_file(
     if coll is not None:
         try:
             doc = {
-                "filename": file.filename,
+                "filename": filename,
                 "file_url": file_url,
                 "file_type": file.content_type,
                 "size_bytes": file_size,
                 "folder_path": folder,
                 "tags": [t.strip() for t in tags.split(",") if t.strip()],
                 "created_by": user["username"],
-                "created_at": datetime.datetime.utcnow().isoformat() + "Z",
+                "created_at": datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).isoformat() + "Z",
                 "deleted_at": None
             }
             coll.replace_one({"file_url": file_url}, doc, upsert=True)

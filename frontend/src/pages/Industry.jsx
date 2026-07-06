@@ -308,7 +308,8 @@ export default function Industry() {
   };
 
   const activeInd = industries.find(i => i.id === selectedIndustry) || industries[0];
-  const filteredProjects = projects.filter(p => p.industryId === selectedIndustry);
+  const projectsList = content?.industry_projects || projects;
+  const filteredProjects = projectsList.filter(p => p.industryId === selectedIndustry || p.industryId === activeInd?.id);
 
   return (
     <div className="relative pb-24 overflow-hidden text-neutral-300 font-sans">
@@ -424,7 +425,7 @@ export default function Industry() {
 
               {/* Dynamic metrics block */}
               <div className="grid grid-cols-2 gap-4 border-y border-white/5 py-6">
-                {industryMetrics[selectedIndustry].map((m) => (
+                {(activeInd.metrics || []).map((m) => (
                   <div key={m.label} className="space-y-1">
                     <span className="font-display text-2xl sm:text-3xl font-extrabold text-white block" style={{ color: activeInd.accentColor }}>
                       {m.value}
