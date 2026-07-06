@@ -121,6 +121,14 @@ export default function AdminPanel() {
             dna_values: draft.about_us?.dna_values || DEFAULT_CONTENT.about_us.dna_values,
             workspace_rooms: draft.about_us?.workspace_rooms || DEFAULT_CONTENT.about_us.workspace_rooms
           },
+          site_settings: {
+            ...DEFAULT_CONTENT.site_settings,
+            ...(draft.site_settings || {}),
+            footer: {
+              ...DEFAULT_CONTENT.site_settings.footer,
+              ...(draft.site_settings?.footer || {})
+            }
+          },
           our_culture: draft.our_culture || DEFAULT_CONTENT.our_culture,
           people: draft.people || DEFAULT_CONTENT.people,
           awards: draft.awards || DEFAULT_CONTENT.awards,
@@ -356,6 +364,138 @@ export default function AdminPanel() {
       dropdown[subIdx] = dropdown[targetIdx];
       dropdown[targetIdx] = temp;
       pushState(nextContent);
+    }
+  };
+
+  // Footer Link Helpers
+  const addFooterCapabilityLink = () => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.site_settings) nextContent.site_settings = {};
+    if (!nextContent.site_settings.footer) nextContent.site_settings.footer = {};
+    if (!nextContent.site_settings.footer.capabilities) nextContent.site_settings.footer.capabilities = [];
+    nextContent.site_settings.footer.capabilities.push({ label: 'New Capability Link', href: '#', show: true });
+    pushState(nextContent);
+  };
+
+  const deleteFooterCapabilityLink = (index) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    nextContent.site_settings.footer.capabilities.splice(index, 1);
+    pushState(nextContent);
+  };
+
+  const moveFooterCapabilityLink = (index, direction) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    const list = nextContent.site_settings.footer.capabilities;
+    const targetIdx = index + direction;
+    if (targetIdx >= 0 && targetIdx < list.length) {
+      const temp = list[index];
+      list[index] = list[targetIdx];
+      list[targetIdx] = temp;
+      pushState(nextContent);
+    }
+  };
+
+  const updateFooterCapabilityLink = (index, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    nextContent.site_settings.footer.capabilities[index][field] = value;
+    pushState(nextContent);
+  };
+
+  const addFooterEcosystemLink = () => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.site_settings) nextContent.site_settings = {};
+    if (!nextContent.site_settings.footer) nextContent.site_settings.footer = {};
+    if (!nextContent.site_settings.footer.ecosystem) nextContent.site_settings.footer.ecosystem = [];
+    nextContent.site_settings.footer.ecosystem.push({ label: 'New Ecosystem Link', href: '#', show: true });
+    pushState(nextContent);
+  };
+
+  const deleteFooterEcosystemLink = (index) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    nextContent.site_settings.footer.ecosystem.splice(index, 1);
+    pushState(nextContent);
+  };
+
+  const moveFooterEcosystemLink = (index, direction) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    const list = nextContent.site_settings.footer.ecosystem;
+    const targetIdx = index + direction;
+    if (targetIdx >= 0 && targetIdx < list.length) {
+      const temp = list[index];
+      list[index] = list[targetIdx];
+      list[targetIdx] = temp;
+      pushState(nextContent);
+    }
+  };
+
+  const updateFooterEcosystemLink = (index, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    nextContent.site_settings.footer.ecosystem[index][field] = value;
+    pushState(nextContent);
+  };
+
+  const addFooterSocialLink = () => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.site_settings) nextContent.site_settings = {};
+    if (!nextContent.site_settings.footer) nextContent.site_settings.footer = {};
+    if (!nextContent.site_settings.footer.social_links) nextContent.site_settings.footer.social_links = [];
+    nextContent.site_settings.footer.social_links.push({ platform: 'New Platform', url: '#', show: true });
+    pushState(nextContent);
+  };
+
+  const deleteFooterSocialLink = (index) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    nextContent.site_settings.footer.social_links.splice(index, 1);
+    pushState(nextContent);
+  };
+
+  const moveFooterSocialLink = (index, direction) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    const list = nextContent.site_settings.footer.social_links;
+    const targetIdx = index + direction;
+    if (targetIdx >= 0 && targetIdx < list.length) {
+      const temp = list[index];
+      list[index] = list[targetIdx];
+      list[targetIdx] = temp;
+      pushState(nextContent);
+    }
+  };
+
+  const updateFooterSocialLink = (index, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    nextContent.site_settings.footer.social_links[index][field] = value;
+    pushState(nextContent);
+  };
+
+  const handleUploadFooterLogo = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setIsUploadingImage(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch(API_URL + '/api/upload/image', {
+        method: 'POST',
+        body: formData
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const nextContent = JSON.parse(JSON.stringify(currentContent));
+        if (!nextContent.site_settings) nextContent.site_settings = {};
+        if (!nextContent.site_settings.footer) nextContent.site_settings.footer = {};
+        nextContent.site_settings.footer.logo_img = data.imageUrl;
+        pushState(nextContent);
+        setSaveStatus({ type: 'success', message: 'Footer logo uploaded successfully!' });
+      } else {
+        const err = await res.json();
+        setSaveStatus({ type: 'error', message: err.detail || 'Upload failed' });
+      }
+    } catch {
+      setSaveStatus({ type: 'error', message: 'Network error uploading image' });
+    } finally {
+      setIsUploadingImage(false);
+      setTimeout(() => setSaveStatus({ type: '', message: '' }), 3000);
     }
   };
 
@@ -2885,7 +3025,83 @@ export default function AdminPanel() {
             <div className="space-y-6">
               <h3 className="font-mono text-[10px] uppercase tracking-wider text-white">// Footer Layout Settings</h3>
               
+              {/* Brand Logo & Description */}
               <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4">
+                        {/* Logo Text */}
+                <div className="space-y-1">
+                  <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Footer Logo Text</label>
+                  <input
+                    type="text"
+                    value={currentContent.site_settings?.footer?.logo_text ?? 'HARIKRUSHN DIGIVERSE LLP'}
+                    onChange={(e) => {
+                      const nextContent = JSON.parse(JSON.stringify(currentContent));
+                      if (!nextContent.site_settings) nextContent.site_settings = {};
+                      if (!nextContent.site_settings.footer) nextContent.site_settings.footer = {};
+                      nextContent.site_settings.footer.logo_text = e.target.value;
+                      pushState(nextContent);
+                    }}
+                    className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none focus:border-white/20"
+                  />
+                </div>
+
+                {/* Brand Description */}
+                <div className="space-y-1">
+                  <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Footer Brand Description</label>
+                  <textarea
+                    rows={2}
+                    value={currentContent.site_settings?.footer?.description ?? 'Architecting the infinite digital through precision engineering and editorial design.'}
+                    onChange={(e) => {
+                      const nextContent = JSON.parse(JSON.stringify(currentContent));
+                      if (!nextContent.site_settings) nextContent.site_settings = {};
+                      if (!nextContent.site_settings.footer) nextContent.site_settings.footer = {};
+                      nextContent.site_settings.footer.description = e.target.value;
+                      pushState(nextContent);
+                    }}
+                    className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none resize-none leading-relaxed"
+                  />
+                </div>
+
+                {/* Logo Image URL & Upload */}
+                <div className="space-y-3 pt-2 border-t border-white/5">
+                  <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Logo Image</label>
+                  <div className="flex gap-3 items-center">
+                    <img 
+                      src={currentContent.site_settings?.footer?.logo_img ?? "/images/hk-logo.png"} 
+                      alt="Footer Logo Preview" 
+                      className="w-10 h-10 object-contain bg-neutral-900 border border-white/10 rounded p-1"
+                    />
+                    <input
+                      type="text"
+                      value={currentContent.site_settings?.footer?.logo_img ?? '/images/hk-logo.png'}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.site_settings) nextContent.site_settings = {};
+                        if (!nextContent.site_settings.footer) nextContent.site_settings.footer = {};
+                        nextContent.site_settings.footer.logo_img = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="flex-1 px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                      placeholder="Logo Image URL"
+                    />
+                  </div>
+                  <div className="flex gap-4">
+                    <label className="flex-1 py-2.5 border border-white/10 hover:border-white/30 text-center rounded-xl bg-white/5 text-[9px] uppercase tracking-widest font-mono cursor-pointer hover:bg-white/10 transition-all text-white font-semibold">
+                      {isUploadingImage ? 'Uploading Logo...' : 'Upload New Logo Image'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleUploadFooterLogo}
+                        disabled={isUploadingImage}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Office Contact Info */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4">
+                <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Office Details</h4>
                 <div className="space-y-1">
                   <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Address</label>
                   <textarea
@@ -2950,37 +3166,208 @@ export default function AdminPanel() {
                 </div>
               </div>
 
+              {/* Capabilities Column Links */}
               <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4">
-                <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Social Media Links</h4>
+                <div className="flex justify-between items-center">
+                  <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Capabilities Links</h4>
+                  <button
+                    onClick={addFooterCapabilityLink}
+                    className="px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/15 rounded text-[8px] font-mono text-neutral-300 hover:text-white cursor-pointer"
+                  >
+                    + Add Link
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {(currentContent.site_settings?.footer?.capabilities || []).map((link, idx) => (
+                    <div key={idx} className="p-3 bg-black/40 border border-white/5 rounded-lg space-y-2 text-left">
+                      <div className="flex justify-between items-center border-b border-white/5 pb-1">
+                        <span className="font-mono text-[8px] text-neutral-500 uppercase tracking-widest">Link #{idx + 1}</span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => moveFooterCapabilityLink(idx, -1)}
+                            disabled={idx === 0}
+                            className="p-0.5 text-neutral-500 hover:text-white disabled:opacity-30 font-mono text-[9px] cursor-pointer"
+                          >
+                            ▲
+                          </button>
+                          <button
+                            onClick={() => moveFooterCapabilityLink(idx, 1)}
+                            disabled={idx === (currentContent.site_settings?.footer?.capabilities || []).length - 1}
+                            className="p-0.5 text-neutral-500 hover:text-white disabled:opacity-30 font-mono text-[9px] cursor-pointer"
+                          >
+                            ▼
+                          </button>
+                          <button
+                            onClick={() => updateFooterCapabilityLink(idx, 'show', link.show !== false ? false : true)}
+                            className={`px-1.5 py-0.5 text-[7px] border rounded font-mono uppercase tracking-widest ${
+                              link.show !== false ? 'bg-white text-black font-semibold' : 'bg-neutral-800 text-neutral-500 border-transparent'
+                            }`}
+                          >
+                            {link.show !== false ? 'Show' : 'Hide'}
+                          </button>
+                          <button
+                            onClick={() => deleteFooterCapabilityLink(idx)}
+                            className="p-0.5 hover:bg-red-500/10 rounded cursor-pointer"
+                            title="Delete"
+                          >
+                            <span className="text-neutral-500 hover:text-red-400 font-mono text-[9px]">✕</span>
+                          </button>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          value={link.label}
+                          onChange={(e) => updateFooterCapabilityLink(idx, 'label', e.target.value)}
+                          className="w-full px-2.5 py-1 bg-black border border-white/10 rounded text-white text-[10px] focus:outline-none"
+                          placeholder="Link Label"
+                        />
+                        <input
+                          type="text"
+                          value={link.href}
+                          onChange={(e) => updateFooterCapabilityLink(idx, 'href', e.target.value)}
+                          className="w-full px-2.5 py-1 bg-black border border-white/10 rounded text-white text-[10px] focus:outline-none"
+                          placeholder="Link Href"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Ecosystem Column Links */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Ecosystem Links</h4>
+                  <button
+                    onClick={addFooterEcosystemLink}
+                    className="px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/15 rounded text-[8px] font-mono text-neutral-300 hover:text-white cursor-pointer"
+                  >
+                    + Add Link
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {(currentContent.site_settings?.footer?.ecosystem || []).map((link, idx) => (
+                    <div key={idx} className="p-3 bg-black/40 border border-white/5 rounded-lg space-y-2 text-left">
+                      <div className="flex justify-between items-center border-b border-white/5 pb-1">
+                        <span className="font-mono text-[8px] text-neutral-500 uppercase tracking-widest">Link #{idx + 1}</span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => moveFooterEcosystemLink(idx, -1)}
+                            disabled={idx === 0}
+                            className="p-0.5 text-neutral-500 hover:text-white disabled:opacity-30 font-mono text-[9px] cursor-pointer"
+                          >
+                            ▲
+                          </button>
+                          <button
+                            onClick={() => moveFooterEcosystemLink(idx, 1)}
+                            disabled={idx === (currentContent.site_settings?.footer?.ecosystem || []).length - 1}
+                            className="p-0.5 text-neutral-500 hover:text-white disabled:opacity-30 font-mono text-[9px] cursor-pointer"
+                          >
+                            ▼
+                          </button>
+                          <button
+                            onClick={() => updateFooterEcosystemLink(idx, 'show', link.show !== false ? false : true)}
+                            className={`px-1.5 py-0.5 text-[7px] border rounded font-mono uppercase tracking-widest ${
+                              link.show !== false ? 'bg-white text-black font-semibold' : 'bg-neutral-800 text-neutral-500 border-transparent'
+                            }`}
+                          >
+                            {link.show !== false ? 'Show' : 'Hide'}
+                          </button>
+                          <button
+                            onClick={() => deleteFooterEcosystemLink(idx)}
+                            className="p-0.5 hover:bg-red-500/10 rounded cursor-pointer"
+                            title="Delete"
+                          >
+                            <span className="text-neutral-500 hover:text-red-400 font-mono text-[9px]">✕</span>
+                          </button>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          value={link.label}
+                          onChange={(e) => updateFooterEcosystemLink(idx, 'label', e.target.value)}
+                          className="w-full px-2.5 py-1 bg-black border border-white/10 rounded text-white text-[10px] focus:outline-none"
+                          placeholder="Link Label"
+                        />
+                        <input
+                          type="text"
+                          value={link.href}
+                          onChange={(e) => updateFooterEcosystemLink(idx, 'href', e.target.value)}
+                          className="w-full px-2.5 py-1 bg-black border border-white/10 rounded text-white text-[10px] focus:outline-none"
+                          placeholder="Link Href"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Social Media Links */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Social Media Links</h4>
+                  <button
+                    onClick={addFooterSocialLink}
+                    className="px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/15 rounded text-[8px] font-mono text-neutral-300 hover:text-white cursor-pointer"
+                  >
+                    + Add Social Link
+                  </button>
+                </div>
                 <div className="space-y-3">
                   {(currentContent.site_settings?.footer?.social_links || []).map((link, idx) => (
                     <div key={idx} className="p-3 bg-black/40 border border-white/5 rounded-lg space-y-2 text-left">
                       <div className="flex justify-between items-center border-b border-white/5 pb-1">
-                        <span className="font-mono text-[8px] text-neutral-500 uppercase tracking-widest">{link.platform}</span>
-                        <button
-                          onClick={() => {
-                            const nextContent = JSON.parse(JSON.stringify(currentContent));
-                            nextContent.site_settings.footer.social_links[idx].show = link.show !== false ? false : true;
-                            pushState(nextContent);
-                          }}
-                          className={`px-2 py-0.5 text-[8px] border rounded font-mono uppercase tracking-widest ${
-                            link.show !== false ? 'bg-white text-black font-semibold' : 'bg-neutral-800 text-neutral-500 border-transparent'
-                          }`}
-                        >
-                          {link.show !== false ? 'Show' : 'Hide'}
-                        </button>
+                        <span className="font-mono text-[8px] text-neutral-500 uppercase tracking-widest">{link.platform || 'New Platform'}</span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => moveFooterSocialLink(idx, -1)}
+                            disabled={idx === 0}
+                            className="p-0.5 text-neutral-500 hover:text-white disabled:opacity-30 font-mono text-[9px] cursor-pointer"
+                          >
+                            ▲
+                          </button>
+                          <button
+                            onClick={() => moveFooterSocialLink(idx, 1)}
+                            disabled={idx === (currentContent.site_settings?.footer?.social_links || []).length - 1}
+                            className="p-0.5 text-neutral-500 hover:text-white disabled:opacity-30 font-mono text-[9px] cursor-pointer"
+                          >
+                            ▼
+                          </button>
+                          <button
+                            onClick={() => updateFooterSocialLink(idx, 'show', link.show !== false ? false : true)}
+                            className={`px-1.5 py-0.5 text-[7px] border rounded font-mono uppercase tracking-widest ${
+                              link.show !== false ? 'bg-white text-black font-semibold' : 'bg-neutral-800 text-neutral-500 border-transparent'
+                            }`}
+                          >
+                            {link.show !== false ? 'Show' : 'Hide'}
+                          </button>
+                          <button
+                            onClick={() => deleteFooterSocialLink(idx)}
+                            className="p-0.5 hover:bg-red-500/10 rounded cursor-pointer"
+                            title="Delete"
+                          >
+                            <span className="text-neutral-500 hover:text-red-400 font-mono text-[9px]">✕</span>
+                          </button>
+                        </div>
                       </div>
-                      <input
-                        type="text"
-                        value={link.url}
-                        onChange={(e) => {
-                          const nextContent = JSON.parse(JSON.stringify(currentContent));
-                          nextContent.site_settings.footer.social_links[idx].url = e.target.value;
-                          pushState(nextContent);
-                        }}
-                        className="w-full px-3 py-1 bg-black border border-white/10 rounded text-white text-[10px] focus:outline-none"
-                        placeholder="Link URL"
-                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          value={link.platform || ''}
+                          onChange={(e) => updateFooterSocialLink(idx, 'platform', e.target.value)}
+                          className="w-full px-2.5 py-1 bg-black border border-white/10 rounded text-white text-[10px] focus:outline-none"
+                          placeholder="Platform Name"
+                        />
+                        <input
+                          type="text"
+                          value={link.url || ''}
+                          onChange={(e) => updateFooterSocialLink(idx, 'url', e.target.value)}
+                          className="w-full px-2.5 py-1 bg-black border border-white/10 rounded text-white text-[10px] focus:outline-none"
+                          placeholder="Link URL"
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>

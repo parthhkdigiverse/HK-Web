@@ -140,6 +140,9 @@ export const DEFAULT_CONTENT = {
       { label: "Contact", href: "#contact", show: true }
     ],
     footer: {
+      logo_img: "/images/hk-logo.png",
+      logo_text: "HARIKRUSHN DIGIVERSE LLP",
+      description: "Architecting the infinite digital through precision engineering and editorial design.",
       address: "Silver Trade Center, 501 & 502, near Pragati IT Park, Mota Varachha, Surat, Gujarat 394101",
       email: "contact@hkdigiverse.com",
       phone: "+91 98765 43210",
