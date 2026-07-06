@@ -194,6 +194,7 @@ export default function AdminPanel() {
           blogs: draft.blogs || DEFAULT_CONTENT.blogs,
           gallery: draft.gallery || DEFAULT_CONTENT.gallery,
           portfolio: draft.portfolio || DEFAULT_CONTENT.portfolio,
+          case_studies: draft.case_studies || DEFAULT_CONTENT.case_studies,
           ventures: draft.ventures || DEFAULT_CONTENT.ventures,
           ventures_settings: draft.ventures_settings || DEFAULT_CONTENT.ventures_settings,
           careers: draft.careers || DEFAULT_CONTENT.careers
@@ -969,6 +970,10 @@ export default function AdminPanel() {
       client: 'Client Name',
       category: 'web',
       description: 'Detail description...',
+      challenge: '',
+      solution: '',
+      features: [],
+      liveUrl: '',
       tech: ['React', 'FastAPI'],
       img: '/images/casestudies/novadefi.png',
       color: 'blue',
@@ -980,6 +985,49 @@ export default function AdminPanel() {
   const deletePortfolioItem = (index) => {
     const nextContent = JSON.parse(JSON.stringify(currentContent));
     nextContent.portfolio.splice(index, 1);
+    pushState(nextContent);
+  };
+
+  // Case Studies handlers
+  const updateCaseStudyItem = (index, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.case_studies) nextContent.case_studies = [];
+    if (field === 'tech') {
+      nextContent.case_studies[index].tech = value.split(',').map(t => t.trim()).filter(Boolean);
+    } else {
+      nextContent.case_studies[index][field] = value;
+    }
+    pushState(nextContent);
+  };
+
+  const addCaseStudyItem = () => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.case_studies) nextContent.case_studies = [];
+    nextContent.case_studies.push({
+      slug: 'new-case-study',
+      client: 'Client Name',
+      title: 'New Case Study Title',
+      industry: 'Industry Sector',
+      summary: 'Brief summary description...',
+      challenge: '',
+      solution: '',
+      tech: ['React', 'Node.js'],
+      img: '/images/casestudies/novadefi.png',
+      metrics: [
+        { label: 'Conversion Rate', value: '+50%' }
+      ],
+      duration: '3 months',
+      color: 'blue',
+      accentColor: '#3b82f6',
+      glowColor: 'rgba(59,130,246,0.15)'
+    });
+    pushState(nextContent);
+  };
+
+  const deleteCaseStudyItem = (index) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.case_studies) nextContent.case_studies = [];
+    nextContent.case_studies.splice(index, 1);
     pushState(nextContent);
   };
 
@@ -1368,6 +1416,7 @@ export default function AdminPanel() {
         { label: "Insights / Blogs", tab: "blogs", route: "#preview/blogs", icon: "📝", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
         { label: "Our Gallery", tab: "gallery", route: "#preview/our-gallery", icon: "🖼️", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
         { label: "Portfolio Work", tab: "portfolio", route: "#preview/portfolio", icon: "🚀", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
+        { label: "Case Studies List", tab: "case_studies_list", route: "#preview/case-study", icon: "📄", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
         { label: "Ventures", tab: "ventures", route: "#preview/ventures", icon: "💡", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
         { label: "Careers & Jobs", tab: "careers", route: "#preview/career", icon: "🤝", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
         { label: "Contact Us", tab: "contact", route: "#preview/contact", icon: "✉️", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" }
@@ -3528,7 +3577,7 @@ export default function AdminPanel() {
                 <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Portfolio Work Registry ({currentContent.portfolio.length})</span>
                 <button
                   onClick={addPortfolioItem}
-                  className="px-3 py-1.5 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors"
+                  className="px-3 py-1.5 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors cursor-pointer"
                 >
                   + Add Project
                 </button>
@@ -3536,105 +3585,365 @@ export default function AdminPanel() {
 
               <div className="space-y-4">
                 {currentContent.portfolio.map((item, index) => (
-                  <div key={index} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-3 text-left">
+                  <div key={item.slug || index} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-3 text-left">
                     <div className="flex justify-between items-center border-b border-white/5 pb-2">
                       <span className="font-mono text-[9px] text-neutral-500 font-bold">{item.title || 'New Project'}</span>
-                      <button
-                        onClick={() => deletePortfolioItem(index)}
-                        className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded"
-                      >
-                        Delete
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          disabled={index === 0}
+                          onClick={() => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            const arr = nextContent.portfolio;
+                            const temp = arr[index]; arr[index] = arr[index - 1]; arr[index - 1] = temp;
+                            pushState(nextContent);
+                          }}
+                          className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
+                        >▲</button>
+                        <button
+                          disabled={index === currentContent.portfolio.length - 1}
+                          onClick={() => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            const arr = nextContent.portfolio;
+                            const temp = arr[index]; arr[index] = arr[index + 1]; arr[index + 1] = temp;
+                            pushState(nextContent);
+                          }}
+                          className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
+                        >▼</button>
+                        <button
+                          onClick={() => deletePortfolioItem(index)}
+                          className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded cursor-pointer ml-1"
+                        >Delete</button>
+                      </div>
                     </div>
+
+                    {/* Basic Info */}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Project Title</label>
-                        <input
-                          type="text"
-                          value={item.title}
-                          onChange={(e) => updatePortfolioItem(index, 'title', e.target.value)}
-                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
-                        />
+                        <input type="text" value={item.title} onChange={(e) => updatePortfolioItem(index, 'title', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" />
                       </div>
                       <div>
                         <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Slug ID</label>
-                        <input
-                          type="text"
-                          value={item.slug}
-                          onChange={(e) => updatePortfolioItem(index, 'slug', e.target.value)}
-                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
-                        />
+                        <input type="text" value={item.slug} onChange={(e) => updatePortfolioItem(index, 'slug', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Client Name</label>
-                        <input
-                          type="text"
-                          value={item.client}
-                          onChange={(e) => updatePortfolioItem(index, 'client', e.target.value)}
-                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
-                        />
+                        <input type="text" value={item.client} onChange={(e) => updatePortfolioItem(index, 'client', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" />
                       </div>
                       <div>
-                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Category (web / platform / ai / ecommerce)</label>
-                        <input
-                          type="text"
-                          value={item.category}
-                          onChange={(e) => updatePortfolioItem(index, 'category', e.target.value)}
-                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
-                        />
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Category</label>
+                        <select value={item.category || 'web'} onChange={(e) => updatePortfolioItem(index, 'category', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none">
+                          <option value="web">Web Development</option>
+                          <option value="platform">CRM & Platforms</option>
+                          <option value="ai">AI Integrations</option>
+                          <option value="ecommerce">E-Commerce</option>
+                        </select>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Project Image URL</label>
-                        <input
-                          type="text"
-                          value={item.img}
-                          onChange={(e) => updatePortfolioItem(index, 'img', e.target.value)}
-                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
-                        />
-                      </div>
-                      <div>
-                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Theme Color (emerald, purple, amber, red, blue, etc)</label>
-                        <input
-                          type="text"
-                          value={item.color}
-                          onChange={(e) => updatePortfolioItem(index, 'color', e.target.value)}
-                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Accent Color Hex Code</label>
-                        <input
-                          type="text"
-                          value={item.accentColor}
-                          onChange={(e) => updatePortfolioItem(index, 'accentColor', e.target.value)}
-                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
-                          placeholder="#3b82f6"
-                        />
-                      </div>
-                      <div>
-                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Tech Stack (comma separated)</label>
-                        <input
-                          type="text"
-                          value={item.tech ? item.tech.join(', ') : ''}
-                          onChange={(e) => updatePortfolioItem(index, 'tech', e.target.value)}
-                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
-                        />
-                      </div>
-                    </div>
+
+                    {/* Image with Preview & Upload */}
                     <div>
-                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Short Project Description</label>
-                      <textarea
-                        rows={3}
-                        value={item.description}
-                        onChange={(e) => updatePortfolioItem(index, 'description', e.target.value)}
-                        className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed"
-                      />
+                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Project Image URL</label>
+                      <div className="flex gap-2">
+                        <input type="text" value={item.img} onChange={(e) => updatePortfolioItem(index, 'img', e.target.value)} className="flex-1 px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" />
+                        <label className="px-3 py-1.5 bg-white/5 border border-white/10 rounded text-[8px] text-neutral-400 hover:text-white cursor-pointer flex items-center">
+                          Upload
+                          <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                            const file = e.target.files[0]; if (!file) return;
+                            const formData = new FormData(); formData.append('file', file);
+                            try {
+                              const res = await fetch(API_URL + '/api/upload/image', { method: 'POST', body: formData });
+                              if (res.ok) { const data = await res.json(); updatePortfolioItem(index, 'img', data.imageUrl); }
+                            } catch (err) { console.error(err); }
+                          }} />
+                        </label>
+                      </div>
+                      {item.img && (
+                        <div className="mt-2 w-full h-32 bg-black/50 rounded-lg border border-white/5 overflow-hidden">
+                          <img src={item.img} alt="Preview" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Colors & Tech */}
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Theme Color</label>
+                        <select value={item.color || 'blue'} onChange={(e) => updatePortfolioItem(index, 'color', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none">
+                          {['emerald','purple','amber','blue','red','orange','pink','neutral','teal','violet','cyan','indigo','sky','rose'].map(c => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Accent Hex</label>
+                        <input type="text" value={item.accentColor} onChange={(e) => updatePortfolioItem(index, 'accentColor', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" placeholder="#3b82f6" />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Tech Stack (comma)</label>
+                        <input type="text" value={item.tech ? item.tech.join(', ') : ''} onChange={(e) => updatePortfolioItem(index, 'tech', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" />
+                      </div>
+                    </div>
+
+                    {/* Live URL */}
+                    <div>
+                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Live Website URL (leave empty if none)</label>
+                      <input type="text" value={item.liveUrl || ''} onChange={(e) => updatePortfolioItem(index, 'liveUrl', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" placeholder="https://example.com" />
+                    </div>
+
+                    {/* Description */}
+                    <div>
+                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Short Description (Card View)</label>
+                      <textarea rows={2} value={item.description} onChange={(e) => updatePortfolioItem(index, 'description', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed" />
+                    </div>
+
+                    {/* Detail Page Fields */}
+                    <div className="border-t border-white/5 pt-3 space-y-3">
+                      <span className="font-mono text-[8px] uppercase tracking-widest text-neutral-400 block">// Detail Page Content</span>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">The Challenge</label>
+                        <textarea rows={3} value={item.challenge || ''} onChange={(e) => updatePortfolioItem(index, 'challenge', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed" placeholder="Describe the client's challenge..." />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Our Solution</label>
+                        <textarea rows={3} value={item.solution || ''} onChange={(e) => updatePortfolioItem(index, 'solution', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed" placeholder="Describe how you solved it..." />
+                      </div>
+
+                      {/* Key Features Builder */}
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <label className="font-mono text-[8px] text-neutral-500">Key Features</label>
+                          <button
+                            onClick={() => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              if (!nextContent.portfolio[index].features) nextContent.portfolio[index].features = [];
+                              nextContent.portfolio[index].features.push('New Feature');
+                              pushState(nextContent);
+                            }}
+                            className="text-[8px] text-emerald-400 font-mono cursor-pointer hover:text-emerald-300"
+                          >+ Add Feature</button>
+                        </div>
+                        <div className="space-y-1.5">
+                          {(item.features || []).map((feat, fi) => (
+                            <div key={fi} className="flex gap-1.5">
+                              <input
+                                type="text" value={feat}
+                                onChange={(e) => {
+                                  const nextContent = JSON.parse(JSON.stringify(currentContent));
+                                  nextContent.portfolio[index].features[fi] = e.target.value;
+                                  pushState(nextContent);
+                                }}
+                                className="flex-1 px-2 py-1 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                              />
+                              <button
+                                onClick={() => {
+                                  const nextContent = JSON.parse(JSON.stringify(currentContent));
+                                  nextContent.portfolio[index].features.splice(fi, 1);
+                                  pushState(nextContent);
+                                }}
+                                className="text-[8px] text-red-500 hover:text-red-400 px-1.5 cursor-pointer"
+                              >✕</button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* CASE STUDIES LIST CMS PANEL */}
+          {activeTab === 'case_studies_list' && currentContent.case_studies && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Case Studies Registry ({currentContent.case_studies.length})</span>
+                <button
+                  onClick={addCaseStudyItem}
+                  className="px-3 py-1.5 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors cursor-pointer"
+                >
+                  + Add Case Study
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {currentContent.case_studies.map((item, index) => (
+                  <div key={item.slug || index} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-3 text-left">
+                    <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                      <span className="font-mono text-[9px] text-neutral-500 font-bold">{item.client || 'New Case Study'} - {item.title || 'Untitled'}</span>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          disabled={index === 0}
+                          onClick={() => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            const arr = nextContent.case_studies;
+                            const temp = arr[index]; arr[index] = arr[index - 1]; arr[index - 1] = temp;
+                            pushState(nextContent);
+                          }}
+                          className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
+                        >▲</button>
+                        <button
+                          disabled={index === currentContent.case_studies.length - 1}
+                          onClick={() => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            const arr = nextContent.case_studies;
+                            const temp = arr[index]; arr[index] = arr[index + 1]; arr[index + 1] = temp;
+                            pushState(nextContent);
+                          }}
+                          className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
+                        >▼</button>
+                        <button
+                          onClick={() => deleteCaseStudyItem(index)}
+                          className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded cursor-pointer ml-1"
+                        >Delete</button>
+                      </div>
+                    </div>
+
+                    {/* Basic Info */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Client Name</label>
+                        <input type="text" value={item.client || ''} onChange={(e) => updateCaseStudyItem(index, 'client', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Project Title</label>
+                        <input type="text" value={item.title || ''} onChange={(e) => updateCaseStudyItem(index, 'title', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Slug ID</label>
+                        <input type="text" value={item.slug || ''} onChange={(e) => updateCaseStudyItem(index, 'slug', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Industry Sector</label>
+                        <input type="text" value={item.industry || ''} onChange={(e) => updateCaseStudyItem(index, 'industry', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Duration</label>
+                        <input type="text" value={item.duration || ''} onChange={(e) => updateCaseStudyItem(index, 'duration', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" placeholder="e.g. 4 months" />
+                      </div>
+                    </div>
+
+                    {/* Image with Preview & Upload */}
+                    <div>
+                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Cover Image URL</label>
+                      <div className="flex gap-2">
+                        <input type="text" value={item.img || ''} onChange={(e) => updateCaseStudyItem(index, 'img', e.target.value)} className="flex-1 px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" />
+                        <label className="px-3 py-1.5 bg-white/5 border border-white/10 rounded text-[8px] text-neutral-400 hover:text-white cursor-pointer flex items-center">
+                          Upload
+                          <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                            const file = e.target.files[0]; if (!file) return;
+                            const formData = new FormData(); formData.append('file', file);
+                            try {
+                              const res = await fetch(API_URL + '/api/upload/image', { method: 'POST', body: formData });
+                              if (res.ok) { const data = await res.json(); updateCaseStudyItem(index, 'img', data.imageUrl); }
+                            } catch (err) { console.error(err); }
+                          }} />
+                        </label>
+                      </div>
+                      {item.img && (
+                        <div className="mt-2 w-full h-32 bg-black/50 rounded-lg border border-white/5 overflow-hidden">
+                          <img src={item.img} alt="Preview" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Styling details */}
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Theme Color</label>
+                        <select value={item.color || 'blue'} onChange={(e) => updateCaseStudyItem(index, 'color', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none">
+                          {['emerald','purple','amber','blue','red','orange','pink','neutral','teal','violet','cyan','indigo','sky','rose'].map(c => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Accent Color Hex</label>
+                        <input type="text" value={item.accentColor || ''} onChange={(e) => updateCaseStudyItem(index, 'accentColor', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" placeholder="#3b82f6" />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Glow Color RGBA</label>
+                        <input type="text" value={item.glowColor || ''} onChange={(e) => updateCaseStudyItem(index, 'glowColor', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" placeholder="rgba(59,130,246,0.15)" />
+                      </div>
+                    </div>
+
+                    {/* Tech Stack */}
+                    <div>
+                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Tech Stack (comma separated)</label>
+                      <input type="text" value={item.tech ? item.tech.join(', ') : ''} onChange={(e) => updateCaseStudyItem(index, 'tech', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none" placeholder="React, Node.js, Express" />
+                    </div>
+
+                    {/* Summary */}
+                    <div>
+                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Short Summary (Listing Card View)</label>
+                      <textarea rows={2} value={item.summary || ''} onChange={(e) => updateCaseStudyItem(index, 'summary', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed" />
+                    </div>
+
+                    {/* Narrative details */}
+                    <div className="border-t border-white/5 pt-3 space-y-3">
+                      <span className="font-mono text-[8px] uppercase tracking-widest text-neutral-400 block">// Detail Page Narrative</span>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">The Challenge</label>
+                        <textarea rows={3} value={item.challenge || ''} onChange={(e) => updateCaseStudyItem(index, 'challenge', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed" placeholder="Describe the client's challenge..." />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Our Solution</label>
+                        <textarea rows={3} value={item.solution || ''} onChange={(e) => updateCaseStudyItem(index, 'solution', e.target.value)} className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed" placeholder="Describe your solution..." />
+                      </div>
+
+                      {/* Impact Metrics Builder */}
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <label className="font-mono text-[8px] text-neutral-500">Impact Metrics</label>
+                          <button
+                            onClick={() => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              if (!nextContent.case_studies[index].metrics) nextContent.case_studies[index].metrics = [];
+                              nextContent.case_studies[index].metrics.push({ label: 'New Metric', value: '+10%' });
+                              pushState(nextContent);
+                            }}
+                            className="text-[8px] text-emerald-400 font-mono cursor-pointer hover:text-emerald-300"
+                          >+ Add Metric</button>
+                        </div>
+                        <div className="space-y-1.5">
+                          {(item.metrics || []).map((m, mi) => (
+                            <div key={mi} className="flex gap-1.5 items-center">
+                              <input
+                                type="text" placeholder="Value" value={m.value || ''}
+                                onChange={(e) => {
+                                  const nextContent = JSON.parse(JSON.stringify(currentContent));
+                                  nextContent.case_studies[index].metrics[mi].value = e.target.value;
+                                  pushState(nextContent);
+                                }}
+                                className="w-1/3 px-2 py-1 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                              />
+                              <input
+                                type="text" placeholder="Label" value={m.label || ''}
+                                onChange={(e) => {
+                                  const nextContent = JSON.parse(JSON.stringify(currentContent));
+                                  nextContent.case_studies[index].metrics[mi].label = e.target.value;
+                                  pushState(nextContent);
+                                }}
+                                className="flex-1 px-2 py-1 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                              />
+                              <button
+                                onClick={() => {
+                                  const nextContent = JSON.parse(JSON.stringify(currentContent));
+                                  nextContent.case_studies[index].metrics.splice(mi, 1);
+                                  pushState(nextContent);
+                                }}
+                                className="text-[8px] text-red-500 hover:text-red-400 px-1.5 cursor-pointer"
+                              >✕</button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}

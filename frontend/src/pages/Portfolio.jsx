@@ -368,7 +368,7 @@ export default function Portfolio() {
       <div className="absolute top-[55%] right-1/3 w-[35vw] h-[35vw] rounded-full bg-purple-500/5 blur-[100px] pointer-events-none" />
 
       {/* ── Header ── */}
-      <div className="text-center mb-20 pt-8 relative z-10">
+      <div className="text-center mb-12 pt-8 relative z-10">
         <span className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.4em] text-neutral-500 font-light block mb-3">
           // Our Showcase
         </span>
@@ -378,6 +378,30 @@ export default function Portfolio() {
         <p className="font-light text-neutral-400 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
           A curated collection of websites, platforms, mobile apps, and AI solutions we've built for clients across industries — from small businesses to enterprise-scale products.
         </p>
+      </div>
+
+      {/* ── Stats Bar (above filters) ── */}
+      <div className="border-t border-b border-white/5 py-10 mb-12 max-w-7xl mx-auto px-4 relative z-10">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+          <div>
+            <span className="font-display text-3xl font-extrabold text-white block">{filtered.length}</span>
+            <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest text-neutral-500 mt-1 block">
+              {filter === 'all' ? 'Total Projects' : categories.find(c => c.key === filter)?.label || 'Projects'}
+            </span>
+          </div>
+          <div>
+            <span className="font-display text-3xl font-extrabold text-white block">{new Set(filtered.map(p => p.category)).size}</span>
+            <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest text-neutral-500 mt-1 block">Categories</span>
+          </div>
+          <div>
+            <span className="font-display text-3xl font-extrabold text-white block">100%</span>
+            <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest text-neutral-500 mt-1 block">Client Satisfaction</span>
+          </div>
+          <div>
+            <span className="font-display text-3xl font-extrabold text-white block">{filtered.reduce((sum, p) => sum + (p.tech?.length || 0), 0)}+</span>
+            <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest text-neutral-500 mt-1 block">Technologies Used</span>
+          </div>
+        </div>
       </div>
 
       {/* ── Filter Tabs ── */}
@@ -461,27 +485,7 @@ export default function Portfolio() {
         </AnimatePresence>
       </div>
 
-      {/* ── Stats Bar ── */}
-      <div className="border-t border-white/5 py-16 max-w-7xl mx-auto px-4 relative z-10">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
-          <div>
-            <span className="font-display text-3xl font-extrabold text-white block">12+</span>
-            <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest text-neutral-500 mt-1 block">Projects Shipped</span>
-          </div>
-          <div>
-            <span className="font-display text-3xl font-extrabold text-white block">8+</span>
-            <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest text-neutral-500 mt-1 block">Industries Covered</span>
-          </div>
-          <div>
-            <span className="font-display text-3xl font-extrabold text-white block">100%</span>
-            <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest text-neutral-500 mt-1 block">Client Satisfaction</span>
-          </div>
-          <div>
-            <span className="font-display text-3xl font-extrabold text-white block">50+</span>
-            <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest text-neutral-500 mt-1 block">Features Built</span>
-          </div>
-        </div>
-      </div>
+
     </div>
   );
 }

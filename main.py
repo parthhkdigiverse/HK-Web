@@ -66,6 +66,129 @@ from app.db.seed import (
     DEFAULT_SERVICES_SUBPAGES
 )
 
+DEFAULT_CASE_STUDIES = [
+  {
+    "slug": "vesper",
+    "client": "Vesper Luxury Living",
+    "title": "Cinematic Visual Sales Engine",
+    "industry": "Real Estate",
+    "summary": "We transformed Vesper's high-end property portal by integrating custom canvas scrubbing transitions, rendering 4K frame sequences that scroll smoothly on desktop and mobile. The cinematic experience increased buyer engagement dramatically.",
+    "challenge": "Vesper needed a property showcase that felt like a luxury brand experience, not a generic listing site. Their existing platform had poor mobile performance and lacked visual storytelling.",
+    "solution": "Built a custom canvas-based scroll scrub engine with optimized frame preloading, lazy-loaded 4K imagery, and GPU-accelerated transitions. Integrated interactive floor plans and virtual walkthrough modules.",
+    "tech": ["React", "Canvas API", "GSAP", "Vite", "Three.js"],
+    "img": "/images/casestudies/vesper.png",
+    "metrics": [
+      { "label": "Conversion Rate", "value": "+142%" },
+      { "label": "Avg. Time on Page", "value": "4m 12s" },
+      { "label": "Load Time", "value": "0.8s" }
+    ],
+    "duration": "4 months",
+    "color": "amber",
+    "accentColor": "#f59e0b",
+    "glowColor": "rgba(245,158,11,0.15)"
+  },
+  {
+    "slug": "aerocrm",
+    "client": "AeroCRM Aviation",
+    "title": "Automated Operations Platform",
+    "industry": "Aviation",
+    "summary": "Replaced a fragmented array of legacy software sheets with a custom high-performance CRM, featuring automated emailers, booking schedules, vector notifications, and daily backups.",
+    "challenge": "AeroCRM was managing fleet operations across spreadsheets and disconnected tools, causing booking conflicts, delayed communications, and zero audit trails.",
+    "solution": "Architected a unified CRM with real-time booking conflict detection, automated email/SMS triggers, role-based dashboards, and end-to-end encrypted data backups running every 6 hours.",
+    "tech": ["React", "FastAPI", "PostgreSQL", "Docker", "Redis"],
+    "img": "/images/casestudies/aerocrm.png",
+    "metrics": [
+      { "label": "Operational Efficiency", "value": "+400%" },
+      { "label": "Booking Failures", "value": "0%" },
+      { "label": "Manual Input Time", "value": "-85%" }
+    ],
+    "duration": "6 months",
+    "color": "blue",
+    "accentColor": "#3b82f6",
+    "glowColor": "rgba(59,130,246,0.15)"
+  },
+  {
+    "slug": "novadefi",
+    "client": "Nova DeFi",
+    "title": "Web3 Trading Platform & UX Overhaul",
+    "industry": "Fintech / Web3",
+    "summary": "Co-architected the complete user flow for Nova's decentralized finance platform, designing intuitive swap interfaces, wallet connectivity, and real-time portfolio dashboards.",
+    "challenge": "Nova's existing DeFi interface had a 60% user drop-off at the wallet connection step. Complex transaction flows confused first-time crypto users.",
+    "solution": "Redesigned the entire UX flow with progressive disclosure patterns, one-click wallet connect, real-time gas estimation, and visual transaction confirmations with animated feedback.",
+    "tech": ["Next.js", "Ethers.js", "Solidity", "The Graph", "Framer Motion"],
+    "img": "/images/casestudies/novadefi.png",
+    "metrics": [
+      { "label": "Transaction Success", "value": "+40%" },
+      { "label": "User Drop-off", "value": "-60%" },
+      { "label": "Daily Active Users", "value": "3x" }
+    ],
+    "duration": "5 months",
+    "color": "purple",
+    "accentColor": "#a855f7",
+    "glowColor": "rgba(168,85,247,0.15)"
+  },
+  {
+    "slug": "corelogistics",
+    "client": "Core Logistics",
+    "title": "AI-Driven Supply Chain Matrix",
+    "industry": "Logistics",
+    "summary": "Constructed a custom supply chain optimization system from scratch, integrating AI-driven route prediction, real-time fleet tracking, and automated warehouse inventory management.",
+    "challenge": "Core Logistics was losing 20% of delivery efficiency due to manual route planning and lack of real-time visibility into fleet locations and warehouse stock levels.",
+    "solution": "Built an AI route optimizer using historical traffic and weather data, integrated GPS fleet tracking with geofence alerts, and automated inventory scanning with barcode/QR integration.",
+    "tech": ["Python", "TensorFlow", "React", "Google Maps API", "PostgreSQL"],
+    "img": "/images/casestudies/corelogistics.png",
+    "metrics": [
+      { "label": "Delivery Efficiency", "value": "+38%" },
+      { "label": "Fuel Cost Savings", "value": "12L/yr" },
+      { "label": "Real-time Accuracy", "value": "99.7%" }
+    ],
+    "duration": "7 months",
+    "color": "emerald",
+    "accentColor": "#10b981",
+    "glowColor": "rgba(16,185,129,0.15)"
+  },
+  {
+    "slug": "pulsehealth",
+    "client": "Pulse MedTech",
+    "title": "HIPAA-Compliant Patient Portal",
+    "industry": "Healthcare",
+    "summary": "Designed and built a secure doctor-patient portal with encrypted medical records, automated appointment scheduling, video consultations, and digital prescription management.",
+    "challenge": "Pulse MedTech needed a patient management system that met strict HIPAA compliance while being intuitive enough for elderly patients to navigate without assistance.",
+    "solution": "Created an accessibility-first portal with large-text modes, voice-guided navigation, E2E encrypted data at rest and in transit, and automated appointment reminders via SMS and WhatsApp.",
+    "tech": ["React", "Express", "MongoDB", "WebGL", "Twilio"],
+    "img": "/images/casestudies/pulsehealth.png",
+    "metrics": [
+      { "label": "Patient Satisfaction", "value": "4.9/5" },
+      { "label": "Booking Efficiency", "value": "+200%" },
+      { "label": "Data Breach Incidents", "value": "0" }
+    ],
+    "duration": "5 months",
+    "color": "sky",
+    "accentColor": "#0ea5e9",
+    "glowColor": "rgba(14,165,233,0.15)"
+  },
+  {
+    "slug": "learnverse",
+    "client": "LearnVerse Academy",
+    "title": "Full-Stack LMS with Live Classrooms",
+    "industry": "EdTech",
+    "summary": "Built a scalable Learning Management System with live video classrooms, adaptive quiz engines, real-time progress tracking, and automated certificate generation for 50,000+ students.",
+    "challenge": "LearnVerse was using Zoom for classes and Google Sheets for tracking, losing student engagement data and unable to personalize the learning experience.",
+    "solution": "Developed a custom LMS with WebRTC-based live classrooms, adaptive quizzing that adjusts difficulty based on performance, gamified progress dashboards, and auto-generated PDF certificates.",
+    "tech": ["Next.js", "WebRTC", "FastAPI", "PostgreSQL", "Redis"],
+    "img": "/images/casestudies/learnverse.png",
+    "metrics": [
+      { "label": "Student Retention", "value": "+65%" },
+      { "label": "Course Completion", "value": "94%" },
+      { "label": "Students Onboarded", "value": "50K+" }
+    ],
+    "duration": "6 months",
+    "color": "rose",
+    "accentColor": "#f43f5e",
+    "glowColor": "rgba(244,63,94,0.15)"
+  }
+]
+
 DEFAULT_VENTURES_SETTINGS = {
     "overline": "// Our Initiatives",
     "title": "Digiverse Ventures",
@@ -324,7 +447,8 @@ def compile_full_content(base_content: dict) -> dict:
         "career_faqs": ("career_faqs", "q", DEFAULT_CAREER_FAQS),
         "contact_offices": ("contact_offices", "slug", DEFAULT_CONTACT_OFFICES),
         "contact_faqs": ("contact_faqs", "q", DEFAULT_CONTACT_FAQS),
-        "services_subpages": ("services_subpages", "identifier", DEFAULT_SERVICES_SUBPAGES)
+        "services_subpages": ("services_subpages", "identifier", DEFAULT_SERVICES_SUBPAGES),
+        "case_studies": ("case_studies", "sort_order", DEFAULT_CASE_STUDIES)
     }
     
     for key, (coll_name, sort_field, fallback) in list_collections_map.items():
@@ -447,7 +571,8 @@ def save_normalized_draft(data: dict):
         "career_faqs": "career_faqs",
         "contact_offices": "contact_offices",
         "contact_faqs": "contact_faqs",
-        "services_subpages": "services_subpages"
+        "services_subpages": "services_subpages",
+        "case_studies": "case_studies"
     }
     
     for key, coll_name in list_collections.items():
