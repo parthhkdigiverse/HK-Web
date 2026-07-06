@@ -38,59 +38,129 @@ export const DEFAULT_CONTENT = {
       title: "Web Engineering",
       desc: "Creating high-fidelity, cinematic, and fast-loading web applications that captivate and convert.",
       tags: ["FRONTEND", "DESIGN"],
-      href: "#service-web"
+      href: "#service-web",
+      img: "/images/gallery/design_sprint.png",
+      gradient: "from-blue-500 via-indigo-500 to-cyan-500"
     },
     {
       num: "02/07",
       title: "Mobile Applications",
       desc: "Building bespoke native-feeling iOS and Android solutions with fluid gestures and offline sync.",
       tags: ["IOS", "ANDROID"],
-      href: "#service-app"
+      href: "#service-app",
+      img: "/images/gallery/digiverse_workspace.png",
+      gradient: "from-emerald-500 via-teal-500 to-cyan-500"
     },
     {
       num: "03/07",
       title: "Custom Software",
       desc: "Constructing robust backend panels, CRM matrices, SaaS dashboards, and multi-tenant systems.",
       tags: ["CRM", "ERP"],
-      href: "#service-custom-software"
+      href: "#service-custom-software",
+      img: "/images/quantum_banking.png",
+      gradient: "from-amber-500 via-orange-500 to-yellow-500"
     },
     {
       num: "04/07",
       title: "Digital Marketing",
       desc: "Driving traffic and client acquisitions using data-backed strategies, SEO, and paid ads.",
       tags: ["SEO", "GROWTH"],
-      href: "#service-digital-marketing"
+      href: "#service-digital-marketing",
+      img: "/images/gallery/launch_celebration.png",
+      gradient: "from-rose-500 via-pink-500 to-purple-500"
     },
     {
       num: "05/07",
       title: "Social Media Management",
       desc: "Crafting brand presence, graphic design guides, and content calendars to elevate recognition.",
       tags: ["BRANDING", "CONTENT"],
-      href: "#service-social-media-management"
+      href: "#service-social-media-management",
+      img: "/images/gallery/cinematic_review.png",
+      gradient: "from-pink-500 via-fuchsia-500 to-violet-500"
     },
     {
       num: "06/07",
       title: "AI Consulting",
       desc: "Developing automated AI agents, vector database search pipelines, and custom LLM integrations.",
       tags: ["LLM", "AGENTS"],
-      href: "#service-ai-consulting"
+      href: "#service-ai-consulting",
+      img: "/images/gallery/ai_orchestrator.png",
+      gradient: "from-purple-500 via-violet-500 to-indigo-500"
     },
     {
       num: "07/07",
       title: "IT Consulting",
       desc: "Designing Cloud migrations, Docker orchestration files, hardened security, and CI/CD pipelines.",
       tags: ["CLOUD", "DEVOPS"],
-      href: "#service-it-consulting"
+      href: "#service-it-consulting",
+      img: "/images/gallery/hardware_calibration.png",
+      gradient: "from-sky-500 via-blue-500 to-indigo-500"
     }
   ],
   caseStudy: {
-    title: "Quantum Banking OS",
-    desc: "Re-architecting the core infrastructure for a leading European fintech. We replaced legacy monolithic systems with a high-concurrency microservices mesh capable of processing millions of transactions per second.",
-    metric1Value: "+340%",
-    metric1Label: "Throughput",
-    metric2Value: "$12M",
-    metric2Label: "Infra Saved",
-    image: "/images/quantum_banking.png"
+    show: true,
+    client: "AeroCRM Aviation",
+    logo: "/images/logos/aerocrm_logo.png",
+    title: "Custom Cloud CRM Platform",
+    label: "Simulation [CRM.v1]",
+    image: "/images/gallery/digiverse_workspace.png",
+    linkText: "View Case Study Details",
+    linkHref: "#case-study",
+    points: [
+      "Constructed custom CRM dashboards with automated lead tracking pipelines",
+      "Built secure client management portal and transaction records matrix",
+      "Integrated automated contract signing and PDF invoice generators"
+    ]
+  },
+  testimonials: {
+    show: true,
+    title: "Trusted by pioneers.",
+    description: "Read what industry leaders say about our custom software engineering, high-fidelity interfaces, and digital architectures.",
+    list: [
+      {
+        name: "Alexander Vance",
+        role: "VP of Engineering, Saphira Aviation",
+        quote: "HariKrushn DigiVerse completely transformed our fleet tracking CRM. Their engineering precision, combined with a meticulous design language, gave us a product that is both cinematic and lightning-fast. They operate at the highest level of craftsmanship.",
+        rating: 5,
+        avatar: "/images/gallery/avatar_alexander.png",
+        tag: "CUSTOM CRM",
+        color: "from-amber-500/10 to-orange-500/5",
+        glowColor: "rgba(245,158,11,0.25)",
+        tagClass: "text-amber-400 bg-amber-500/10 border-amber-500/20",
+        starClass: "text-amber-500"
+      },
+      {
+        name: "Elena Rostova",
+        role: "Co-Founder, Nova DeFi",
+        quote: "Building a Web3 platform requires absolute trust and flawless UX. The team didn't just build our interfaces; they co-architected the user flow. Our transaction success rate increased by 40% after launching the new interface.",
+        rating: 5,
+        avatar: "/images/gallery/avatar_elena.png",
+        tag: "WEB3 PLATFORM",
+        color: "from-purple-500/10 to-indigo-500/5",
+        glowColor: "rgba(168,85,247,0.25)",
+        tagClass: "text-purple-400 bg-purple-500/10 border-purple-500/20",
+        starClass: "text-purple-500"
+      },
+      {
+        name: "Marcus Thorn",
+        role: "Head of Product, Core Logistics",
+        quote: "Managing a global supply chain demands real-time data visibility. HariKrushn Digiverse built an AI-driven predictive dispatch matrix that integrated seamlessly with our legacy database. Their work is a masterclass in modern systems integration.",
+        rating: 5,
+        avatar: "/images/gallery/avatar_marcus.png",
+        tag: "AI LOGISTICS",
+        color: "from-emerald-500/10 to-teal-500/5",
+        glowColor: "rgba(16,185,129,0.25)",
+        tagClass: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+        starClass: "text-emerald-500"
+      }
+    ]
+  },
+  bottomCta: {
+    show: true,
+    titleNormal: "Let's build the",
+    titleItalic: "future together.",
+    btnText: "Start a Project →",
+    btnLink: "#contact"
   },
   sectors: ["FINTECH", "HEALTHTECH", "E-COMMERCE", "LOGISTICS", "EDTECH", "REAL ESTATE", "SAAS", "HOSPITALITY"],
   milestones: [

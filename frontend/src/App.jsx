@@ -54,7 +54,7 @@ function PreviewContainer({ currentHash }) {
     } else if (tab === 'footer') {
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     } else {
-      const targetId = tab === 'stats' ? 'stats-section' : tab === 'services' ? 'services-section' : tab === 'brands' ? 'brands-section' : null;
+      const targetId = tab === 'stats' ? 'stats-section' : tab === 'services' ? 'services-section' : tab === 'brands' ? 'brands-section' : tab === 'caseStudy' ? 'case-study-section' : tab === 'testimonials' ? 'testimonials-section' : tab === 'bottomCta' ? 'bottom-cta-section' : null;
       if (targetId) {
         setTimeout(() => {
           const el = document.getElementById(targetId);

@@ -3,6 +3,22 @@ import { useContent, DEFAULT_CONTENT } from '../context/ContentContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8008';
 
+const getServiceDefaultPreview = (num, index) => {
+  const defaults = {
+    "01/07": { img: "/images/gallery/design_sprint.png", gradient: "from-blue-500 via-indigo-500 to-cyan-500" },
+    "02/07": { img: "/images/gallery/digiverse_workspace.png", gradient: "from-emerald-500 via-teal-500 to-cyan-500" },
+    "03/07": { img: "/images/quantum_banking.png", gradient: "from-amber-500 via-orange-500 to-yellow-500" },
+    "04/07": { img: "/images/gallery/launch_celebration.png", gradient: "from-rose-500 via-pink-500 to-purple-500" },
+    "05/07": { img: "/images/gallery/cinematic_review.png", gradient: "from-pink-500 via-fuchsia-500 to-violet-500" },
+    "06/07": { img: "/images/gallery/ai_orchestrator.png", gradient: "from-purple-500 via-violet-500 to-indigo-500" },
+    "07/07": { img: "/images/gallery/hardware_calibration.png", gradient: "from-sky-500 via-blue-500 to-indigo-500" }
+  };
+  if (defaults[num]) return defaults[num];
+  const keys = Object.keys(defaults);
+  const fallbackKey = keys[index % keys.length];
+  return defaults[fallbackKey];
+};
+
 export default function AdminPanel() {
   const { 
     fetchDraft, 
@@ -112,8 +128,34 @@ export default function AdminPanel() {
           ...DEFAULT_CONTENT,
           ...draft,
           hero: { ...DEFAULT_CONTENT.hero, ...(draft.hero || {}) },
+          caseStudy: {
+            ...DEFAULT_CONTENT.caseStudy,
+            ...(draft.caseStudy || {}),
+            points: draft.caseStudy?.points || DEFAULT_CONTENT.caseStudy.points
+          },
+          testimonials: {
+            ...DEFAULT_CONTENT.testimonials,
+            ...(draft.testimonials || {}),
+            list: (draft.testimonials?.list || DEFAULT_CONTENT.testimonials.list).map((t, i) => ({
+              id: t.id || i + 1,
+              show: true,
+              ...t
+            }))
+          },
+          bottomCta: {
+            ...DEFAULT_CONTENT.bottomCta,
+            ...(draft.bottomCta || {})
+          },
           stats: (draft.stats || DEFAULT_CONTENT.stats).map(s => ({ show: true, ...s })),
-          services: (draft.services || DEFAULT_CONTENT.services).map(s => ({ show: true, ...s })),
+          services: (draft.services || DEFAULT_CONTENT.services).map((s, idx) => {
+            const defaults = getServiceDefaultPreview(s.num, idx);
+            return {
+              show: true,
+              img: defaults.img,
+              gradient: defaults.gradient,
+              ...s
+            };
+          }),
           about_us: {
             philosophy: { ...DEFAULT_CONTENT.about_us.philosophy, ...(draft.about_us?.philosophy || {}) },
             vision: { ...DEFAULT_CONTENT.about_us.vision, ...(draft.about_us?.vision || {}) },
@@ -601,16 +643,50 @@ export default function AdminPanel() {
     pushState(nextContent);
   };
 
+  const handleUploadServiceHoverImage = async (index, e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setIsUploadingImage(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch(API_URL + '/api/upload/image', {
+        method: 'POST',
+        body: formData
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const nextContent = JSON.parse(JSON.stringify(currentContent));
+        if (!nextContent.services) nextContent.services = [];
+        nextContent.services[index].img = data.imageUrl;
+        pushState(nextContent);
+        setSaveStatus({ type: 'success', message: 'Hover image uploaded successfully!' });
+      } else {
+        const err = await res.json();
+        setSaveStatus({ type: 'error', message: err.detail || 'Upload failed' });
+      }
+    } catch {
+      setSaveStatus({ type: 'error', message: 'Network error uploading image' });
+    } finally {
+      setIsUploadingImage(false);
+      setTimeout(() => setSaveStatus({ type: '', message: '' }), 3000);
+    }
+  };
+
   const addServiceItem = () => {
     const nextContent = JSON.parse(JSON.stringify(currentContent));
     const num = `0${nextContent.services.length + 1}/07`;
+    const defaults = getServiceDefaultPreview(num, nextContent.services.length);
     nextContent.services.push({
       num,
       title: 'New Service Capability',
       desc: 'Describe this service capability here.',
       tags: ['TAG'],
       href: '#',
-      show: true
+      show: true,
+      img: defaults.img,
+      gradient: defaults.gradient
     });
     pushState(nextContent);
   };
@@ -1186,8 +1262,11 @@ export default function AdminPanel() {
       items: [
         { label: "Hero Canvas Section", tab: "hero", route: "#preview/home", icon: "⚡", badge: "LIVE", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
         { label: "Statistics & Metrics", tab: "stats", route: "#preview/home", icon: "📊", badge: "LIVE", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
+        { label: "Partner Brand Ticker", tab: "brands", route: "#preview/home", icon: "🤝", badge: "LIVE", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
         { label: "Services Preview Index", tab: "services", route: "#preview/home", icon: "💼", badge: "LIVE", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
-        { label: "Partner Brand Ticker", tab: "brands", route: "#preview/home", icon: "🤝", badge: "LIVE", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" }
+        { label: "Featured Case Study", tab: "caseStudy", route: "#preview/home", icon: "🚀", badge: "LIVE", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
+        { label: "Client Testimonials", tab: "testimonials", route: "#preview/home", icon: "💬", badge: "LIVE", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
+        { label: "Bottom CTA Section", tab: "bottomCta", route: "#preview/home", icon: "📢", badge: "LIVE", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" }
       ]
     },
     {
@@ -1822,6 +1901,57 @@ export default function AdminPanel() {
                         className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white font-sans text-xs focus:outline-none resize-none leading-relaxed"
                       />
                     </div>
+
+                    {/* Hover Image & Gradient Settings */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-white/[0.03]">
+                      {/* Gradient */}
+                      <div className="space-y-1">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-400 block">Underline Neon Gradient (Tailwind classes)</label>
+                        <input
+                          type="text"
+                          value={service.gradient || ''}
+                          onChange={(e) => updateServiceItem(index, 'gradient', e.target.value)}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white font-mono text-xs focus:outline-none"
+                          placeholder="from-blue-500 via-indigo-500 to-cyan-500"
+                        />
+                      </div>
+
+                      {/* Hover image */}
+                      <div className="space-y-2">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-400 block">Hover Preview Image</label>
+                        <div className="space-y-2">
+                          {service.img && (
+                            <div className="flex items-center gap-3">
+                              <img 
+                                src={service.img} 
+                                alt="Hover Preview" 
+                                className="w-16 h-10 object-cover border border-white/10 rounded-lg bg-neutral-900"
+                              />
+                              <span className="text-[9px] text-neutral-500 font-mono">Current Preview</span>
+                            </div>
+                          )}
+                          <input
+                            type="text"
+                            value={service.img || ''}
+                            onChange={(e) => updateServiceItem(index, 'img', e.target.value)}
+                            className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none focus:border-white/20"
+                            placeholder="Image URL"
+                          />
+                        </div>
+                        <div className="flex gap-4">
+                          <label className="flex-1 py-2 border border-white/10 hover:border-white/30 text-center rounded-xl bg-white/5 text-[9px] uppercase tracking-widest font-mono cursor-pointer hover:bg-white/10 transition-all text-white font-semibold block">
+                            {isUploadingImage ? 'Uploading Image...' : 'Upload Hover Image'}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleUploadServiceHoverImage(index, e)}
+                              disabled={isUploadingImage}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1975,6 +2105,741 @@ export default function AdminPanel() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* FEATURED CASE STUDY CMS PANEL */}
+          {activeTab === 'caseStudy' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="font-mono text-[10px] uppercase tracking-wider text-white">// Featured Case Study Settings</h3>
+              </div>
+
+              {/* Show/Hide Case Study */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
+                <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Section Visibility</h4>
+                <div className="w-full md:w-1/3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextContent = JSON.parse(JSON.stringify(currentContent));
+                      nextContent.caseStudy.show = nextContent.caseStudy.show !== false ? false : true;
+                      pushState(nextContent);
+                    }}
+                    className={`w-full py-2 border rounded-lg text-[8px] uppercase tracking-widest font-mono cursor-pointer transition-all duration-300 ${
+                      (currentContent.caseStudy?.show !== false) 
+                        ? 'bg-white text-black font-semibold' 
+                        : 'bg-neutral-800 text-neutral-500 border-transparent'
+                    }`}
+                  >
+                    {(currentContent.caseStudy?.show !== false) ? 'Show Section' : 'Hide Section'}
+                  </button>
+                </div>
+              </div>
+
+              {/* General Metadata */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
+                <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Case Study Details</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Client Name */}
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Client / Company Name</label>
+                    <input
+                      type="text"
+                      value={currentContent.caseStudy?.client || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        nextContent.caseStudy.client = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                      placeholder="e.g. AeroCRM Aviation"
+                    />
+                  </div>
+
+                  {/* Title */}
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Project Title</label>
+                    <input
+                      type="text"
+                      value={currentContent.caseStudy?.title || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        nextContent.caseStudy.title = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                      placeholder="e.g. Custom Cloud CRM Platform"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Simulation label */}
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Simulation / Version Label</label>
+                    <input
+                      type="text"
+                      value={currentContent.caseStudy?.label || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        nextContent.caseStudy.label = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                      placeholder="e.g. Simulation [CRM.v1]"
+                    />
+                  </div>
+
+                  {/* Link Text */}
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Link Label Text</label>
+                    <input
+                      type="text"
+                      value={currentContent.caseStudy?.linkText || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        nextContent.caseStudy.linkText = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                      placeholder="e.g. View Case Study Details"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Link Href */}
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Link Destination URL</label>
+                    <input
+                      type="text"
+                      value={currentContent.caseStudy?.linkHref || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        nextContent.caseStudy.linkHref = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                      placeholder="e.g. #case-study"
+                    />
+                  </div>
+                </div>
+
+                {/* Client Logo URL & Upload */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-white/5">
+                  <div className="space-y-2">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Client Logo URL</label>
+                    <input
+                      type="text"
+                      value={currentContent.caseStudy?.logo || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        nextContent.caseStudy.logo = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                      placeholder="Logo image URL"
+                    />
+                    <label className="w-full py-2 border border-white/10 hover:border-white/30 text-center rounded-xl bg-white/5 text-[9px] uppercase tracking-widest font-mono cursor-pointer hover:bg-white/10 transition-all text-white font-semibold block">
+                      {isUploadingImage ? 'Uploading...' : 'Upload Client Logo'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={async (e) => {
+                          const file = e.target.files[0];
+                          if (!file) return;
+                          setIsUploadingImage(true);
+                          const formData = new FormData();
+                          formData.append('file', file);
+                          try {
+                            const res = await fetch(API_URL + '/api/upload/image', { method: 'POST', body: formData });
+                            if (res.ok) {
+                              const data = await res.json();
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              nextContent.caseStudy.logo = data.imageUrl;
+                              pushState(nextContent);
+                            }
+                          } catch (err) {
+                            console.error(err);
+                          } finally {
+                            setIsUploadingImage(false);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                  {currentContent.caseStudy?.logo && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-16 h-16 bg-[#15151a] border border-white/10 rounded-lg p-2 flex items-center justify-center">
+                        <img src={currentContent.caseStudy.logo} alt="Client Logo" className="max-w-full max-h-full object-contain mix-blend-screen" />
+                      </div>
+                      <span className="text-[9px] font-mono text-neutral-500">Logo Preview</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Main Case Study Mockup Image URL & Upload */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-white/5">
+                  <div className="space-y-2">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Main Case Study Image URL</label>
+                    <input
+                      type="text"
+                      value={currentContent.caseStudy?.image || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        nextContent.caseStudy.image = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                      placeholder="Main image URL"
+                    />
+                    <label className="w-full py-2 border border-white/10 hover:border-white/30 text-center rounded-xl bg-white/5 text-[9px] uppercase tracking-widest font-mono cursor-pointer hover:bg-white/10 transition-all text-white font-semibold block">
+                      {isUploadingImage ? 'Uploading...' : 'Upload Main Image'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={async (e) => {
+                          const file = e.target.files[0];
+                          if (!file) return;
+                          setIsUploadingImage(true);
+                          const formData = new FormData();
+                          formData.append('file', file);
+                          try {
+                            const res = await fetch(API_URL + '/api/upload/image', { method: 'POST', body: formData });
+                            if (res.ok) {
+                              const data = await res.json();
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              nextContent.caseStudy.image = data.imageUrl;
+                              pushState(nextContent);
+                            }
+                          } catch (err) {
+                            console.error(err);
+                          } finally {
+                            setIsUploadingImage(false);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                  {currentContent.caseStudy?.image && (
+                    <div className="flex items-center gap-3">
+                      <img src={currentContent.caseStudy.image} alt="Case Study Main" className="w-24 h-24 object-cover border border-white/10 rounded-lg bg-[#15151a]" />
+                      <span className="text-[9px] font-mono text-neutral-500">Image Preview</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Case Study Points (Bullet Points) */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Features / Points Built ({currentContent.caseStudy?.points?.length || 0})</h4>
+                  <button
+                    onClick={() => {
+                      const nextContent = JSON.parse(JSON.stringify(currentContent));
+                      if (!nextContent.caseStudy.points) nextContent.caseStudy.points = [];
+                      nextContent.caseStudy.points.push("Describe a custom feature or milestone here.");
+                      pushState(nextContent);
+                    }}
+                    className="px-2 py-1 bg-white/5 border border-white/10 hover:border-white/20 text-neutral-300 hover:text-white rounded text-[8px] font-mono font-semibold"
+                  >
+                    + Add Point
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  {(currentContent.caseStudy?.points || []).map((point, index) => (
+                    <div key={index} className="flex gap-3 items-center bg-black/20 p-3 rounded-lg border border-white/[0.03]">
+                      <div className="flex flex-col gap-1">
+                        <button
+                          onClick={() => {
+                            if (index === 0) return;
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            const temp = nextContent.caseStudy.points[index];
+                            nextContent.caseStudy.points[index] = nextContent.caseStudy.points[index - 1];
+                            nextContent.caseStudy.points[index - 1] = temp;
+                            pushState(nextContent);
+                          }}
+                          className="text-neutral-500 hover:text-white text-[8px]"
+                          disabled={index === 0}
+                        >
+                          ▲
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (index === currentContent.caseStudy.points.length - 1) return;
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            const temp = nextContent.caseStudy.points[index];
+                            nextContent.caseStudy.points[index] = nextContent.caseStudy.points[index + 1];
+                            nextContent.caseStudy.points[index + 1] = temp;
+                            pushState(nextContent);
+                          }}
+                          className="text-neutral-500 hover:text-white text-[8px]"
+                          disabled={index === currentContent.caseStudy.points.length - 1}
+                        >
+                          ▼
+                        </button>
+                      </div>
+
+                      <input
+                        type="text"
+                        value={point}
+                        onChange={(e) => {
+                          const nextContent = JSON.parse(JSON.stringify(currentContent));
+                          nextContent.caseStudy.points[index] = e.target.value;
+                          pushState(nextContent);
+                        }}
+                        className="flex-1 px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                      />
+
+                      <button
+                        onClick={() => {
+                          const nextContent = JSON.parse(JSON.stringify(currentContent));
+                          nextContent.caseStudy.points.splice(index, 1);
+                          pushState(nextContent);
+                        }}
+                        className="w-6 h-6 border border-red-500/10 hover:border-red-500/30 rounded flex items-center justify-center text-[9px] text-red-500 bg-red-500/5 hover:bg-red-500/10 cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* CLIENT TESTIMONIALS CMS PANEL */}
+          {activeTab === 'testimonials' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="font-mono text-[10px] uppercase tracking-wider text-white">// Client Testimonials</h3>
+                <button
+                  onClick={() => {
+                    const nextContent = JSON.parse(JSON.stringify(currentContent));
+                    if (!nextContent.testimonials) nextContent.testimonials = { list: [] };
+                    if (!nextContent.testimonials.list) nextContent.testimonials.list = [];
+                    nextContent.testimonials.list.push({
+                      id: Date.now(),
+                      name: "New Client",
+                      role: "CEO, Pioneer Corp",
+                      quote: "Describe the client's perspective here.",
+                      rating: 5,
+                      tag: "CUSTOM WORK",
+                      avatar: "/images/gallery/avatar_alexander.png",
+                      color: "from-amber-500/10 to-orange-500/5",
+                      glowColor: "rgba(245,158,11,0.25)",
+                      tagClass: "text-amber-400 bg-amber-500/10 border-amber-500/20",
+                      starClass: "text-amber-500"
+                    });
+                    pushState(nextContent);
+                  }}
+                  className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/15 rounded-lg text-[9px] font-mono text-neutral-300 hover:text-white cursor-pointer transition-all flex items-center gap-1.5 font-semibold"
+                >
+                  <span>+ Add Testimonial</span>
+                </button>
+              </div>
+
+              {/* General Testimonial Header Settings */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
+                <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Header Text & Visibility</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Show Section</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        nextContent.testimonials.show = nextContent.testimonials.show !== false ? false : true;
+                        pushState(nextContent);
+                      }}
+                      className={`w-full py-2 border rounded-lg text-[8px] uppercase tracking-widest font-mono cursor-pointer transition-all duration-300 ${
+                        (currentContent.testimonials?.show !== false) 
+                          ? 'bg-white text-black font-semibold' 
+                          : 'bg-neutral-800 text-neutral-500 border-transparent'
+                      }`}
+                    >
+                      {(currentContent.testimonials?.show !== false) ? 'Show' : 'Hide'}
+                    </button>
+                  </div>
+
+                  <div className="space-y-1 md:col-span-2">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Section Title</label>
+                    <input
+                      type="text"
+                      value={currentContent.testimonials?.title || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        nextContent.testimonials.title = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Section Description</label>
+                  <textarea
+                    rows={2}
+                    value={currentContent.testimonials?.description || ''}
+                    onChange={(e) => {
+                      const nextContent = JSON.parse(JSON.stringify(currentContent));
+                      nextContent.testimonials.description = e.target.value;
+                      pushState(nextContent);
+                    }}
+                    className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white font-sans text-xs focus:outline-none resize-none leading-relaxed"
+                  />
+                </div>
+              </div>
+
+              {/* Testimonials List */}
+              <div className="space-y-4">
+                {(currentContent.testimonials?.list || []).map((item, index) => (
+                  <div key={item.id || index} className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left relative">
+                    
+                    {/* Header Controls */}
+                    <div className="flex justify-between items-center pb-3 border-b border-white/5">
+                      <span className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Testimonial #{index + 1}</span>
+                      
+                      <div className="flex gap-2">
+                        {/* Reorder Buttons */}
+                        <button
+                          onClick={() => {
+                            if (index === 0) return;
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            const temp = nextContent.testimonials.list[index];
+                            nextContent.testimonials.list[index] = nextContent.testimonials.list[index - 1];
+                            nextContent.testimonials.list[index - 1] = temp;
+                            pushState(nextContent);
+                          }}
+                          className="w-6 h-6 border border-white/10 hover:border-white/20 rounded flex items-center justify-center text-[9px] text-neutral-400 hover:text-white bg-black/20"
+                          disabled={index === 0}
+                        >
+                          ▲
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (index === currentContent.testimonials.list.length - 1) return;
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            const temp = nextContent.testimonials.list[index];
+                            nextContent.testimonials.list[index] = nextContent.testimonials.list[index + 1];
+                            nextContent.testimonials.list[index + 1] = temp;
+                            pushState(nextContent);
+                          }}
+                          className="w-6 h-6 border border-white/10 hover:border-white/20 rounded flex items-center justify-center text-[9px] text-neutral-400 hover:text-white bg-black/20"
+                          disabled={index === currentContent.testimonials.list.length - 1}
+                        >
+                          ▼
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            nextContent.testimonials.list.splice(index, 1);
+                            pushState(nextContent);
+                          }}
+                          className="w-6 h-6 border border-red-500/10 hover:border-red-500/30 rounded flex items-center justify-center text-[9px] text-red-500 bg-red-500/5 hover:bg-red-500/10 cursor-pointer"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Inputs */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Name */}
+                      <div className="space-y-1">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Client Name</label>
+                        <input
+                          type="text"
+                          value={item.name || ''}
+                          onChange={(e) => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            nextContent.testimonials.list[index].name = e.target.value;
+                            pushState(nextContent);
+                          }}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                        />
+                      </div>
+
+                      {/* Role */}
+                      <div className="space-y-1">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Client Designation / Company</label>
+                        <input
+                          type="text"
+                          value={item.role || ''}
+                          onChange={(e) => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            nextContent.testimonials.list[index].role = e.target.value;
+                            pushState(nextContent);
+                          }}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                        />
+                      </div>
+
+                      {/* Project tag */}
+                      <div className="space-y-1">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Project Tag</label>
+                        <input
+                          type="text"
+                          value={item.tag || ''}
+                          onChange={(e) => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            nextContent.testimonials.list[index].tag = e.target.value;
+                            pushState(nextContent);
+                          }}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Body Quote */}
+                    <div className="space-y-1">
+                      <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Quote Message</label>
+                      <textarea
+                        rows={3}
+                        value={item.quote || ''}
+                        onChange={(e) => {
+                          const nextContent = JSON.parse(JSON.stringify(currentContent));
+                          nextContent.testimonials.list[index].quote = e.target.value;
+                          pushState(nextContent);
+                        }}
+                        className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white font-sans text-xs focus:outline-none resize-none leading-relaxed"
+                      />
+                    </div>
+
+                    {/* Star Rating & Styling Colors */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      {/* Rating select */}
+                      <div className="space-y-1">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Rating Stars (1-5)</label>
+                        <select
+                          value={item.rating || 5}
+                          onChange={(e) => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            nextContent.testimonials.list[index].rating = Number(e.target.value);
+                            pushState(nextContent);
+                          }}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                        >
+                          <option value="1">1 Star</option>
+                          <option value="2">2 Stars</option>
+                          <option value="3">3 Stars</option>
+                          <option value="4">4 Stars</option>
+                          <option value="5">5 Stars</option>
+                        </select>
+                      </div>
+
+                      {/* Card Gradient bg class */}
+                      <div className="space-y-1">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Glow Bg Gradient (Tailwind)</label>
+                        <input
+                          type="text"
+                          value={item.color || ''}
+                          onChange={(e) => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            nextContent.testimonials.list[index].color = e.target.value;
+                            pushState(nextContent);
+                          }}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white font-mono text-xs focus:outline-none"
+                        />
+                      </div>
+
+                      {/* Glow Shadow Color */}
+                      <div className="space-y-1">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Glow Shadow (rgba/hex)</label>
+                        <input
+                          type="text"
+                          value={item.glowColor || ''}
+                          onChange={(e) => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            nextContent.testimonials.list[index].glowColor = e.target.value;
+                            pushState(nextContent);
+                          }}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white font-mono text-xs focus:outline-none"
+                        />
+                      </div>
+
+                      {/* Badge Class */}
+                      <div className="space-y-1">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Tag Class (Tailwind)</label>
+                        <input
+                          type="text"
+                          value={item.tagClass || ''}
+                          onChange={(e) => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            nextContent.testimonials.list[index].tagClass = e.target.value;
+                            pushState(nextContent);
+                          }}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white font-mono text-xs focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Avatar Upload */}
+                    <div className="flex gap-4 items-center pt-3 border-t border-white/[0.03]">
+                      {item.avatar && (
+                        <div className="w-12 h-12 rounded-full overflow-hidden border border-white/10">
+                          <img src={item.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                      <div className="flex-1 space-y-2">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Avatar Image URL</label>
+                        <div className="flex gap-3">
+                          <input
+                            type="text"
+                            value={item.avatar || ''}
+                            onChange={(e) => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              nextContent.testimonials.list[index].avatar = e.target.value;
+                              pushState(nextContent);
+                            }}
+                            className="flex-1 px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                          />
+                          <label className="py-2 px-4 border border-white/10 hover:border-white/30 text-center rounded-xl bg-white/5 text-[9px] uppercase tracking-widest font-mono cursor-pointer hover:bg-white/10 transition-all text-white font-semibold block">
+                            {isUploadingImage ? 'Uploading...' : 'Upload Avatar'}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={async (e) => {
+                                const file = e.target.files[0];
+                                if (!file) return;
+                                setIsUploadingImage(true);
+                                const formData = new FormData();
+                                formData.append('file', file);
+                                try {
+                                  const res = await fetch(API_URL + '/api/upload/image', { method: 'POST', body: formData });
+                                  if (res.ok) {
+                                    const data = await res.json();
+                                    const nextContent = JSON.parse(JSON.stringify(currentContent));
+                                    nextContent.testimonials.list[index].avatar = data.imageUrl;
+                                    pushState(nextContent);
+                                  }
+                                } catch (err) {
+                                  console.error(err);
+                                } finally {
+                                  setIsUploadingImage(false);
+                                }
+                              }}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* BOTTOM CTA SECTION CMS PANEL */}
+          {activeTab === 'bottomCta' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="font-mono text-[10px] uppercase tracking-wider text-white">// Bottom CTA Section Settings</h3>
+              </div>
+
+              {/* Show/Hide CTA */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
+                <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Section Visibility</h4>
+                <div className="w-full md:w-1/3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextContent = JSON.parse(JSON.stringify(currentContent));
+                      nextContent.bottomCta.show = nextContent.bottomCta.show !== false ? false : true;
+                      pushState(nextContent);
+                    }}
+                    className={`w-full py-2 border rounded-lg text-[8px] uppercase tracking-widest font-mono cursor-pointer transition-all duration-300 ${
+                      (currentContent.bottomCta?.show !== false) 
+                        ? 'bg-white text-black font-semibold' 
+                        : 'bg-neutral-800 text-neutral-500 border-transparent'
+                    }`}
+                  >
+                    {(currentContent.bottomCta?.show !== false) ? 'Show Section' : 'Hide Section'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Content Config */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
+                <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">CTA Content Details</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Normal Title Text */}
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Title (Normal Text)</label>
+                    <input
+                      type="text"
+                      value={currentContent.bottomCta?.titleNormal || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        nextContent.bottomCta.titleNormal = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                      placeholder="e.g. Let's build the"
+                    />
+                  </div>
+
+                  {/* Italic Title Text */}
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Title Accent (Italic Text)</label>
+                    <input
+                      type="text"
+                      value={currentContent.bottomCta?.titleItalic || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        nextContent.bottomCta.titleItalic = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                      placeholder="e.g. future together."
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Button Action Text */}
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Button Label Text</label>
+                    <input
+                      type="text"
+                      value={currentContent.bottomCta?.btnText || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        nextContent.bottomCta.btnText = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                      placeholder="e.g. Start a Project →"
+                    />
+                  </div>
+
+                  {/* Button Destination URL */}
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Button Destination Link</label>
+                    <input
+                      type="text"
+                      value={currentContent.bottomCta?.btnLink || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        nextContent.bottomCta.btnLink = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                      placeholder="e.g. #contact"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           )}
