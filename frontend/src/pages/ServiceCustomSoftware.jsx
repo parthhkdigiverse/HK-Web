@@ -1,7 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useContent } from '../context/ContentContext';
 
-export default function ServiceCustomSoftware() {
+export default function ServiceCustomSoftware({ overrideContent }) {
+  const { content: liveContent } = useContent();
+  const content = overrideContent || liveContent;
+  const serviceData = content?.services?.find(s => 
+    s.href === '#service-custom-software' || 
+    s.href === 'service-custom-software' || 
+    s.href === '/service-custom-software' ||
+    (s.title && s.title.toLowerCase().includes('custom'))
+  ) || {};
+
   // 1. Particle positions for Cinematic Hero Background
   const [particles, setParticles] = useState([]);
   const heroRef = useRef(null);
@@ -61,47 +71,19 @@ export default function ServiceCustomSoftware() {
   const [mockupTab, setMockupTab] = useState('crm'); // 'crm' | 'sales' | 'records'
 
   // 5. Tech Stack Selector State
-  const [selectedTech, setSelectedTech] = useState('python');
-
-  const techStack = {
-    python: {
-      name: 'Python (FastAPI)',
-      role: 'Our core language for building fast REST APIs, database models, background queues, and system utilities.',
-      badge: 'Backend Core'
-    },
-    typescript: {
-      name: 'TypeScript',
-      role: 'Provides static typing across our client portals and microservice APIs, preventing data runtime issues.',
-      badge: 'Strict Security'
-    },
-    postgresql: {
-      name: 'PostgreSQL',
-      role: 'Relational database housing customer accounts, transactions, logs, and multi-tenant isolated tables.',
-      badge: 'Database Layer'
-    },
-    redis: {
-      name: 'Redis',
-      role: 'In-memory database that handles secure session caching, system task queues, and instant data lookups.',
-      badge: 'Caching Mesh'
-    },
-    docker: {
-      name: 'Docker',
-      role: 'Virtualizes our backend services into isolated containers, ensuring identical execution from staging to production.',
-      badge: 'Virtualization'
-    },
-    nodejs: {
-      name: 'Node.js',
-      role: 'Powers microservice operations, automated triggers, file compression tools, and third-party API webhooks.',
-      badge: 'Microservices'
-    }
-  };
+  const [selectedTechIdx, setSelectedTechIdx] = useState(0);
+  const techStackList = serviceData.inner_tech_stack || [
+    { name: 'Python (FastAPI)', badge: 'Backend Core', role: 'Our core language for building fast REST APIs, database models, background queues, and system utilities.' },
+    { name: 'TypeScript', badge: 'Frontend Logic', role: 'Ensures strict system types, autocompletions and interface integrations.' }
+  ];
+  const activeTech = techStackList[selectedTechIdx] || techStackList[0] || {};
 
   return (
     <div className="relative min-h-screen bg-[#030307] text-neutral-300 font-sans pb-24 overflow-x-hidden">
       
       {/* Background Ambience */}
-      <div className="absolute top-[10%] left-1/4 w-[35vw] h-[35vw] rounded-full bg-indigo-500/5 blur-[120px] pointer-events-none" />
-      <div className="absolute top-[50%] right-1/4 w-[40vw] h-[40vw] rounded-full bg-purple-500/5 blur-[130px] pointer-events-none" />
+      <div className="absolute top-[10%] left-1/4 w-[35vw] h-[35vw] rounded-full bg-purple-500/5 blur-[120px] pointer-events-none" />
+      <div className="absolute top-[50%] right-1/4 w-[40vw] h-[40vw] rounded-full bg-indigo-500/5 blur-[130px] pointer-events-none" />
 
       {/* ──────────────────────────────────────────────────
           I. CINEMATIC HERO SECTION WITH FLOATING PARTICLES
@@ -145,7 +127,7 @@ export default function ServiceCustomSoftware() {
             transition={{ duration: 0.6 }}
             className="font-mono text-[10px] uppercase tracking-[0.4em] text-purple-400 font-light block"
           >
-            // Enterprise Architectures
+            {serviceData.page_subtitle || "// Enterprise Architectures"}
           </motion.span>
           <motion.h1 
             initial={{ opacity: 0, y: 15 }}
@@ -153,8 +135,7 @@ export default function ServiceCustomSoftware() {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="font-display text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight text-white leading-tight"
           >
-            Engineering Custom <br />
-            <span className="text-neutral-400 font-light italic">Software Systems</span>
+            {serviceData.page_hero_title || "Engineering Custom Software Systems"}
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0 }}
@@ -162,13 +143,13 @@ export default function ServiceCustomSoftware() {
             transition={{ duration: 0.8, delay: 0.3 }}
             className="font-light text-neutral-400 text-sm sm:text-lg max-w-xl mx-auto leading-relaxed"
           >
-            We build secure multi-tenant portals, custom CRM environments, unified transaction dashboards, and automated microservice interfaces.
+            {serviceData.page_hero_desc || "We build secure multi-tenant portals, custom CRM environments, unified transaction dashboards, and automated microservice interfaces."}
           </motion.p>
         </div>
       </section>
 
       {/* ──────────────────────────────────────────────────
-          II. SPEED VS BLOAT SIMULATOR WIDGET
+          II. SYSTEM BEHAVIOR SIMULATOR
           ────────────────────────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-4 py-28 border-b border-white/5 relative z-10 text-center">
         <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-400 block mb-3">// Performance Benchmark</span>
@@ -521,19 +502,19 @@ export default function ServiceCustomSoftware() {
           Click on any technology component below to understand its technical role in our system builds.
         </p>
 
-        {/* Tab Buttons grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mb-10">
-          {Object.keys(techStack).map((key) => (
+        {/* Tab Buttons flex layout */}
+        <div className="flex flex-wrap justify-center gap-3 mb-10">
+          {techStackList.map((tech, idx) => (
             <button
-              key={key}
-              onClick={() => setSelectedTech(key)}
-              className={`px-3 py-3 rounded-2xl text-[10px] font-mono font-bold tracking-wider uppercase border transition-all duration-300 ${
-                selectedTech === key 
+              key={idx}
+              onClick={() => setSelectedTechIdx(idx)}
+              className={`px-4 py-3 rounded-2xl text-[10px] font-mono font-bold tracking-wider uppercase border transition-all duration-300 ${
+                selectedTechIdx === idx 
                   ? 'bg-white text-black border-white shadow-lg' 
                   : 'text-neutral-400 bg-white/[0.02] border-white/5 hover:border-white/15'
               }`}
             >
-              {techStack[key].name}
+              {tech.name}
             </button>
           ))}
         </div>
@@ -542,22 +523,22 @@ export default function ServiceCustomSoftware() {
         <div className="p-8 rounded-3xl bg-[#09090d]/80 border border-white/5 hover:border-purple-500/20 shadow-2xl backdrop-blur-xl relative overflow-hidden min-h-[160px] text-left transition-all">
           <div className="absolute top-4 right-6">
             <span className="font-mono text-[8px] font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400">
-              {techStack[selectedTech].badge}
+              {activeTech.badge || 'Core Stack'}
             </span>
           </div>
           
           <AnimatePresence mode="wait">
             <motion.div
-              key={selectedTech}
+              key={selectedTechIdx}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
               className="space-y-4"
             >
-              <h4 className="font-display font-extrabold text-base text-white">{techStack[selectedTech].name}</h4>
+              <h4 className="font-display font-extrabold text-base text-white">{activeTech.name}</h4>
               <p className="font-light text-neutral-400 text-xs sm:text-sm leading-relaxed max-w-2xl">
-                {techStack[selectedTech].role}
+                {activeTech.role}
               </p>
             </motion.div>
           </AnimatePresence>

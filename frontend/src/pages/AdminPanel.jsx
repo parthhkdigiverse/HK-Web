@@ -19,6 +19,19 @@ const getServiceDefaultPreview = (num, index) => {
   return defaults[fallbackKey];
 };
 
+const resolveImageUrl = (imgSrc) => {
+  if (!imgSrc) return '';
+  const normalizedSrc = imgSrc.replace(/\\/g, '/');
+  if (normalizedSrc.startsWith('http://') || normalizedSrc.startsWith('https://') || normalizedSrc.startsWith('data:')) {
+    return normalizedSrc;
+  }
+  const cleanSrc = normalizedSrc.startsWith('/') ? normalizedSrc : '/' + normalizedSrc;
+  if (cleanSrc.startsWith('/uploads')) {
+    return `${API_URL}${cleanSrc}`;
+  }
+  return cleanSrc;
+};
+
 export default function AdminPanel() {
   const { 
     fetchDraft, 
@@ -71,6 +84,10 @@ export default function AdminPanel() {
   const [newLinkHref, setNewLinkHref] = useState('');
   const [newLinkType, setNewLinkType] = useState('link'); // 'link' or 'dropdown'
 
+  // Submissions search and filter states
+  const [submissionSearch, setSubmissionSearch] = useState('');
+  const [submissionFilter, setSubmissionFilter] = useState('all'); // 'all', 'inquiry', 'application'
+
   // Active state content is pulled from our history stack
   const currentContent = history[historyIndex] || DEFAULT_CONTENT;
 
@@ -84,6 +101,49 @@ export default function AdminPanel() {
       setLoadingDraft(false);
     }
   }, []);
+
+  // Global Auto-Resize for all textarea inputs based on content
+  useEffect(() => {
+    if (!authorized) return;
+
+    const adjustHeight = (el) => {
+      // Force text wrapping and disable horizontal scroll
+      el.style.whiteSpace = 'pre-wrap';
+      el.style.wordBreak = 'break-word';
+      el.style.overflowX = 'hidden';
+      el.style.overflowY = 'hidden';
+      el.style.resize = 'none';
+      el.style.width = '100%';
+      
+      el.style.height = 'auto';
+      el.style.height = `${el.scrollHeight}px`;
+    };
+
+    // Auto-resize on initial load / state updates
+    const textareas = document.querySelectorAll('textarea');
+    textareas.forEach(adjustHeight);
+
+    // Auto-resize on input typing
+    const handleInput = (e) => {
+      if (e.target.tagName.toLowerCase() === 'textarea') {
+        adjustHeight(e.target);
+      }
+    };
+
+    document.addEventListener('input', handleInput);
+    
+    // Also run a small timeout to let the DOM settle on tab changes
+    const timeoutId = setTimeout(() => {
+      const textareas = document.querySelectorAll('textarea');
+      textareas.forEach(adjustHeight);
+    }, 100);
+
+    return () => {
+      document.removeEventListener('input', handleInput);
+      clearTimeout(timeoutId);
+    };
+  }, [authorized, activeTab, currentContent]);
+
 
   const verifyPassword = async (passToVerify) => {
     setIsVerifying(true);
@@ -161,10 +221,34 @@ export default function AdminPanel() {
           stats: (draft.stats || DEFAULT_CONTENT.stats).map(s => ({ show: true, ...s })),
           services: (draft.services || DEFAULT_CONTENT.services).map((s, idx) => {
             const defaults = getServiceDefaultPreview(s.num, idx);
+            
+            // Rich defaults for sub-elements if not present in draft
+            const defaultFeatures = [
+              { title: 'Cinematic Frontends', desc: 'GPU-accelerated interface layouts with smooth gesture physics.' },
+              { title: 'Distributed Backend Integration', desc: 'Secure backend microservices configured for horizontal auto-scaling.' },
+              { title: 'Continuous Integration Flow', desc: 'Automated CI/CD pipelines deploying builds directly to cloud nodes.' }
+            ];
+
+            const defaultSimulator = [
+              { label: 'LOAD SPEED', value: '0.15s (Instant)', bar_percent: 92 },
+              { label: 'PACKAGE SIZE', value: '145 KB', bar_percent: 90 },
+              { label: 'FRAME RATE (FPS)', value: '120 FPS', bar_percent: 100 }
+            ];
+
+            const defaultTechStack = [
+              { name: 'React.js', badge: 'Interactive UI', role: 'Component architecture enabling fast component rendering.' },
+              { name: 'FastAPI (Python)', badge: 'API Core', role: 'API endpoints with automatic async route processing.' },
+              { name: 'PostgreSQL', badge: 'Database', role: 'Secure transactional storage and query indexing layers.' }
+            ];
+
             return {
               show: true,
               img: defaults.img,
               gradient: defaults.gradient,
+              description: s.description || s.desc || '',
+              inner_features: s.inner_features || defaultFeatures,
+              inner_simulator: s.inner_simulator || defaultSimulator,
+              inner_tech_stack: s.inner_tech_stack || defaultTechStack,
               ...s
             };
           }),
@@ -652,12 +736,44 @@ export default function AdminPanel() {
     }
   };
 
+  const updateServiceSubItem = (serviceIndex, listKey, subIndex, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.services[serviceIndex][listKey]) {
+      nextContent.services[serviceIndex][listKey] = [];
+    }
+    nextContent.services[serviceIndex][listKey][subIndex][field] = value;
+    pushState(nextContent);
+  };
+
+  const addServiceSubItem = (serviceIndex, listKey, defaultObject) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.services[serviceIndex][listKey]) {
+      nextContent.services[serviceIndex][listKey] = [];
+    }
+    nextContent.services[serviceIndex][listKey].push(defaultObject);
+    pushState(nextContent);
+  };
+
+  const deleteServiceSubItem = (serviceIndex, listKey, subIndex) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (nextContent.services[serviceIndex][listKey]) {
+      nextContent.services[serviceIndex][listKey].splice(subIndex, 1);
+      pushState(nextContent);
+    }
+  };
+
   const updateServiceItem = (index, field, value) => {
     const nextContent = JSON.parse(JSON.stringify(currentContent));
     if (field === 'tags') {
       nextContent.services[index].tags = value.split(',').map(tag => tag.trim()).filter(Boolean);
     } else {
       nextContent.services[index][field] = value;
+      if (field === 'desc') {
+        nextContent.services[index].description = value;
+      }
+      if (field === 'description') {
+        nextContent.services[index].desc = value;
+      }
     }
     pushState(nextContent);
   };
@@ -738,6 +854,183 @@ export default function AdminPanel() {
   const [inquiries, setInquiries] = useState([]);
   const [applications, setApplications] = useState([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
+
+  // Helper to convert JSON to CSV and download
+  const downloadCSV = (type) => {
+    let dataToExport = [];
+    let filename = 'submissions_export.csv';
+
+    if (type === 'inquiry' || type === 'all') {
+      inquiries.forEach(inq => {
+        dataToExport.push({
+          Type: 'Client Inquiry',
+          Date: inq.created_at ? new Date(inq.created_at).toLocaleString() : 'N/A',
+          Name: inq.name || '',
+          Email: inq.email || '',
+          Phone: inq.phone || '',
+          Role_or_Track: '',
+          College: '',
+          Message: (inq.message || inq.project_details || '').replace(/"/g, '""')
+        });
+      });
+    }
+
+    if (type === 'application' || type === 'all') {
+      applications.forEach(app => {
+        dataToExport.push({
+          Type: app.type === 'intern' ? 'Internship Application' : 'Job Application',
+          Date: app.created_at ? new Date(app.created_at).toLocaleString() : 'N/A',
+          Name: app.name || '',
+          Email: app.email || '',
+          Phone: app.phone || '',
+          Role_or_Track: app.role || app.track || '',
+          College: app.college || '',
+          Message: (app.message || '').replace(/"/g, '""')
+        });
+      });
+    }
+
+    if (dataToExport.length === 0) {
+      alert("No data available to export.");
+      return;
+    }
+
+    // Generate CSV string
+    const headers = Object.keys(dataToExport[0]).join(',');
+    const rows = dataToExport.map(row => 
+      Object.values(row).map(val => `"${val}"`).join(',')
+    );
+    const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].join("\n");
+    
+    // Trigger download
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `${type}_submissions_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Helper to generate a clean print/PDF view
+  const downloadPDF = (type) => {
+    let dataToExport = [];
+    if (type === 'inquiry' || type === 'all') {
+      inquiries.forEach(inq => {
+        dataToExport.push({ ...inq, category: 'Client Inquiry', date: inq.created_at });
+      });
+    }
+    if (type === 'application' || type === 'all') {
+      applications.forEach(app => {
+        dataToExport.push({ ...app, category: app.type === 'intern' ? 'Internship' : 'Job Application', date: app.created_at });
+      });
+    }
+
+    if (dataToExport.length === 0) {
+      alert("No data to export.");
+      return;
+    }
+
+    dataToExport.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    // Open a new printable window
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Submissions Report - ${new Date().toLocaleDateString()}</title>
+          <style>
+            body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #fff; color: #333; margin: 40px; }
+            h1 { font-size: 20px; text-transform: uppercase; border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 20px; font-weight: bold; }
+            .item { page-break-inside: avoid; border-bottom: 1px solid #eee; padding: 15px 0; margin-bottom: 15px; }
+            .header-info { display: flex; justify-content: space-between; font-size: 11px; color: #666; font-family: monospace; }
+            .name { font-size: 15px; font-weight: bold; margin-top: 5px; color: #111; }
+            .badge { background: #eee; padding: 2px 6px; border-radius: 3px; font-weight: bold; }
+            .details { display: grid; grid-template-cols: 1fr 1fr; gap: 10px; font-size: 12px; margin-top: 8px; background: #f9f9f9; padding: 10px; border-radius: 5px; }
+            .message { font-size: 12px; margin-top: 10px; line-height: 1.5; color: #444; background: #fff; border-left: 3px solid #ccc; padding-left: 10px; }
+          </style>
+        </head>
+        <body>
+          <h1>HARIKRUSHN DIGIVERSE - SUBMISSIONS EXPORT</h1>
+          <p style="font-size: 11px; color: #777;">Generated on: ${new Date().toLocaleString()} | Filter: ${type}</p>
+          <div style="margin-top: 20px;">
+            ${dataToExport.map((item, idx) => `
+              <div class="item">
+                <div class="header-info">
+                  <span>LOG #${dataToExport.length - idx}</span>
+                  <span>${item.date ? new Date(item.date).toLocaleString() : 'N/A'}</span>
+                </div>
+                <div class="name">
+                  ${item.name} <span class="badge" style="font-size: 9px; margin-left: 10px;">${item.category}</span>
+                </div>
+                <div class="details">
+                  <div><strong>Email:</strong> ${item.email || 'N/A'}</div>
+                  <div><strong>Phone:</strong> ${item.phone || 'N/A'}</div>
+                  ${item.role || item.track ? `<div><strong>Role/Track:</strong> ${item.role || item.track}</div>` : ''}
+                  ${item.college ? `<div><strong>College:</strong> ${item.college}</div>` : ''}
+                </div>
+                <div class="message">
+                  <strong>Message/Cover Note:</strong><br/>
+                  ${(item.message || item.project_details || 'No message.').replace(/\n/g, '<br/>')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          <script>
+            window.onload = function() {
+              window.print();
+            }
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
+  const handleDeleteSubmission = async (id, type) => {
+    if (!window.confirm("Are you sure you want to delete this submission? This action is permanent.")) return;
+    try {
+      const res = await fetch(API_URL + '/api/admin/submissions/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password, id, type })
+      });
+      if (res.ok) {
+        setSaveStatus({ type: 'success', message: 'Deleted successfully!' });
+        loadSubmissions(); // reload data
+      } else {
+        const err = await res.json();
+        alert(err.detail || 'Delete failed');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Network error deleting submission');
+    }
+  };
+
+  const handleClearAllSubmissions = async (type) => {
+    const scopeName = type === 'all' ? 'ALL submissions' : type === 'inquiry' ? 'ALL inquiries' : 'ALL applications';
+    if (!window.confirm(`⚠️ WARNING: Are you sure you want to clear ${scopeName}? This will permanently delete everything from database.`)) return;
+    
+    try {
+      const res = await fetch(API_URL + '/api/admin/submissions/clear-all', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password, type })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSaveStatus({ type: 'success', message: data.message });
+        loadSubmissions(); // reload data
+      } else {
+        const err = await res.json();
+        alert(err.detail || 'Clear all failed');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Network error clearing database');
+    }
+  };
 
   useEffect(() => {
     if (activeTab === 'submissions' && authorized) {
@@ -953,6 +1246,41 @@ export default function AdminPanel() {
     const nextContent = JSON.parse(JSON.stringify(currentContent));
     nextContent.gallery.splice(index, 1);
     pushState(nextContent);
+  };
+
+  const moveGalleryItem = (index, direction) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= nextContent.gallery.length) return;
+    const temp = nextContent.gallery[index];
+    nextContent.gallery[index] = nextContent.gallery[targetIndex];
+    nextContent.gallery[targetIndex] = temp;
+    pushState(nextContent);
+  };
+
+  const handleUploadGalleryImage = async (index, e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setIsUploadingImage(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await fetch(API_URL + '/api/upload/image', {
+        method: 'POST',
+        body: formData
+      });
+      if (res.ok) {
+        const data = await res.json();
+        updateGalleryItem(index, 'image', data.imageUrl || data.url || data.path);
+        setSaveStatus({ type: 'success', message: 'Gallery image uploaded successfully!' });
+      } else {
+        setSaveStatus({ type: 'error', message: 'Failed to upload gallery image' });
+      }
+    } catch (err) {
+      setSaveStatus({ type: 'error', message: 'Network error uploading gallery image' });
+    } finally {
+      setIsUploadingImage(false);
+    }
   };
 
   // Portfolio handlers
@@ -1766,59 +2094,100 @@ export default function AdminPanel() {
 
   const pageNavGroups = [
     {
-      title: "Global Layout Elements",
+      title: "1. Global Layout Elements",
       items: [
         { label: "Navigation Bar", tab: "navbar", route: "#preview/navbar", icon: "💎", badge: "GLOBAL", badgeStyle: "bg-blue-500/10 text-blue-400 border border-blue-500/20" },
         { label: "Footer Details", tab: "footer", route: "#preview/footer", icon: "👣", badge: "GLOBAL", badgeStyle: "bg-blue-500/10 text-blue-400 border border-blue-500/20" }
       ]
     },
     {
-      title: "Home Page Sections",
+      title: "2. Home Page Sections",
       items: [
-        { label: "Hero Canvas Section", tab: "hero", route: "#preview/home", icon: "⚡", badge: "LIVE", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
-        { label: "Statistics & Metrics", tab: "stats", route: "#preview/home", icon: "📊", badge: "LIVE", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
-        { label: "Partner Brand Ticker", tab: "brands", route: "#preview/home", icon: "🤝", badge: "LIVE", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
-        { label: "Services Preview Index", tab: "services", route: "#preview/home", icon: "💼", badge: "LIVE", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
-        { label: "Featured Case Study", tab: "caseStudy", route: "#preview/home", icon: "🚀", badge: "LIVE", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
-        { label: "Client Testimonials", tab: "testimonials", route: "#preview/home", icon: "💬", badge: "LIVE", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
-        { label: "Bottom CTA Section", tab: "bottomCta", route: "#preview/home", icon: "📢", badge: "LIVE", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" }
+        { label: "Hero Canvas Section", tab: "hero", route: "#preview/home", icon: "⚡", badge: "HOME BLOCK", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
+        { label: "Statistics & Metrics", tab: "stats", route: "#preview/home", icon: "📊", badge: "HOME BLOCK", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
+        { label: "Partner Brand Ticker", tab: "brands", route: "#preview/home", icon: "🤝", badge: "HOME BLOCK", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
+        { label: "Services Preview Index", tab: "services", route: "#preview/home", icon: "💼", badge: "HOME BLOCK", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
+        { label: "Featured Case Study", tab: "caseStudy", route: "#preview/home", icon: "🚀", badge: "HOME BLOCK", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
+        { label: "Client Testimonials", tab: "testimonials", route: "#preview/home", icon: "💬", badge: "HOME BLOCK", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" },
+        { label: "Bottom CTA Section", tab: "bottomCta", route: "#preview/home", icon: "📢", badge: "HOME BLOCK", badgeStyle: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" }
       ]
     },
     {
-      title: "Company Inner Pages",
+      title: "3. Pages: Company Menu",
       items: [
-        { label: "Our Story", tab: "our_story", route: "#preview/our-story", icon: "📖", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
-        { label: "Team Members", tab: "people", route: "#preview/our-people", icon: "👥", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
-        { label: "Life & Culture", tab: "our_culture", route: "#preview/our-culture", icon: "🌟", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
-        { label: "About Us Details", tab: "about_us", route: "#preview/about-us", icon: "🏢", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
-        { label: "Awards & Trophies", tab: "awards", route: "#preview/awards-achievements", icon: "🏆", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
-        { label: "Insights / Blogs", tab: "blogs", route: "#preview/blogs", icon: "📝", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
-        { label: "Our Gallery", tab: "gallery", route: "#preview/our-gallery", icon: "🖼️", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
-        { label: "Portfolio Work", tab: "portfolio", route: "#preview/portfolio", icon: "🚀", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
-        { label: "Case Studies List", tab: "case_studies_list", route: "#preview/case-study", icon: "📄", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
-        { label: "Ventures", tab: "ventures", route: "#preview/ventures", icon: "💡", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
-        { label: "Industries Served", tab: "industry", route: "#preview/industry", icon: "🌐", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
-        { label: "Careers & Jobs", tab: "careers", route: "#preview/career", icon: "🤝", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
-        { label: "Contact Us", tab: "contact", route: "#preview/contact", icon: "✉️", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" }
+        { label: "Our Story", tab: "our_story", route: "#preview/our-story", icon: "📖", badge: "COMPANY", badgeStyle: "bg-neutral-800 text-neutral-300 border border-white/10" },
+        { label: "Team Members", tab: "people", route: "#preview/our-people", icon: "👥", badge: "COMPANY", badgeStyle: "bg-neutral-800 text-neutral-300 border border-white/10" },
+        { label: "Life & Culture", tab: "our_culture", route: "#preview/our-culture", icon: "🌟", badge: "COMPANY", badgeStyle: "bg-neutral-800 text-neutral-300 border border-white/10" },
+        { label: "About Us Details", tab: "about_us", route: "#preview/about-us", icon: "🏢", badge: "COMPANY", badgeStyle: "bg-neutral-800 text-neutral-300 border border-white/10" },
+        { label: "Awards & Achievements", tab: "awards", route: "#preview/awards-achievements", icon: "🏆", badge: "COMPANY", badgeStyle: "bg-neutral-800 text-neutral-300 border border-white/10" },
+        { label: "Insights / Blogs", tab: "blogs", route: "#preview/blogs", icon: "📝", badge: "COMPANY", badgeStyle: "bg-neutral-800 text-neutral-300 border border-white/10" },
+        { label: "Our Gallery", tab: "gallery", route: "#preview/our-gallery", icon: "🖼️", badge: "COMPANY", badgeStyle: "bg-neutral-800 text-neutral-300 border border-white/10" }
       ]
     },
     {
-      title: "Capabilities Pages (Static)",
+      title: "4. Pages: Services & Capabilities",
       items: [
-        { label: "Services Main Page", tab: "services_main", route: "#preview/services", icon: "⚙️", badge: "STATIC", badgeStyle: "bg-purple-500/10 text-purple-400 border border-purple-500/20" },
-        { label: "Web Engineering", tab: "service_web", route: "#preview/service-web", icon: "💻", badge: "STATIC", badgeStyle: "bg-purple-500/10 text-purple-400 border border-purple-500/20" },
-        { label: "Mobile Applications", tab: "service_app", route: "#preview/service-app", icon: "📱", badge: "STATIC", badgeStyle: "bg-purple-500/10 text-purple-400 border border-purple-500/20" },
-        { label: "Custom Software", tab: "service_custom_software", route: "#preview/service-custom-software", icon: "🛠️", badge: "STATIC", badgeStyle: "bg-purple-500/10 text-purple-400 border border-purple-500/20" },
-        { label: "Digital Marketing", tab: "service_digital_marketing", route: "#preview/service-digital-marketing", icon: "📈", badge: "STATIC", badgeStyle: "bg-purple-500/10 text-purple-400 border border-purple-500/20" },
-        { label: "Social Media", tab: "service_social_media", route: "#preview/service-social-media-management", icon: "📣", badge: "STATIC", badgeStyle: "bg-purple-500/10 text-purple-400 border border-purple-500/20" },
-        { label: "AI Consulting", tab: "service_ai_consulting", route: "#preview/service-ai-consulting", icon: "🧠", badge: "STATIC", badgeStyle: "bg-purple-500/10 text-purple-400 border border-purple-500/20" },
-        { label: "IT Consulting", tab: "service_it_consulting", route: "#preview/service-it-consulting", icon: "🛡️", badge: "STATIC", badgeStyle: "bg-purple-500/10 text-purple-400 border border-purple-500/20" }
+        { label: "Services Main Page", tab: "services_main", route: "#preview/services", icon: "⚙️", badge: "PAGE", badgeStyle: "bg-purple-500/10 text-purple-400 border border-purple-500/20" },
+        ...(currentContent.services || []).map((s, idx) => {
+          // Normalize href from e.g. '#service-web' to '#preview/service-web'
+          let previewRoute = '#preview/services';
+          if (s.href) {
+            const cleanHref = s.href.replace('#', '').trim();
+            previewRoute = `#preview/${cleanHref}`;
+          }
+          
+          return {
+            label: s.title || `Service Capability #${idx + 1}`,
+            tab: `service_detail_${idx}`,
+            route: previewRoute,
+            icon: s.icon === 'web' ? '💻' :
+                  s.icon === 'app' ? '📱' :
+                  s.icon === 'software' ? '🛠️' :
+                  s.icon === 'ai' ? '🧠' :
+                  s.icon === 'it' ? '🛡️' :
+                  s.icon === 'marketing' ? '📈' :
+                  s.icon === 'social' ? '📣' : '⚙️',
+            badge: "DYNAMIC",
+            badgeStyle: "bg-purple-500/10 text-purple-400 border border-purple-500/20"
+          };
+        })
       ]
     },
     {
-      title: "Ecosystem Admin Logs",
+      title: "5. Pages: Industries Served",
       items: [
-        { label: "Form Submissions Log", tab: "submissions", route: "#preview/home", icon: "📨", badge: "LOGS", badgeStyle: "bg-rose-500/10 text-rose-400 border border-rose-500/20" }
+        { label: "Industries Setup", tab: "industry", route: "#preview/industry", icon: "🌐", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" }
+      ]
+    },
+    {
+      title: "6. Pages: Careers & Jobs",
+      items: [
+        { label: "Careers Page Setup", tab: "careers", route: "#preview/career", icon: "🤝", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" }
+      ]
+    },
+    {
+      title: "7. Pages: Case Studies",
+      items: [
+        { label: "Case Studies List", tab: "case_studies_list", route: "#preview/case-study", icon: "📄", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" }
+      ]
+    },
+    {
+      title: "8. Pages: Portfolio Work",
+      items: [
+        { label: "Portfolio Project Grid", tab: "portfolio", route: "#preview/portfolio", icon: "🎨", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" }
+      ]
+    },
+    {
+      title: "9. Pages: Ventures",
+      items: [
+        { label: "Ventures Setup", tab: "ventures", route: "#preview/ventures", icon: "💡", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" }
+      ]
+    },
+    {
+      title: "10. Pages: Contact & Data Logs",
+      items: [
+        { label: "Contact Us Details", tab: "contact", route: "#preview/contact", icon: "✉️", badge: "PAGE", badgeStyle: "bg-white/5 text-neutral-400 border border-white/10" },
+        { label: "Form Submissions Hub", tab: "submissions", route: "#preview/home", icon: "📨", badge: "DATABASE", badgeStyle: "bg-rose-500/10 text-rose-400 border border-rose-500/20" }
       ]
     }
   ];
@@ -1846,7 +2215,7 @@ export default function AdminPanel() {
             Logout
           </button>
         </header>
-
+ 
         {/* Content Area based on adminView */}
         {adminView === 'pages' ? (
           /* Pages List View */
@@ -2293,6 +2662,388 @@ export default function AdminPanel() {
 
             </div>
           )}
+
+          {/* SERVICES MAIN PAGE CMS PANEL */}
+          {activeTab === 'services_main' && (
+            <div className="space-y-6">
+              <div className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-2">
+                <span className="font-mono text-[9px] uppercase tracking-widest text-emerald-400">// Services Main Registry</span>
+                <p className="text-[11px] text-neutral-400 leading-relaxed font-sans">
+                  Manage the core services grid displayed on the Services Page. Any changes made here will update the asymmetric collage in real-time.
+                </p>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Capabilities Registry ({currentContent.services?.length || 0})</span>
+                <button
+                  onClick={addServiceItem}
+                  className="px-4 py-2 bg-white text-black font-semibold text-[9px] uppercase tracking-widest rounded-lg hover:bg-neutral-200 transition-colors cursor-pointer"
+                >
+                  + Add Service Card
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {(currentContent.services || []).map((service, index) => (
+                  <div 
+                    key={index} 
+                    className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 relative group"
+                  >
+                    {/* Position controls & delete */}
+                    <div className="flex items-center justify-between border-b border-white/5 pb-3">
+                      <span className="font-mono text-[9px] uppercase tracking-wider text-neutral-500">Service #{index + 1}</span>
+                      
+                      <div className="flex items-center gap-2">
+                        <button
+                          disabled={index === 0}
+                          onClick={() => moveServiceItem(index, -1)}
+                          className="w-6 h-6 border border-white/10 hover:border-white/30 rounded flex items-center justify-center text-xs text-neutral-400 hover:text-white disabled:opacity-30 cursor-pointer"
+                          title="Move Up"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          disabled={index === (currentContent.services?.length || 0) - 1}
+                          onClick={() => moveServiceItem(index, 1)}
+                          className="w-6 h-6 border border-white/10 hover:border-white/30 rounded flex items-center justify-center text-xs text-neutral-400 hover:text-white disabled:opacity-30 cursor-pointer"
+                          title="Move Down"
+                        >
+                          ↓
+                        </button>
+                        <button
+                          onClick={() => duplicateServiceItem(index)}
+                          className="w-6 h-6 border border-white/10 hover:border-white/30 rounded flex items-center justify-center text-[10px] text-neutral-400 hover:text-white cursor-pointer"
+                          title="Duplicate"
+                        >
+                          📋
+                        </button>
+                        <button
+                          onClick={() => deleteServiceItem(index)}
+                          className="w-6 h-6 border border-red-500/10 hover:border-red-500/30 rounded flex items-center justify-center text-[9px] text-red-500 bg-red-500/5 hover:bg-red-500/10 cursor-pointer"
+                          title="Delete Service"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Inputs */}
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                      <div className="space-y-1 col-span-1">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-400 block">Service Code</label>
+                        <input
+                          type="text"
+                          value={service.code || ''}
+                          onChange={(e) => updateServiceItem(index, 'code', e.target.value)}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white font-mono text-xs focus:outline-none"
+                          placeholder="e.g. HK-WEB"
+                        />
+                      </div>
+                      <div className="space-y-1 col-span-2">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-400 block">Service Title</label>
+                        <input
+                          type="text"
+                          value={service.title || ''}
+                          onChange={(e) => updateServiceItem(index, 'title', e.target.value)}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white font-sans text-xs focus:outline-none"
+                          placeholder="Web Engineering"
+                        />
+                      </div>
+                      <div className="space-y-1 col-span-1">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-400 block">Visibility</label>
+                        <button
+                          type="button"
+                          onClick={() => updateServiceItem(index, 'show', service.show !== false ? false : true)}
+                          className={`w-full py-2 border rounded-lg text-[8px] uppercase tracking-widest font-mono cursor-pointer transition-colors duration-300 ${
+                            service.show !== false 
+                              ? 'bg-white text-black font-semibold' 
+                              : 'bg-neutral-800 text-neutral-500 border-transparent'
+                          }`}
+                        >
+                          {service.show !== false ? 'Show' : 'Hide'}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-400 block">Icon Name (web, app, software, ai, it, marketing, social)</label>
+                        <select
+                          value={service.icon || 'web'}
+                          onChange={(e) => updateServiceItem(index, 'icon', e.target.value)}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white font-sans text-xs focus:outline-none"
+                        >
+                          <option value="web">web (Monitor/Desktop)</option>
+                          <option value="app">app (Mobile)</option>
+                          <option value="software">software (Database/Stack)</option>
+                          <option value="ai">ai (Brain/Neural)</option>
+                          <option value="it">it (Network/Shield)</option>
+                          <option value="marketing">marketing (Chart/Growth)</option>
+                          <option value="social">social (Chat bubble)</option>
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-400 block">Service Route Link</label>
+                        <input
+                          type="text"
+                          value={service.href || ''}
+                          onChange={(e) => updateServiceItem(index, 'href', e.target.value)}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white font-sans text-xs focus:outline-none"
+                          placeholder="e.g. #service-web"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-400 block">Service Description</label>
+                      <textarea
+                        rows={3}
+                        value={service.description || ''}
+                        onChange={(e) => updateServiceItem(index, 'description', e.target.value)}
+                        className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white font-sans text-xs focus:outline-none resize-none leading-relaxed"
+                      />
+                    </div>
+
+                    {/* Gradient color setting */}
+                    <div className="space-y-1">
+                      <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-400 block">Neon Glow Accent Color (Tailwind from-color class)</label>
+                      <input
+                        type="text"
+                        value={service.color || ''}
+                        onChange={(e) => updateServiceItem(index, 'color', e.target.value)}
+                        className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white font-mono text-xs focus:outline-none"
+                        placeholder="from-cyan-500/40 to-transparent"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* DYNAMIC INDIVIDUAL SERVICE PAGE CMS PANEL */}
+          {activeTab.startsWith('service_detail_') && (() => {
+            const index = parseInt(activeTab.replace('service_detail_', ''));
+            const service = currentContent.services?.[index];
+            if (!service) return null;
+
+            return (
+              <div className="space-y-6 text-left">
+                <div className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-1">
+                  <span className="font-mono text-[9px] uppercase tracking-widest text-purple-400">// Service Page Module</span>
+                  <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+                    {service.title || `Service Module #${index + 1}`}
+                  </h3>
+                </div>
+
+                {/* Core configuration */}
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-400 block font-light">Service Page Title</label>
+                    <input
+                      type="text"
+                      value={service.title || ''}
+                      onChange={(e) => updateServiceItem(index, 'title', e.target.value)}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white font-sans text-xs focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-400 block font-light">Service Code</label>
+                      <input
+                        type="text"
+                        value={service.code || ''}
+                        onChange={(e) => updateServiceItem(index, 'code', e.target.value)}
+                        className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white font-mono text-xs focus:outline-none"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-400 block font-light">Custom Router Link</label>
+                      <input
+                        type="text"
+                        value={service.href || ''}
+                        onChange={(e) => updateServiceItem(index, 'href', e.target.value)}
+                        className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white font-sans text-xs focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-400 block font-light">Service Grid Description (Card Text)</label>
+                    <textarea
+                      rows={3}
+                      value={service.description || service.desc || ''}
+                      onChange={(e) => updateServiceItem(index, 'description', e.target.value)}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white font-sans text-xs focus:outline-none resize-none leading-relaxed"
+                    />
+                  </div>
+
+                  {/* Specific Inner Page CMS Sections */}
+                  <div className="border-t border-white/5 pt-4 mt-4 space-y-4">
+                    <span className="font-mono text-[9px] uppercase tracking-widest text-purple-400 font-semibold block">// Inner Service Page Configuration</span>
+                    
+                    <div className="space-y-1">
+                      <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-400 block font-light">Inner Page Hero Tagline</label>
+                      <input
+                        type="text"
+                        value={service.page_subtitle || `// ${service.title || 'Service'} Engineering Studio`}
+                        onChange={(e) => updateServiceItem(index, 'page_subtitle', e.target.value)}
+                        className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white font-sans text-xs focus:outline-none"
+                        placeholder="e.g. // Custom Engineering Studio"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-400 block font-light">Inner Page Hero Main Title</label>
+                      <input
+                        type="text"
+                        value={service.page_hero_title || `High-Performance ${service.title || 'Service'} Systems`}
+                        onChange={(e) => updateServiceItem(index, 'page_hero_title', e.target.value)}
+                        className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white font-sans text-xs focus:outline-none"
+                        placeholder="e.g. Next-Generation Cloud Systems"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-400 block font-light">Inner Page Hero Sub-description</label>
+                      <textarea
+                        rows={3}
+                        value={service.page_hero_desc || `We construct secure, high-concurrency, and highly optimized platforms tailored to your business needs.`}
+                        onChange={(e) => updateServiceItem(index, 'page_hero_desc', e.target.value)}
+                        className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white font-sans text-xs focus:outline-none resize-none leading-relaxed"
+                        placeholder="Detail description shown in the inner page hero..."
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-400 block font-light">Active Icon Box</label>
+                      <select
+                        value={service.icon || 'web'}
+                        onChange={(e) => updateServiceItem(index, 'icon', e.target.value)}
+                        className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white font-sans text-xs focus:outline-none"
+                      >
+                        <option value="web">web (Monitor/Desktop)</option>
+                        <option value="app">app (Mobile)</option>
+                        <option value="software">software (Database/Stack)</option>
+                        <option value="ai">ai (Brain/Neural)</option>
+                        <option value="it">it (Network/Shield)</option>
+                        <option value="marketing">marketing (Chart/Growth)</option>
+                        <option value="social">social (Chat bubble)</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-400 block font-light">Neon Glow Theme Color</label>
+                      <input
+                        type="text"
+                        value={service.color || ''}
+                        onChange={(e) => updateServiceItem(index, 'color', e.target.value)}
+                        className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white font-mono text-xs focus:outline-none"
+                        placeholder="from-purple-500/40 to-transparent"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Banner Image Customizer */}
+                <div className="border-t border-white/5 pt-5 space-y-4">
+                  <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">// Page Visual Assets</h4>
+                  <div className="p-4 bg-white/[0.01] border border-white/5 rounded-xl space-y-3">
+                    <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Cover Hover Image URL</label>
+                    <input
+                      type="text"
+                      value={service.img || ''}
+                      onChange={(e) => updateServiceItem(index, 'img', e.target.value)}
+                      className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                      placeholder="/images/gallery/default.png"
+                    />
+                    
+                    {service.img && (
+                      <div className="flex items-center gap-3">
+                        <img 
+                          src={service.img} 
+                          alt="Cover Banner" 
+                          className="w-20 h-12 object-cover border border-white/10 rounded-lg bg-neutral-900"
+                        />
+                        <span className="text-[9px] text-neutral-500 font-mono">Current Cover Image</span>
+                      </div>
+                    )}
+
+                    <label className="w-full py-2 border border-white/10 hover:border-white/30 text-center rounded-xl bg-white/5 text-[9px] uppercase tracking-widest font-mono cursor-pointer hover:bg-white/10 transition-all text-white font-semibold block">
+                      {isUploadingImage ? 'Uploading Image...' : 'Upload New Cover Image'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleUploadServiceHoverImage(index, e)}
+                        disabled={isUploadingImage}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {/* 3. Tech Stack cards */}
+                <div className="border-t border-white/5 pt-5 space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">// Technology Stack list</h4>
+                    <button
+                      onClick={() => addServiceSubItem(index, 'inner_tech_stack', { name: 'New Tech', badge: 'Core', role: 'Describe how this technology is used in our deployments.' })}
+                      className="px-2 py-1 bg-white/5 border border-white/10 hover:border-white/20 text-neutral-300 hover:text-white rounded text-[8px] font-mono font-semibold"
+                    >
+                      + Add Tech Card
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {(service.inner_tech_stack || []).map((tech, techIdx) => (
+                      <div key={techIdx} className="p-3 bg-black/40 border border-white/5 rounded-xl space-y-2 relative">
+                        <button
+                          onClick={() => deleteServiceSubItem(index, 'inner_tech_stack', techIdx)}
+                          className="absolute right-2 top-2 w-5 h-5 flex items-center justify-center border border-red-500/10 hover:border-red-500/30 rounded text-red-500 bg-red-500/5 hover:bg-red-500/10 cursor-pointer text-[8px]"
+                          title="Delete Tech"
+                        >
+                          ✕
+                        </button>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="font-mono text-[7px] text-neutral-500">Tech Name</label>
+                            <input
+                              type="text"
+                              value={tech.name || ''}
+                              onChange={(e) => updateServiceSubItem(index, 'inner_tech_stack', techIdx, 'name', e.target.value)}
+                              className="w-full px-3 py-1.5 bg-black border border-white/10 rounded-lg text-white font-sans text-xs focus:outline-none"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="font-mono text-[7px] text-neutral-500">Tech Badge</label>
+                            <input
+                              type="text"
+                              value={tech.badge || ''}
+                              onChange={(e) => updateServiceSubItem(index, 'inner_tech_stack', techIdx, 'badge', e.target.value)}
+                              className="w-full px-3 py-1.5 bg-black border border-white/10 rounded-lg text-white font-sans text-xs focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="font-mono text-[7px] text-neutral-500">Tech Role/Description</label>
+                          <textarea
+                            rows={2}
+                            value={tech.role || ''}
+                            onChange={(e) => updateServiceSubItem(index, 'inner_tech_stack', techIdx, 'role', e.target.value)}
+                            className="w-full px-3 py-1.5 bg-black border border-white/10 rounded-lg text-white font-sans text-xs focus:outline-none resize-none leading-normal"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+            );
+          })()}
 
           {/* 3. CAPABILITIES CMS PANEL */}
           {activeTab === 'services' && (
@@ -3906,43 +4657,107 @@ export default function AdminPanel() {
                 {currentContent.gallery.map((item, index) => (
                   <div key={index} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-3 text-left">
                     <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                      <span className="font-mono text-[9px] text-neutral-500 font-bold">{item.title || 'New Gallery Image'}</span>
-                      <button
-                        onClick={() => deleteGalleryItem(index)}
-                        className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded"
-                      >
-                        Delete
-                      </button>
+                      <span className="font-mono text-[9px] text-neutral-400 font-bold">{item.title || 'New Gallery Image'}</span>
+                      
+                      <div className="flex items-center gap-2">
+                        <button
+                          disabled={index === 0}
+                          onClick={() => moveGalleryItem(index, -1)}
+                          className="w-6 h-6 border border-white/10 hover:border-white/30 rounded flex items-center justify-center text-xs text-neutral-400 hover:text-white disabled:opacity-30 cursor-pointer"
+                          title="Move Up"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          disabled={index === currentContent.gallery.length - 1}
+                          onClick={() => moveGalleryItem(index, 1)}
+                          className="w-6 h-6 border border-white/10 hover:border-white/30 rounded flex items-center justify-center text-xs text-neutral-400 hover:text-white disabled:opacity-30 cursor-pointer"
+                          title="Move Down"
+                        >
+                          ↓
+                        </button>
+                        <button
+                          onClick={() => deleteGalleryItem(index)}
+                          className="w-6 h-6 border border-red-500/10 hover:border-red-500/30 rounded flex items-center justify-center text-[9px] text-red-500 bg-red-500/5 hover:bg-red-500/10 cursor-pointer"
+                          title="Delete Image"
+                        >
+                          ✕
+                        </button>
+                      </div>
                     </div>
+                    
                     <div className="space-y-2">
-                      <input
-                        type="text"
-                        placeholder="Image Title"
-                        value={item.title}
-                        onChange={(e) => updateGalleryItem(index, 'title', e.target.value)}
-                        className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Category"
-                        value={item.category}
-                        onChange={(e) => updateGalleryItem(index, 'category', e.target.value)}
-                        className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Masonry Size Class (e.g. col-span-1 row-span-1 / col-span-2 row-span-1)"
-                        value={item.size}
-                        onChange={(e) => updateGalleryItem(index, 'size', e.target.value)}
-                        className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Image URL"
-                        value={item.image}
-                        onChange={(e) => updateGalleryItem(index, 'image', e.target.value)}
-                        className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
-                      />
+                      {/* Image Preview Thumbnail */}
+                      {item.image && (
+                        <div className="flex items-center gap-3 p-2 bg-black/40 border border-white/5 rounded-lg">
+                          <img 
+                            src={resolveImageUrl(item.image)} 
+                            alt={item.title} 
+                            className="w-16 h-12 object-cover border border-white/10 rounded-lg bg-neutral-900"
+                            onError={(e) => { e.target.src = 'https://placehold.co/100x75/000000/ffffff?text=Image+Error'; }}
+                          />
+                          <div className="flex flex-col">
+                            <span className="font-mono text-[8px] text-neutral-400 uppercase tracking-wider">// Active Preview</span>
+                            <span className="font-mono text-[7px] text-neutral-600 break-all">{item.image}</span>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="space-y-1">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Image Title</label>
+                        <input
+                          type="text"
+                          placeholder="Image Title"
+                          value={item.title}
+                          onChange={(e) => updateGalleryItem(index, 'title', e.target.value)}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none focus:border-white/20"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Category Label</label>
+                        <input
+                          type="text"
+                          placeholder="Category"
+                          value={item.category}
+                          onChange={(e) => updateGalleryItem(index, 'category', e.target.value)}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none focus:border-white/20"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Grid Layout Size (Masonry Class)</label>
+                        <input
+                          type="text"
+                          placeholder="Masonry Size Class (e.g. col-span-1 row-span-1 / col-span-2 row-span-1)"
+                          value={item.size}
+                          onChange={(e) => updateGalleryItem(index, 'size', e.target.value)}
+                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none focus:border-white/20"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Static Image Source URL</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="Image URL"
+                            value={item.image}
+                            onChange={(e) => updateGalleryItem(index, 'image', e.target.value)}
+                            className="flex-1 px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none focus:border-white/20"
+                          />
+                          <label className="px-3 py-2 bg-white/5 border border-white/10 hover:border-white/20 hover:bg-white/10 text-white rounded-lg text-[8px] uppercase tracking-widest font-mono cursor-pointer flex items-center justify-center transition-colors min-w-[70px]">
+                            {isUploadingImage ? 'Wait...' : 'Upload'}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleUploadGalleryImage(index, e)}
+                              disabled={isUploadingImage}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -7429,81 +8244,31 @@ export default function AdminPanel() {
 
           {/* 13. SUBMISSIONS LOG VIEW */}
           {activeTab === 'submissions' && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Form Submissions Log</span>
-                <button
-                  onClick={loadSubmissions}
-                  className="px-4 py-2 bg-white text-black font-semibold text-[9px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors"
-                >
-                  Refresh
-                </button>
-              </div>
-
-              {loadingSubmissions ? (
-                <div className="text-center py-10 font-mono text-xs text-neutral-500">Loading logs from database...</div>
-              ) : (
-                <div className="space-y-8">
-                  {/* Inquiries */}
-                  <div className="space-y-3">
-                    <h4 className="font-mono text-[10px] uppercase tracking-widest text-emerald-400">// Client Inquiries ({inquiries.length})</h4>
-                    <div className="space-y-3">
-                      {inquiries.map((inq, idx) => {
-                        const inqNum = inquiries.length - idx;
-                        const dateStr = inq.created_at ? new Date(inq.created_at).toLocaleString() : 'N/A';
-                        const dynamicFields = Object.entries(inq).filter(
-                          ([k]) => !['created_at', '_id'].includes(k)
-                        );
-                        return (
-                          <div key={idx} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-3.5 text-left relative hover:border-white/10 transition-all duration-300">
-                            <div className="flex justify-between items-center pb-2 border-b border-white/[0.04]">
-                              <span className="font-mono text-[9px] text-emerald-400 font-bold uppercase tracking-wider">// Inquiry #{inqNum}</span>
-                              <span className="font-mono text-[8px] text-neutral-500 bg-neutral-900 border border-white/5 px-2 py-0.5 rounded">
-                                {dateStr}
-                              </span>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-xs">
-                              {dynamicFields.map(([key, val]) => (
-                                <div key={key} className="flex flex-col gap-0.5">
-                                  <span className="font-mono text-[8px] uppercase tracking-widest text-neutral-500">{key}:</span>
-                                  <span className="text-neutral-200 font-light whitespace-pre-wrap">{String(val || 'N/A')}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        );
-                      })}
-                      {inquiries.length === 0 && <div className="text-center py-6 text-neutral-500 font-mono text-[10px]">No inquiries received yet.</div>}
-                    </div>
-                  </div>
-
-                  {/* Applications */}
-                  <div className="space-y-3">
-                    <h4 className="font-mono text-[10px] uppercase tracking-widest text-blue-400">// Job & Intern Applications ({applications.length})</h4>
-                    <div className="space-y-3">
-                      {applications.map((app, idx) => (
-                        <div key={idx} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-2 text-left">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <span className="text-white font-bold text-xs">{app.name}</span>
-                              <span className="text-neutral-500 text-[10px] font-mono ml-2">({app.email} | {app.phone})</span>
-                            </div>
-                            <span className="font-mono text-[8px] text-neutral-400 bg-white/5 border border-white/10 px-2 py-0.5 rounded uppercase">{app.type || 'job'}</span>
-                          </div>
-                          <div className="text-xs text-neutral-300">
-                            <strong>Role/Track:</strong> {app.role || app.track} <br/>
-                            {app.college && <><strong>College:</strong> {app.college} <br/></>}
-                            <strong>Resume URL:</strong> <a href={app.resume} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">{app.resume}</a>
-                          </div>
-                          {app.message && <p className="text-xs text-neutral-400 leading-relaxed font-light mt-1">"{app.message}"</p>}
-                          <div className="font-mono text-[8px] text-neutral-500">Date: {app.created_at ? new Date(app.created_at).toLocaleString() : 'N/A'}</div>
-                        </div>
-                      ))}
-                      {applications.length === 0 && <div className="text-center py-6 text-neutral-500 font-mono text-[10px]">No applications received yet.</div>}
-                    </div>
-                  </div>
+            <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
+              <span className="font-mono text-[10px] uppercase tracking-wider text-purple-400">// Database Submissions</span>
+              <p className="text-xs text-neutral-400 font-light leading-relaxed">
+                We have moved the Submissions Log to the main right area for a full-screen, comfortable reading experience.
+              </p>
+              <div className="pt-2 space-y-2">
+                <div className="flex items-center gap-2 text-[10px] text-neutral-500 font-mono">
+                  <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                  Full 65% Screen View
                 </div>
-              )}
+                <div className="flex items-center gap-2 text-[10px] text-neutral-500 font-mono">
+                  <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                  Real-time Search & Filter
+                </div>
+                <div className="flex items-center gap-2 text-[10px] text-neutral-500 font-mono">
+                  <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                  Quick Resume Download
+                </div>
+              </div>
+              <button
+                onClick={loadSubmissions}
+                className="w-full mt-4 py-2 border border-white/10 hover:border-white/20 hover:bg-white/5 rounded-xl font-mono text-[9px] uppercase tracking-widest text-neutral-300 transition-colors font-medium text-center cursor-pointer"
+              >
+                Refresh Data
+              </button>
             </div>
           )}
 
@@ -7576,101 +8341,397 @@ export default function AdminPanel() {
 
       </aside>
 
-      {/* RIGHT PANEL: LIVE PREVIEW CONTAINER (65% Width) */}
-      <main className="flex-1 bg-[#101010] flex flex-col h-full overflow-hidden relative z-10">
+      {/* RIGHT PANEL: LIVE PREVIEW CONTAINER OR SUBMISSIONS HUB */}
+      <main className="flex-1 bg-[#0d0d0d] flex flex-col h-full overflow-hidden relative z-10">
         
-        {/* Preview Control Toolbar */}
-        <div className="h-16 px-6 border-b border-white/5 bg-[#0a0a0a] flex items-center justify-between select-none">
-          
-          {/* Iframe size selectors */}
-          <div className="flex items-center gap-3">
-            <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-500 mr-2">Preview Size:</span>
-            {[
-              { id: 'desktop', label: 'Desktop', icon: '🖥️' },
-              { id: 'tablet', label: '768px', icon: '📱' },
-              { id: 'mobile', label: '375px', icon: '📱' }
-            ].map(device => (
-              <button
-                key={device.id}
-                onClick={() => setPreviewDevice(device.id)}
-                className={`px-3 py-1.5 border rounded-lg font-mono text-[9px] uppercase tracking-widest flex items-center gap-1.5 cursor-pointer transition-colors ${
-                  previewDevice === device.id 
-                    ? 'bg-white text-black font-semibold border-white' 
-                    : 'bg-white/5 text-neutral-400 border-white/5 hover:text-white'
-                }`}
-              >
-                <span>{device.icon}</span>
-                <span>{device.label}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* History Stack Controls */}
-          <div className="flex items-center gap-4">
-            <div className="flex border border-white/10 rounded-lg overflow-hidden bg-black">
-              <button
-                onClick={handleUndo}
-                disabled={historyIndex === 0}
-                className="px-4 py-2 text-xs font-mono text-neutral-400 hover:text-white disabled:opacity-20 transition-colors border-r border-white/10 cursor-pointer"
-                title="Undo (Ctrl+Z)"
-              >
-                ↩ Undo
-              </button>
-              <button
-                onClick={handleRedo}
-                disabled={historyIndex === history.length - 1}
-                className="px-4 py-2 text-xs font-mono text-neutral-400 hover:text-white disabled:opacity-20 transition-colors cursor-pointer"
-                title="Redo (Ctrl+Y)"
-              >
-                Redo ↪
-              </button>
-            </div>
-            
-            <button 
-              onClick={() => { window.location.hash = '#home'; }}
-              className="px-4 py-2 border border-white/10 hover:border-white/20 hover:bg-white/5 rounded-lg font-mono text-[9px] uppercase tracking-widest text-neutral-400 hover:text-white transition-colors cursor-pointer"
-            >
-              Exit Editor
-            </button>
-          </div>
-
-        </div>
-
-        {/* Live Website Iframe Canvas Frame wrapper */}
-        <div className="flex-1 p-8 overflow-auto flex items-center justify-center relative bg-[radial-gradient(#1e1e1e_1px,transparent_1px)] [background-size:16px_16px]">
-          
-          <div 
-            className="h-full bg-black shadow-2xl rounded-2xl overflow-hidden border border-white/10 transition-all duration-500 relative flex flex-col"
-            style={{
-              width: previewDevice === 'mobile' ? '375px' : previewDevice === 'tablet' ? '768px' : '100%',
-              maxWidth: '100%',
-              aspectRatio: previewDevice === 'mobile' ? '9/16' : previewDevice === 'tablet' ? '3/4' : 'auto'
-            }}
-          >
-            {/* Device mock header */}
-            <div className="h-8 bg-neutral-900 border-b border-white/5 flex items-center px-4 justify-between select-none">
-              <div className="flex gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
-                <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
-                <span className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
+        {activeTab === 'submissions' ? (
+          /* ==========================================
+             PREMIUM SUBMISSIONS HUB (FULL SCREEN VIEW)
+             ========================================== */
+          <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#070707]">
+            {/* Top Hub Bar */}
+            <div className="h-20 px-8 border-b border-white/5 bg-[#0a0a0a]/60 backdrop-blur-md flex items-center justify-between select-none shrink-0 gap-4">
+              <div className="flex flex-col text-left shrink-0">
+                <span className="font-mono text-[9px] uppercase tracking-widest text-purple-400 font-bold">// Operations Control</span>
+                <h2 className="text-sm font-bold text-white uppercase tracking-wider mt-0.5">Submissions Matrix</h2>
               </div>
-              <span className="font-mono text-[8px] text-neutral-600 tracking-wider">
-                {window.location.origin}/#preview ({previewDevice})
-              </span>
-              <span className="w-12" />
+
+              {/* Dynamic Tabs */}
+              <div className="flex items-center gap-2 bg-white/[0.02] border border-white/5 p-1 rounded-xl shrink-0">
+                {[
+                  { id: 'all', label: 'All Logs' },
+                  { id: 'inquiry', label: 'Inquiries' },
+                  { id: 'application', label: 'Applications' }
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setSubmissionFilter(tab.id)}
+                    className={`px-4 py-1.5 rounded-lg font-mono text-[9px] uppercase tracking-wider transition-all cursor-pointer ${
+                      submissionFilter === tab.id
+                        ? 'bg-purple-600 text-white font-semibold shadow-[0_0_15px_rgba(168,85,247,0.3)]'
+                        : 'text-neutral-400 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    {tab.id === 'all' && `All (${inquiries.length + applications.length})`}
+                    {tab.id === 'inquiry' && `Inquiries (${inquiries.length})`}
+                    {tab.id === 'application' && `Applications (${applications.length})`}
+                  </button>
+                ))}
+              </div>
+
+              {/* Download and Clear Buttons */}
+              <div className="flex items-center gap-2.5 shrink-0">
+                <button
+                  onClick={() => downloadCSV(submissionFilter)}
+                  className="px-3.5 py-2 border border-white/10 hover:border-emerald-500/30 hover:bg-emerald-500/5 rounded-xl font-mono text-[9px] uppercase tracking-widest text-emerald-400 transition-all font-medium cursor-pointer"
+                  title="Export current view to Excel / CSV"
+                >
+                  🟢 Export Excel
+                </button>
+                <button
+                  onClick={() => downloadPDF(submissionFilter)}
+                  className="px-3.5 py-2 border border-white/10 hover:border-blue-500/30 hover:bg-blue-500/5 rounded-xl font-mono text-[9px] uppercase tracking-widest text-blue-400 transition-all font-medium cursor-pointer"
+                  title="Generate Printable PDF Report"
+                >
+                  🔵 Export PDF
+                </button>
+                <button
+                  onClick={() => handleClearAllSubmissions(submissionFilter)}
+                  className="px-3.5 py-2 border border-red-500/10 hover:border-red-500/30 hover:bg-red-500/5 rounded-xl font-mono text-[9px] uppercase tracking-widest text-red-500 transition-all font-medium cursor-pointer"
+                  title="Permanently clear filtered submissions"
+                >
+                  🗑️ Clear Filtered
+                </button>
+              </div>
+
+              {/* Live search input */}
+              <div className="w-60 relative shrink-0">
+                <input
+                  type="text"
+                  placeholder="SEARCH..."
+                  value={submissionSearch}
+                  onChange={(e) => setSubmissionSearch(e.target.value)}
+                  className="w-full pl-8 pr-4 py-2 bg-black/60 border border-white/10 rounded-xl text-white font-mono text-[10px] uppercase tracking-widest focus:outline-none focus:border-purple-500/50 transition-all placeholder:text-neutral-600"
+                />
+                <span className="absolute left-3 top-2.5 text-[10px] opacity-35">🔍</span>
+                {submissionSearch && (
+                  <button 
+                    onClick={() => setSubmissionSearch('')}
+                    className="absolute right-3 top-2.5 text-[9px] text-neutral-400 hover:text-white font-mono cursor-pointer"
+                  >
+                    CLEAR
+                  </button>
+                )}
+              </div>
             </div>
 
-            {/* Iframe element */}
-            <iframe
-              ref={iframeRef}
-              src={`${window.location.origin}${window.location.pathname}${iframeHash}`}
-              className="flex-1 w-full border-none bg-black select-none pointer-events-auto"
-              title="Live CMS Web Preview"
-              key={iframeHash}
-            />
-          </div>
+            {/* Grid Area with Filtered Data */}
+            <div className="flex-1 p-8 overflow-y-auto bg-[radial-gradient(#151515_1px,transparent_1px)] [background-size:24px_24px]">
+              
+              {loadingSubmissions ? (
+                <div className="h-full flex items-center justify-center flex-col gap-3">
+                  <div className="w-8 h-8 border-2 border-purple-500/10 border-t-purple-500 rounded-full animate-spin" />
+                  <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-500">// RETRIEVING LIVE LOGS...</span>
+                </div>
+              ) : (
+                (() => {
+                  // Compile and parse both data types into a unified structure
+                  const compiledList = [];
 
-        </div>
+                  if (submissionFilter === 'all' || submissionFilter === 'inquiry') {
+                    inquiries.forEach((inq, i) => {
+                      compiledList.push({
+                        id: inq._id || `inq-${i}`,
+                        dbType: 'inquiry',
+                        sourceType: 'inquiry',
+                        date: inq.created_at ? new Date(inq.created_at) : new Date(0),
+                        name: inq.name || 'Anonymous Client',
+                        email: inq.email || 'N/A',
+                        phone: inq.phone || 'N/A',
+                        message: inq.message || inq.project_details || 'No message attached.',
+                        extraData: Object.entries(inq).filter(
+                          ([k]) => !['created_at', '_id', 'name', 'email', 'phone', 'message', 'project_details'].includes(k)
+                        )
+                      });
+                    });
+                  }
+
+                  if (submissionFilter === 'all' || submissionFilter === 'application') {
+                    applications.forEach((app, i) => {
+                      compiledList.push({
+                        id: app._id || `app-${i}`,
+                        dbType: 'application',
+                        sourceType: app.type === 'intern' ? 'internship' : 'job_application',
+                        date: app.created_at ? new Date(app.created_at) : new Date(0),
+                        name: app.name || 'Anonymous Applicant',
+                        email: app.email || 'N/A',
+                        phone: app.phone || 'N/A',
+                        role: app.role || app.track || 'Unspecified Role',
+                        resume: app.resume,
+                        college: app.college,
+                        message: app.message || 'No cover letter attached.',
+                        extraData: Object.entries(app).filter(
+                          ([k]) => !['created_at', '_id', 'name', 'email', 'phone', 'message', 'role', 'track', 'resume', 'college', 'type'].includes(k)
+                        )
+                      });
+                    });
+                  }
+
+                  // Sort by newest date
+                  compiledList.sort((a, b) => b.date - a.date);
+
+                  // Apply search query
+                  const filteredList = compiledList.filter(item => {
+                    const query = submissionSearch.toLowerCase().trim();
+                    if (!query) return true;
+                    return (
+                      item.name.toLowerCase().includes(query) ||
+                      item.email.toLowerCase().includes(query) ||
+                      item.phone.toLowerCase().includes(query) ||
+                      (item.role && item.role.toLowerCase().includes(query)) ||
+                      (item.message && item.message.toLowerCase().includes(query))
+                    );
+                  });
+
+                  if (filteredList.length === 0) {
+                    return (
+                      <div className="h-64 border border-white/5 bg-black/40 rounded-2xl flex flex-col items-center justify-center gap-2 font-mono text-[10px] text-neutral-500 uppercase tracking-widest">
+                        <span>No records match your query.</span>
+                        <span className="opacity-50">Filter: {submissionFilter} | Search: "{submissionSearch}"</span>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 text-left">
+                      {filteredList.map((item, index) => {
+                        const dateStr = item.date.getTime() > 0 ? item.date.toLocaleString() : 'N/A';
+                        
+                        return (
+                          <div 
+                            key={item.id} 
+                            className="p-6 bg-black/60 border border-white/5 rounded-2xl space-y-4 hover:border-white/10 transition-all duration-300 relative group"
+                          >
+                            {/* Card Header */}
+                            <div className="flex justify-between items-start pb-3 border-b border-white/5">
+                              <div className="flex flex-col">
+                                <span className="font-mono text-[8px] text-neutral-500 uppercase tracking-widest">
+                                  Received {dateStr}
+                                </span>
+                                <h3 className="text-sm font-bold text-white tracking-wide mt-1">
+                                  {item.name}
+                                </h3>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                {/* Source Type Badge */}
+                                {item.sourceType === 'inquiry' && (
+                                  <span className="px-2 py-0.5 rounded text-[8px] font-mono tracking-widest uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
+                                    Client Inquiry
+                                  </span>
+                                )}
+                                {item.sourceType === 'job_application' && (
+                                  <span className="px-2 py-0.5 rounded text-[8px] font-mono tracking-widest uppercase bg-blue-500/10 text-blue-400 border border-blue-500/25">
+                                    Job Candidate
+                                  </span>
+                                )}
+                                {item.sourceType === 'internship' && (
+                                  <span className="px-2 py-0.5 rounded text-[8px] font-mono tracking-widest uppercase bg-purple-500/10 text-purple-400 border border-purple-500/25">
+                                    Intern Track
+                                  </span>
+                                )}
+
+                                {/* Delete Button */}
+                                <button
+                                  onClick={() => handleDeleteSubmission(item.id, item.dbType)}
+                                  className="w-5 h-5 flex items-center justify-center border border-red-500/10 hover:border-red-500/40 hover:bg-red-500/10 rounded-lg text-red-400 transition-all cursor-pointer text-[10px]"
+                                  title="Delete this log"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Main Contact details */}
+                            <div className="grid grid-cols-2 gap-4 bg-white/[0.01] p-3 border border-white/5 rounded-xl">
+                              <div className="flex flex-col gap-0.5">
+                                <span className="font-mono text-[7px] uppercase tracking-wider text-neutral-500">Email Address</span>
+                                <a href={`mailto:${item.email}`} className="text-xs text-neutral-300 hover:text-white font-light transition-all truncate">
+                                  {item.email}
+                                </a>
+                              </div>
+                              <div className="flex flex-col gap-0.5">
+                                <span className="font-mono text-[7px] uppercase tracking-wider text-neutral-500">Contact Number</span>
+                                <a href={`tel:${item.phone}`} className="text-xs text-neutral-300 hover:text-white font-light transition-all">
+                                  {item.phone}
+                                </a>
+                              </div>
+                            </div>
+
+                            {/* Job Application Specifics */}
+                            {(item.role || item.college) && (
+                              <div className="grid grid-cols-2 gap-4 p-3 bg-white/[0.01] border border-white/5 rounded-xl">
+                                {item.role && (
+                                  <div className="flex flex-col gap-0.5">
+                                    <span className="font-mono text-[7px] uppercase tracking-wider text-neutral-500">Applying Role</span>
+                                    <span className="text-xs text-purple-300 font-semibold">{item.role}</span>
+                                  </div>
+                                )}
+                                {item.college && (
+                                  <div className="flex flex-col gap-0.5">
+                                    <span className="font-mono text-[7px] uppercase tracking-wider text-neutral-500">College / Semester</span>
+                                    <span className="text-xs text-neutral-300 font-light truncate">{item.college}</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Content message */}
+                            <div className="space-y-1">
+                              <span className="font-mono text-[7px] uppercase tracking-wider text-neutral-500 block">Attached Message / Cover note</span>
+                              <p className="text-xs text-neutral-300 font-light leading-relaxed whitespace-pre-wrap bg-black/40 p-4 border border-white/5 rounded-xl max-h-48 overflow-y-auto">
+                                "{item.message}"
+                              </p>
+                            </div>
+
+                            {/* Extra attributes (Dynamic fields from contact forms) */}
+                            {item.extraData.length > 0 && (
+                              <div className="space-y-2 pt-2 border-t border-white/5">
+                                <span className="font-mono text-[7px] uppercase tracking-wider text-neutral-500 block">Custom Form Attributes</span>
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                                  {item.extraData.map(([key, val]) => (
+                                    <div key={key} className="flex flex-col bg-white/[0.01] p-2 border border-white/5 rounded-lg">
+                                      <span className="font-mono text-[7px] uppercase text-neutral-500">{key.replace('_', ' ')}</span>
+                                      <span className="text-neutral-300 font-light mt-0.5">{String(val || 'N/A')}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Resume Links button */}
+                            {item.resume && (
+                              <div className="pt-2">
+                                <a 
+                                  href={item.resume} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="w-full inline-flex items-center justify-center gap-2 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold text-[9px] uppercase tracking-widest rounded-xl transition-all shadow-[0_4px_12px_rgba(168,85,247,0.2)] hover:shadow-[0_4px_20px_rgba(168,85,247,0.35)]"
+                                >
+                                  <span>📄</span>
+                                  <span>Open Candidate Resume</span>
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()
+              )}
+
+            </div>
+          </div>
+        ) : (
+          /* ==========================================
+             DEFAULT PREVIEW TOOLBAR & IFRAME
+             ========================================== */
+          <>
+            {/* Preview Control Toolbar */}
+            <div className="h-16 px-6 border-b border-white/5 bg-[#0a0a0a] flex items-center justify-between select-none">
+              
+              {/* Iframe size selectors */}
+              <div className="flex items-center gap-3">
+                <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-500 mr-2">Preview Size:</span>
+                {[
+                  { id: 'desktop', label: 'Desktop', icon: '🖥️' },
+                  { id: 'tablet', label: '768px', icon: '📱' },
+                  { id: 'mobile', label: '375px', icon: '📱' }
+                ].map(device => (
+                  <button
+                    key={device.id}
+                    onClick={() => setPreviewDevice(device.id)}
+                    className={`px-3 py-1.5 border rounded-lg font-mono text-[9px] uppercase tracking-widest flex items-center gap-1.5 cursor-pointer transition-colors ${
+                      previewDevice === device.id 
+                        ? 'bg-white text-black font-semibold border-white' 
+                        : 'bg-white/5 text-neutral-400 border-white/5 hover:text-white'
+                    }`}
+                  >
+                    <span>{device.icon}</span>
+                    <span>{device.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* History Stack Controls */}
+              <div className="flex items-center gap-4">
+                <div className="flex border border-white/10 rounded-lg overflow-hidden bg-black">
+                  <button
+                    onClick={handleUndo}
+                    disabled={historyIndex === 0}
+                    className="px-4 py-2 text-xs font-mono text-neutral-400 hover:text-white disabled:opacity-20 transition-colors border-r border-white/10 cursor-pointer"
+                    title="Undo (Ctrl+Z)"
+                  >
+                    ↩ Undo
+                  </button>
+                  <button
+                    onClick={handleRedo}
+                    disabled={historyIndex === history.length - 1}
+                    className="px-4 py-2 text-xs font-mono text-neutral-400 hover:text-white disabled:opacity-20 transition-colors cursor-pointer"
+                    title="Redo (Ctrl+Y)"
+                  >
+                    Redo ↪
+                  </button>
+                </div>
+                
+                <button 
+                  onClick={() => { window.location.hash = '#home'; }}
+                  className="px-4 py-2 border border-white/10 hover:border-white/20 hover:bg-white/5 rounded-lg font-mono text-[9px] uppercase tracking-widest text-neutral-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  Exit Editor
+                </button>
+              </div>
+
+            </div>
+
+            {/* Live Website Iframe Canvas Frame wrapper */}
+            <div className="flex-1 p-8 overflow-auto flex items-center justify-center relative bg-[radial-gradient(#1e1e1e_1px,transparent_1px)] [background-size:16px_16px]">
+              
+              <div 
+                className="h-full bg-black shadow-2xl rounded-2xl overflow-hidden border border-white/10 transition-all duration-500 relative flex flex-col"
+                style={{
+                  width: previewDevice === 'mobile' ? '375px' : previewDevice === 'tablet' ? '768px' : '100%',
+                  maxWidth: '100%',
+                  aspectRatio: previewDevice === 'mobile' ? '9/16' : previewDevice === 'tablet' ? '3/4' : 'auto'
+                }}
+              >
+                {/* Device mock header */}
+                <div className="h-8 bg-neutral-900 border-b border-white/5 flex items-center px-4 justify-between select-none">
+                  <div className="flex gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
+                  </div>
+                  <span className="font-mono text-[8px] text-neutral-600 tracking-wider">
+                    {window.location.origin}/#preview ({previewDevice})
+                  </span>
+                  <span className="w-12" />
+                </div>
+
+                {/* Iframe element */}
+                <iframe
+                  ref={iframeRef}
+                  src={`${window.location.origin}${window.location.pathname}${iframeHash}`}
+                  className="flex-1 w-full border-none bg-black select-none pointer-events-auto"
+                  title="Live CMS Web Preview"
+                  key={iframeHash}
+                />
+              </div>
+
+            </div>
+          </>
+        )}
 
         {/* Console logs / alerts */}
         {saveStatus.message && (

@@ -106,8 +106,9 @@ function PreviewContainer({ currentHash }) {
     );
   }
 
-  // Determine what page to render inside the preview container
-  const subpage = currentHash.replace('#preview', ''); // e.g. "/about-us", "/our-story" or empty/slash
+  // Determine what page to render inside the preview container with normalization
+  const rawSubpage = currentHash.replace('#preview', '').trim();
+  const subpage = rawSubpage.startsWith('/') ? rawSubpage : '/' + rawSubpage;
 
   const renderPreviewPage = () => {
     switch (subpage) {
@@ -149,19 +150,19 @@ function PreviewContainer({ currentHash }) {
       case '/contact':
         return <Contact />;
       case '/service-web':
-        return <ServiceWeb />;
+        return <ServiceWeb overrideContent={previewContent} />;
       case '/service-app':
-        return <ServiceApp />;
+        return <ServiceApp overrideContent={previewContent} />;
       case '/service-custom-software':
-        return <ServiceCustomSoftware />;
+        return <ServiceCustomSoftware overrideContent={previewContent} />;
       case '/service-digital-marketing':
-        return <ServiceDigitalMarketing />;
+        return <ServiceDigitalMarketing overrideContent={previewContent} />;
       case '/service-social-media-management':
-        return <ServiceSocialMedia />;
+        return <ServiceSocialMedia overrideContent={previewContent} />;
       case '/service-ai-consulting':
-        return <ServiceAiConsulting />;
+        return <ServiceAiConsulting overrideContent={previewContent} />;
       case '/service-it-consulting':
-        return <ServiceItConsulting />;
+        return <ServiceItConsulting overrideContent={previewContent} />;
       default:
         return (
           <>

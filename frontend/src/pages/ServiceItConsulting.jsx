@@ -1,7 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useContent } from '../context/ContentContext';
 
-export default function ServiceItConsulting() {
+export default function ServiceItConsulting({ overrideContent }) {
+  const { content: liveContent } = useContent();
+  const content = overrideContent || liveContent;
+  const serviceData = content?.services?.find(s => 
+    s.href === '#service-it-consulting' || 
+    s.href === 'service-it-consulting' || 
+    s.href === '/service-it-consulting' ||
+    (s.title && s.title.toLowerCase().includes('it'))
+  ) || {};
+
   // 1. Particle positions for Cinematic Hero Background
   const [particles, setParticles] = useState([]);
   const heroRef = useRef(null);
@@ -61,40 +71,13 @@ export default function ServiceItConsulting() {
   const [mockupTab, setMockupTab] = useState('nodes'); // 'nodes' | 'logs' | 'security'
 
   // 5. Tech Stack Selector State
-  const [selectedTech, setSelectedTech] = useState('aws');
-
-  const techStack = {
-    aws: {
-      name: 'Amazon Web Services (AWS)',
-      role: 'Powers scalable compute nodes (EC2), multi-region secure virtual private clouds (VPCs), and IAM access controls.',
-      badge: 'Cloud Host'
-    },
-    gcp: {
-      name: 'Google Cloud Platform (GCP)',
-      role: 'Integrated for hosting high-speed container networks (GKE) and managing large AI datasets securely.',
-      badge: 'Data & Containers'
-    },
-    kubernetes: {
-      name: 'Kubernetes (K8s)',
-      role: 'Orchestrates container groups, managing microservice auto-scaling parameters and self-healing node clusters.',
-      badge: 'Orchestration'
-    },
-    nginx: {
-      name: 'Nginx Proxy Server',
-      role: 'Acts as our frontend edge server proxy, managing SSL handshake layers and routing incoming client traffic.',
-      badge: 'Reverse Proxy'
-    },
-    terraform: {
-      name: 'Terraform (IaC)',
-      role: 'Defines entire cloud architectures as code, allowing rapid multi-region network replications.',
-      badge: 'Infrastructure Code'
-    },
-    cloudflare: {
-      name: 'Cloudflare WAF',
-      role: 'Hardens web portals against automated DDoS vectors, managing secure DNS records and static asset caches.',
-      badge: 'Zero-Trust Security'
-    }
-  };
+  const [selectedTechIdx, setSelectedTechIdx] = useState(0);
+  const techStackList = serviceData.inner_tech_stack || [
+    { name: 'Amazon Web Services (AWS)', badge: 'Cloud Host', role: 'Powers scalable compute nodes (EC2), multi-region secure virtual private clouds (VPCs), and IAM access controls.' },
+    { name: 'Google Cloud Platform (GCP)', badge: 'Data & Containers', role: 'Integrated for hosting high-speed container networks (GKE) and managing large AI datasets securely.' },
+    { name: 'Kubernetes (K8s)', badge: 'Orchestration', role: 'Orchestrates container groups, managing microservice auto-scaling parameters and self-healing node clusters.' }
+  ];
+  const activeTech = techStackList[selectedTechIdx] || techStackList[0] || {};
 
   return (
     <div className="relative min-h-screen bg-[#030307] text-neutral-300 font-sans pb-24 overflow-x-hidden">
@@ -145,7 +128,7 @@ export default function ServiceItConsulting() {
             transition={{ duration: 0.6 }}
             className="font-mono text-[10px] uppercase tracking-[0.4em] text-emerald-400 font-light block"
           >
-            // Infrastructure Engineering
+            {serviceData.page_subtitle || "// Infrastructure Engineering"}
           </motion.span>
           <motion.h1 
             initial={{ opacity: 0, y: 15 }}
@@ -153,8 +136,7 @@ export default function ServiceItConsulting() {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="font-display text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight text-white leading-tight"
           >
-            Hardening Resilient <br />
-            <span className="text-neutral-400 font-light italic">Cloud Systems</span>
+            {serviceData.page_hero_title || "Hardening Resilient Cloud Systems"}
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0 }}
@@ -162,7 +144,7 @@ export default function ServiceItConsulting() {
             transition={{ duration: 0.8, delay: 0.3 }}
             className="font-light text-neutral-400 text-sm sm:text-lg max-w-xl mx-auto leading-relaxed"
           >
-            We audit networks, designing AWS and Google Cloud layouts to guarantee high uptime, zero packet drops, and automated security monitoring.
+            {serviceData.page_hero_desc || "We audit networks, designing AWS and Google Cloud layouts to guarantee high uptime, zero packet drops, and automated security monitoring."}
           </motion.p>
         </div>
       </section>
@@ -521,19 +503,19 @@ export default function ServiceItConsulting() {
           Click on any technology component below to understand its technical role in our system builds.
         </p>
 
-        {/* Tab Buttons grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mb-10">
-          {Object.keys(techStack).map((key) => (
+        {/* Tab Buttons flex layout */}
+        <div className="flex flex-wrap justify-center gap-3 mb-10">
+          {techStackList.map((tech, idx) => (
             <button
-              key={key}
-              onClick={() => setSelectedTech(key)}
-              className={`px-3 py-3 rounded-2xl text-[10px] font-mono font-bold tracking-wider uppercase border transition-all duration-300 ${
-                selectedTech === key 
+              key={idx}
+              onClick={() => setSelectedTechIdx(idx)}
+              className={`px-4 py-3 rounded-2xl text-[10px] font-mono font-bold tracking-wider uppercase border transition-all duration-300 ${
+                selectedTechIdx === idx 
                   ? 'bg-white text-black border-white shadow-lg' 
                   : 'text-neutral-400 bg-white/[0.02] border-white/5 hover:border-white/15'
               }`}
             >
-              {techStack[key].name}
+              {tech.name}
             </button>
           ))}
         </div>
@@ -542,22 +524,22 @@ export default function ServiceItConsulting() {
         <div className="p-8 rounded-3xl bg-[#09090d]/80 border border-white/5 hover:border-emerald-500/20 shadow-2xl backdrop-blur-xl relative overflow-hidden min-h-[160px] text-left transition-all">
           <div className="absolute top-4 right-6">
             <span className="font-mono text-[8px] font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-              {techStack[selectedTech].badge}
+              {activeTech.badge || 'Core Stack'}
             </span>
           </div>
           
           <AnimatePresence mode="wait">
             <motion.div
-              key={selectedTech}
+              key={selectedTechIdx}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
               className="space-y-4"
             >
-              <h4 className="font-display font-extrabold text-base text-white">{techStack[selectedTech].name}</h4>
+              <h4 className="font-display font-extrabold text-base text-white">{activeTech.name}</h4>
               <p className="font-light text-neutral-400 text-xs sm:text-sm leading-relaxed max-w-2xl">
-                {techStack[selectedTech].role}
+                {activeTech.role}
               </p>
             </motion.div>
           </AnimatePresence>

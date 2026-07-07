@@ -1,7 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useContent } from '../context/ContentContext';
 
-export default function ServiceDigitalMarketing() {
+export default function ServiceDigitalMarketing({ overrideContent }) {
+  const { content: liveContent } = useContent();
+  const content = overrideContent || liveContent;
+  const serviceData = content?.services?.find(s => 
+    s.href === '#service-digital-marketing' || 
+    s.href === 'service-digital-marketing' || 
+    s.href === '/service-digital-marketing' ||
+    (s.title && (s.title.toLowerCase().includes('marketing') || s.title.toLowerCase().includes('digital')))
+  ) || {};
+
   // 1. Particle positions for Cinematic Hero Background
   const [particles, setParticles] = useState([]);
   const heroRef = useRef(null);
@@ -61,40 +71,13 @@ export default function ServiceDigitalMarketing() {
   const [mockupTab, setMockupTab] = useState('roi'); // 'adset' | 'conversion' | 'roi'
 
   // 5. Tech Stack Selector State
-  const [selectedTech, setSelectedTech] = useState('ads');
-
-  const techStack = {
-    ads: {
-      name: 'Google Ads API',
-      role: 'Automates campaign adjustments, bids, keyword optimization, and real-time CPC (cost-per-click) metrics pull.',
-      badge: 'Acquisition'
-    },
-    meta: {
-      name: 'Meta Conversions API',
-      role: 'Direct server-to-server connection that feeds conversion metrics directly back to Facebook ads without relying on browser cookies.',
-      badge: 'Retargeting'
-    },
-    analytics: {
-      name: 'Google Analytics 4',
-      role: 'Tracks user interactions, page session timers, landing path drop-offs, and custom conversion events across the site.',
-      badge: 'Data Reporting'
-    },
-    semrush: {
-      name: 'SEMrush API',
-      role: 'Powers competitor audits, backlink tracking, keyword gap analysis, and search query position updates.',
-      badge: 'SEO Research'
-    },
-    hotjar: {
-      name: 'Hotjar SDK',
-      role: 'Renders visual visitor heatmaps and click logs, showing layout components that drop client interest.',
-      badge: 'Conversion Rate'
-    },
-    ahrefs: {
-      name: 'Ahrefs API',
-      role: 'Tracks external domain authority scores, organic search volume, backlink lists, and indexing patterns.',
-      badge: 'Domain Authority'
-    }
-  };
+  const [selectedTechIdx, setSelectedTechIdx] = useState(0);
+  const techStackList = serviceData.inner_tech_stack || [
+    { name: 'Google Ads API', badge: 'Acquisition', role: 'Automates campaign adjustments, bids, keyword optimization, and real-time CPC (cost-per-click) metrics pull.' },
+    { name: 'Meta Conversions API', badge: 'Retargeting', role: 'Direct server-to-server connection that feeds conversion metrics directly back to Facebook ads without relying on browser cookies.' },
+    { name: 'Google Analytics 4', badge: 'Data Reporting', role: 'Tracks user interactions, page session timers, landing path drop-offs, and custom conversion events across the site.' }
+  ];
+  const activeTech = techStackList[selectedTechIdx] || techStackList[0] || {};
 
   return (
     <div className="relative min-h-screen bg-[#030307] text-neutral-300 font-sans pb-24 overflow-x-hidden">
@@ -145,7 +128,7 @@ export default function ServiceDigitalMarketing() {
             transition={{ duration: 0.6 }}
             className="font-mono text-[10px] uppercase tracking-[0.4em] text-amber-500 font-light block"
           >
-            // Performance Marketing Hub
+            {serviceData.page_subtitle || "// Performance Marketing Hub"}
           </motion.span>
           <motion.h1 
             initial={{ opacity: 0, y: 15 }}
@@ -153,8 +136,7 @@ export default function ServiceDigitalMarketing() {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="font-display text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight text-white leading-tight"
           >
-            Engineering High-Yield <br />
-            <span className="text-neutral-400 font-light italic">Digital Campaigns</span>
+            {serviceData.page_hero_title || "Engineering High-Yield Digital Campaigns"}
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0 }}
@@ -162,7 +144,7 @@ export default function ServiceDigitalMarketing() {
             transition={{ duration: 0.8, delay: 0.3 }}
             className="font-light text-neutral-400 text-sm sm:text-lg max-w-xl mx-auto leading-relaxed"
           >
-            We deploy data-backed acquisition strategies, optimizing paid meta funnels, keyword rankings, and visual landing pages to maximize customer volume.
+            {serviceData.page_hero_desc || "We deploy data-backed acquisition strategies, optimizing paid meta funnels, keyword rankings, and visual landing pages to maximize customer volume."}
           </motion.p>
         </div>
       </section>
@@ -521,19 +503,19 @@ export default function ServiceDigitalMarketing() {
           Click on any technology component below to understand its technical role in our system builds.
         </p>
 
-        {/* Tab Buttons grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mb-10">
-          {Object.keys(techStack).map((key) => (
+        {/* Tab Buttons flex layout */}
+        <div className="flex flex-wrap justify-center gap-3 mb-10">
+          {techStackList.map((tech, idx) => (
             <button
-              key={key}
-              onClick={() => setSelectedTech(key)}
-              className={`px-3 py-3 rounded-2xl text-[10px] font-mono font-bold tracking-wider uppercase border transition-all duration-300 ${
-                selectedTech === key 
+              key={idx}
+              onClick={() => setSelectedTechIdx(idx)}
+              className={`px-4 py-3 rounded-2xl text-[10px] font-mono font-bold tracking-wider uppercase border transition-all duration-300 ${
+                selectedTechIdx === idx 
                   ? 'bg-white text-black border-white shadow-lg' 
                   : 'text-neutral-400 bg-white/[0.02] border-white/5 hover:border-white/15'
               }`}
             >
-              {techStack[key].name}
+              {tech.name}
             </button>
           ))}
         </div>
@@ -542,22 +524,22 @@ export default function ServiceDigitalMarketing() {
         <div className="p-8 rounded-3xl bg-[#09090d]/80 border border-white/5 hover:border-amber-500/20 shadow-2xl backdrop-blur-xl relative overflow-hidden min-h-[160px] text-left transition-all">
           <div className="absolute top-4 right-6">
             <span className="font-mono text-[8px] font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400">
-              {techStack[selectedTech].badge}
+              {activeTech.badge || 'Core Stack'}
             </span>
           </div>
           
           <AnimatePresence mode="wait">
             <motion.div
-              key={selectedTech}
+              key={selectedTechIdx}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
               className="space-y-4"
             >
-              <h4 className="font-display font-extrabold text-base text-white">{techStack[selectedTech].name}</h4>
+              <h4 className="font-display font-extrabold text-base text-white">{activeTech.name}</h4>
               <p className="font-light text-neutral-400 text-xs sm:text-sm leading-relaxed max-w-2xl">
-                {techStack[selectedTech].role}
+                {activeTech.role}
               </p>
             </motion.div>
           </AnimatePresence>

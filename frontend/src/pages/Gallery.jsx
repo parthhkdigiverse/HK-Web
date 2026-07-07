@@ -2,6 +2,23 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useContent } from '../context/ContentContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8008';
+
+const resolveImageUrl = (imgSrc) => {
+  if (!imgSrc) return '';
+  // Convert all backslashes to forward slashes first
+  const normalizedSrc = imgSrc.replace(/\\/g, '/');
+  
+  if (normalizedSrc.startsWith('http://') || normalizedSrc.startsWith('https://') || normalizedSrc.startsWith('data:')) {
+    return normalizedSrc;
+  }
+  const cleanSrc = normalizedSrc.startsWith('/') ? normalizedSrc : '/' + normalizedSrc;
+  if (cleanSrc.startsWith('/uploads')) {
+    return `${API_URL}${cleanSrc}`;
+  }
+  return cleanSrc;
+};
+
 export default function Gallery() {
   const { content } = useContent();
   const items = content?.gallery || [];
@@ -64,7 +81,7 @@ export default function Gallery() {
           >
             {/* Gallery Image */}
             <img 
-              src={item.image} 
+              src={resolveImageUrl(item.image)} 
               alt={item.title} 
               className="absolute inset-0 w-full h-full object-cover grayscale opacity-45 group-hover:grayscale-0 group-hover:opacity-75 group-hover:scale-[1.05] transition-all duration-750"
             />
@@ -131,7 +148,7 @@ export default function Gallery() {
                   className="relative max-w-full max-h-full flex flex-col items-center"
                 >
                   <img
-                    src={items[selectedIdx].image}
+                    src={resolveImageUrl(items[selectedIdx].image)}
                     alt={items[selectedIdx].title}
                     className="max-w-full max-h-[65vh] object-contain rounded-2xl border border-white/10 shadow-2xl"
                   />

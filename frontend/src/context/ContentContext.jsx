@@ -37,6 +37,7 @@ export const DEFAULT_CONTENT = {
       num: "01/07",
       title: "Web Engineering",
       desc: "Creating high-fidelity, cinematic, and fast-loading web applications that captivate and convert.",
+      description: "Creating high-fidelity, cinematic, and fast-loading web applications that captivate and convert.",
       tags: ["FRONTEND", "DESIGN"],
       href: "#service-web",
       img: "/images/gallery/design_sprint.png",
@@ -46,6 +47,7 @@ export const DEFAULT_CONTENT = {
       num: "02/07",
       title: "Mobile Applications",
       desc: "Building bespoke native-feeling iOS and Android solutions with fluid gestures and offline sync.",
+      description: "Building bespoke native-feeling iOS and Android solutions with fluid gestures and offline sync.",
       tags: ["IOS", "ANDROID"],
       href: "#service-app",
       img: "/images/gallery/digiverse_workspace.png",
@@ -55,6 +57,7 @@ export const DEFAULT_CONTENT = {
       num: "03/07",
       title: "Custom Software",
       desc: "Constructing robust backend panels, CRM matrices, SaaS dashboards, and multi-tenant systems.",
+      description: "Constructing robust backend panels, CRM matrices, SaaS dashboards, and multi-tenant systems.",
       tags: ["CRM", "ERP"],
       href: "#service-custom-software",
       img: "/images/quantum_banking.png",
@@ -64,6 +67,7 @@ export const DEFAULT_CONTENT = {
       num: "04/07",
       title: "Digital Marketing",
       desc: "Driving traffic and client acquisitions using data-backed strategies, SEO, and paid ads.",
+      description: "Driving traffic and client acquisitions using data-backed strategies, SEO, and paid ads.",
       tags: ["SEO", "GROWTH"],
       href: "#service-digital-marketing",
       img: "/images/gallery/launch_celebration.png",
@@ -73,6 +77,7 @@ export const DEFAULT_CONTENT = {
       num: "05/07",
       title: "Social Media Management",
       desc: "Crafting brand presence, graphic design guides, and content calendars to elevate recognition.",
+      description: "Crafting brand presence, graphic design guides, and content calendars to elevate recognition.",
       tags: ["BRANDING", "CONTENT"],
       href: "#service-social-media-management",
       img: "/images/gallery/cinematic_review.png",
@@ -82,6 +87,7 @@ export const DEFAULT_CONTENT = {
       num: "06/07",
       title: "AI Consulting",
       desc: "Developing automated AI agents, vector database search pipelines, and custom LLM integrations.",
+      description: "Developing automated AI agents, vector database search pipelines, and custom LLM integrations.",
       tags: ["LLM", "AGENTS"],
       href: "#service-ai-consulting",
       img: "/images/gallery/ai_orchestrator.png",
@@ -91,6 +97,7 @@ export const DEFAULT_CONTENT = {
       num: "07/07",
       title: "IT Consulting",
       desc: "Designing Cloud migrations, Docker orchestration files, hardened security, and CI/CD pipelines.",
+      description: "Designing Cloud migrations, Docker orchestration files, hardened security, and CI/CD pipelines.",
       tags: ["CLOUD", "DEVOPS"],
       href: "#service-it-consulting",
       img: "/images/gallery/hardware_calibration.png",
@@ -1087,8 +1094,9 @@ export const DEFAULT_CONTENT = {
 };
 
 export function ContentProvider({ children }) {
-  const [content, setContent] = useState(DEFAULT_CONTENT);
+  const [content, setContent] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
 
   const fetchContent = useCallback(async () => {
     try {
@@ -1097,12 +1105,24 @@ export function ContentProvider({ children }) {
       if (res.ok) {
         const data = await res.json();
         if (data.career_jobs) data.careers = data.career_jobs;
+        if (data.services) {
+          data.services = data.services.map(s => ({
+            ...s,
+            description: s.description || s.desc || ''
+          }));
+        }
         setContent(data);
+      } else {
+        // API returned error, use defaults
+        setContent(prev => prev || DEFAULT_CONTENT);
       }
     } catch (e) {
       console.warn("Failed to fetch dynamic content from API, using defaults:", e);
+      // Only fall back to defaults if we don't have content yet
+      setContent(prev => prev || DEFAULT_CONTENT);
     } finally {
       setLoading(false);
+      setInitialLoadDone(true);
     }
   }, []);
 
@@ -1199,6 +1219,46 @@ export function ContentProvider({ children }) {
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, []);
+
+  // Don't render children until initial API fetch completes
+  // This prevents the flash of default/static content
+  if (!initialLoadDone) {
+    return (
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#0a0a0a',
+        zIndex: 9999
+      }}>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '20px'
+        }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            border: '3px solid rgba(255,255,255,0.1)',
+            borderTopColor: '#a855f7',
+            borderRadius: '50%',
+            animation: 'hk-spin 0.8s linear infinite'
+          }} />
+          <span style={{
+            color: 'rgba(255,255,255,0.4)',
+            fontSize: '13px',
+            fontFamily: "'Inter', sans-serif",
+            letterSpacing: '3px',
+            textTransform: 'uppercase'
+          }}>Loading</span>
+          <style>{`@keyframes hk-spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <ContentContext.Provider value={{ 

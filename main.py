@@ -1302,8 +1302,12 @@ async def get_inquiries(req: VerifyRequest):
     coll = get_collection("inquiries")
     if coll is not None:
         try:
-            cursor = coll.find({}, {"_id": 0}).sort("created_at", -1)
-            return list(cursor)
+            cursor = coll.find({}).sort("created_at", -1)
+            results = []
+            for doc in cursor:
+                doc["_id"] = str(doc["_id"])
+                results.append(doc)
+            return results
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
     return []
@@ -1315,11 +1319,63 @@ async def get_applications(req: VerifyRequest):
     coll = get_collection("career_applications")
     if coll is not None:
         try:
-            cursor = coll.find({}, {"_id": 0}).sort("applied_at", -1)
-            return list(cursor)
+            cursor = coll.find({}).sort("applied_at", -1)
+            results = []
+            for doc in cursor:
+                doc["_id"] = str(doc["_id"])
+                results.append(doc)
+            return results
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
     return []
+
+class DeleteSubmissionRequest(BaseModel):
+    password: str
+    id: str
+    type: str # 'inquiry' or 'application'
+
+@app.post("/api/admin/submissions/delete")
+async def delete_submission(req: DeleteSubmissionRequest):
+    if not verify_admin_password(req.password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    collection_name = "inquiries" if req.type == "inquiry" else "career_applications"
+    coll = get_collection(collection_name)
+    if coll is not None:
+        try:
+            from bson import ObjectId
+            result = coll.delete_one({"_id": ObjectId(req.id)})
+            if result.deleted_count > 0:
+                return {"status": "success", "message": "Submission deleted successfully"}
+            raise HTTPException(status_code=404, detail="Submission not found")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+    raise HTTPException(status_code=500, detail="Database not available")
+
+class ClearSubmissionsRequest(BaseModel):
+    password: str
+    type: str # 'inquiry' or 'application' or 'all'
+
+@app.post("/api/admin/submissions/clear-all")
+async def clear_all_submissions(req: ClearSubmissionsRequest):
+    if not verify_admin_password(req.password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    try:
+        deleted_count = 0
+        if req.type in ["inquiry", "all"]:
+            coll_inq = get_collection("inquiries")
+            if coll_inq is not None:
+                res = coll_inq.delete_many({})
+                deleted_count += res.deleted_count
+        if req.type in ["application", "all"]:
+            coll_app = get_collection("career_applications")
+            if coll_app is not None:
+                res = coll_app.delete_many({})
+                deleted_count += res.deleted_count
+        return {"status": "success", "message": f"Successfully deleted {deleted_count} submissions"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 from app.core.security import verify_password, create_session_token, verify_session_token
 

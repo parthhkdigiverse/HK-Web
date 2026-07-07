@@ -1,7 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useContent } from '../context/ContentContext';
 
-export default function ServiceApp() {
+export default function ServiceApp({ overrideContent }) {
+  const { content: liveContent } = useContent();
+  const content = overrideContent || liveContent;
+
+  const serviceData = content?.services?.find(s => 
+    s.href === '#service-app' || 
+    s.href === 'service-app' || 
+    s.href === '/service-app' ||
+    (s.title && (s.title.toLowerCase().includes('app') || s.title.toLowerCase().includes('mobile')))
+  ) || {};
+
   // 1. Particle positions for Cinematic Hero Background
   const [particles, setParticles] = useState([]);
   const heroRef = useRef(null);
@@ -61,40 +72,13 @@ export default function ServiceApp() {
   const [mockupTab, setMockupTab] = useState('crypto'); // 'crypto' | 'fitness' | 'retail'
 
   // 5. Tech Stack Selector State
-  const [selectedTech, setSelectedTech] = useState('flutter');
-
-  const techStack = {
-    flutter: {
-      name: 'Flutter (Dart)',
-      role: 'Google\'s high-performance UI toolkit. Compiles to native ARM machine code for iOS and Android, allowing 120 FPS render pipelines.',
-      badge: 'Primary Framework'
-    },
-    reactnative: {
-      name: 'React Native',
-      role: 'Builds native applications using React and JavaScript. Bridges component logic to platform UI views seamlessly.',
-      badge: 'Hybrid Bridge'
-    },
-    swift: {
-      name: 'Swift / SwiftUI',
-      role: 'Apple\'s native language for iOS. Enables high-fidelity widget views, Apple Pay configurations, and direct hardware API calls.',
-      badge: 'Native iOS'
-    },
-    kotlin: {
-      name: 'Kotlin',
-      role: 'Google\'s preferred language for Android. Ideal for building native background services, sensor polling, and notification channels.',
-      badge: 'Native Android'
-    },
-    sqlite: {
-      name: 'SQLite / Room',
-      role: 'Embedded serverless database that stores application data locally, facilitating immediate offline operations.',
-      badge: 'Local Database'
-    },
-    firebase: {
-      name: 'Firebase (FCM)',
-      role: 'Manages real-time cloud data streams, Google Analytics reporting, crash logs, and remote push notification deliveries.',
-      badge: 'Cloud Services'
-    }
-  };
+  const [selectedTechIdx, setSelectedTechIdx] = useState(0);
+  const techStackList = serviceData.inner_tech_stack || [
+    { name: 'Flutter (Dart)', badge: 'Primary Framework', role: 'Google\'s high-performance UI toolkit. Compiles to native ARM machine code for iOS and Android, allowing 120 FPS render pipelines.' },
+    { name: 'React Native', badge: 'Hybrid Bridge', role: 'Builds native applications using React and JavaScript. Bridges component logic to platform UI views seamlessly.' },
+    { name: 'Swift / SwiftUI', badge: 'Native iOS', role: 'Apple\'s native language for iOS. Enables high-fidelity widget views, Apple Pay configurations, and direct hardware API calls.' }
+  ];
+  const activeTech = techStackList[selectedTechIdx] || techStackList[0] || {};
 
   return (
     <div className="relative min-h-screen bg-[#030307] text-neutral-300 font-sans pb-24 overflow-x-hidden">
@@ -145,7 +129,7 @@ export default function ServiceApp() {
             transition={{ duration: 0.6 }}
             className="font-mono text-[10px] uppercase tracking-[0.4em] text-cyan-400 font-light block"
           >
-            // Mobile Systems Studio
+            {serviceData.page_subtitle || "// Mobile Systems Studio"}
           </motion.span>
           <motion.h1 
             initial={{ opacity: 0, y: 15 }}
@@ -153,8 +137,7 @@ export default function ServiceApp() {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="font-display text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight text-white leading-tight"
           >
-            Engineering Native <br />
-            <span className="text-neutral-400 font-light italic">Mobile Interfaces</span>
+            {serviceData.page_hero_title || "Engineering Native Mobile Interfaces"}
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0 }}
@@ -162,7 +145,7 @@ export default function ServiceApp() {
             transition={{ duration: 0.8, delay: 0.3 }}
             className="font-light text-neutral-400 text-sm sm:text-lg max-w-xl mx-auto leading-relaxed"
           >
-            We develop premium iOS and Android applications utilizing Flutter or Swift, optimizing native frame updates, local caches, and seamless sensor integrations.
+            {serviceData.page_hero_desc || "We develop premium iOS and Android applications utilizing Flutter or Swift, optimizing native frame updates, local caches, and seamless sensor integrations."}
           </motion.p>
         </div>
       </section>
@@ -180,7 +163,7 @@ export default function ServiceApp() {
         {/* Simulator Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center text-left">
           
-          {/* Controls & Gauges (Left) */}
+          {/* Controls & Gauges (Left - 5 columns) */}
           <div className="lg:col-span-5 space-y-8 bg-white/[0.01] border border-white/5 p-8 rounded-3xl backdrop-blur-md">
             
             {/* Mode Switcher */}
@@ -195,7 +178,7 @@ export default function ServiceApp() {
                       : 'text-neutral-400 hover:text-white'
                   }`}
                 >
-                  WebView Hybrid
+                  Standard Template
                 </button>
                 <button 
                   onClick={() => setPerformanceMode('optimized')}
@@ -205,56 +188,59 @@ export default function ServiceApp() {
                       : 'text-neutral-400 hover:text-white'
                   }`}
                 >
-                  Native Compiled
+                  HK Compiled
                 </button>
               </div>
             </div>
 
-            {/* Gauges */}
+            {/* Gauges parameters list */}
             <div className="space-y-5 font-mono text-[11px]">
               
+              {/* Load Time parameter */}
               <div className="space-y-1.5">
                 <div className="flex justify-between">
-                  <span>GESTURE RESPONSE TIMING:</span>
+                  <span>GESTURE RESPONSE:</span>
                   <span className={`font-bold ${performanceMode === 'optimized' ? 'text-cyan-400' : 'text-rose-400'}`}>
-                    {performanceMode === 'optimized' ? '5ms (Instant)' : '110ms (Sluggish)'}
+                    {performanceMode === 'optimized' ? '4.2ms (Zero-Lag)' : '94ms (Noticeable)'}
                   </span>
                 </div>
                 <div className="w-full h-1.5 bg-neutral-800 rounded-full overflow-hidden">
                   <motion.div 
-                    animate={{ width: performanceMode === 'optimized' ? '5%' : '90%' }}
+                    animate={{ width: performanceMode === 'optimized' ? '4%' : '90%' }}
                     transition={{ type: "spring", stiffness: 100 }}
                     className={`h-full ${performanceMode === 'optimized' ? 'bg-cyan-500' : 'bg-rose-500'}`}
                   />
                 </div>
               </div>
 
+              {/* Package size parameter */}
               <div className="space-y-1.5">
                 <div className="flex justify-between">
-                  <span>BATTERY CONSUMPTION RATE:</span>
+                  <span>BATTERY DRAIN RATE:</span>
                   <span className={`font-bold ${performanceMode === 'optimized' ? 'text-cyan-400' : 'text-rose-400'}`}>
-                    {performanceMode === 'optimized' ? 'Minimal' : 'Extremely High'}
+                    {performanceMode === 'optimized' ? 'Low (-3x)' : 'High (Constant Bridging)'}
                   </span>
                 </div>
                 <div className="w-full h-1.5 bg-neutral-800 rounded-full overflow-hidden">
                   <motion.div 
-                    animate={{ width: performanceMode === 'optimized' ? '12%' : '85%' }}
+                    animate={{ width: performanceMode === 'optimized' ? '15%' : '85%' }}
                     transition={{ type: "spring", stiffness: 100 }}
                     className={`h-full ${performanceMode === 'optimized' ? 'bg-cyan-500' : 'bg-rose-500'}`}
                   />
                 </div>
               </div>
 
+              {/* Rendering rate parameter */}
               <div className="space-y-1.5">
                 <div className="flex justify-between">
-                  <span>REFRESH FREQUENCY:</span>
+                  <span>RENDERING METRICS:</span>
                   <span className={`font-bold ${performanceMode === 'optimized' ? 'text-cyan-400' : 'text-rose-400'}`}>
-                    {performanceMode === 'optimized' ? '120 FPS' : '30 FPS'}
+                    {performanceMode === 'optimized' ? '120 FPS Native' : '45 FPS Web-View'}
                   </span>
                 </div>
                 <div className="w-full h-1.5 bg-neutral-800 rounded-full overflow-hidden">
                   <motion.div 
-                    animate={{ width: performanceMode === 'optimized' ? '100%' : '25%' }}
+                    animate={{ width: performanceMode === 'optimized' ? '100%' : '38%' }}
                     transition={{ type: "spring", stiffness: 100 }}
                     className={`h-full ${performanceMode === 'optimized' ? 'bg-cyan-500' : 'bg-rose-500'}`}
                   />
@@ -265,19 +251,22 @@ export default function ServiceApp() {
 
           </div>
 
-          {/* Rendering Box (Right) */}
+          {/* Rendering Box (Right - 7 columns) */}
           <div className="lg:col-span-7 bg-[#09090d]/80 border border-white/5 rounded-3xl p-8 h-80 flex flex-col justify-between relative overflow-hidden backdrop-blur-md">
+            
+            {/* Grid gridlines */}
             <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none" />
 
             <div className="flex justify-between items-center pb-4 border-b border-white/5 relative z-10">
-              <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-500">Live Gesture Rendering Test</span>
+              <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-500">Live Frame Rendering Test</span>
               <span className={`font-mono text-[9px] uppercase tracking-widest px-2 py-0.5 rounded ${
                 performanceMode === 'optimized' ? 'bg-cyan-500/10 text-cyan-400' : 'bg-rose-500/10 text-rose-400'
               }`}>
-                {performanceMode === 'optimized' ? 'Native Rendering' : 'UI Thread Overload'}
+                {performanceMode === 'optimized' ? 'Smooth GPU Rendering' : 'CPU Bottle-Neck'}
               </span>
             </div>
 
+            {/* Scrolling test box */}
             <div className="relative flex-1 flex items-center justify-center">
               <motion.div
                 animate={performanceMode === 'optimized' 
@@ -301,7 +290,7 @@ export default function ServiceApp() {
             </div>
 
             <div className="text-center font-mono text-[9px] text-neutral-500 relative z-10">
-              // The cyan box demonstrates frame dropping during thread operations.
+              // The cyan box demonstrates responsive gestures on device frames.
             </div>
 
           </div>
@@ -528,19 +517,19 @@ export default function ServiceApp() {
           Click on any technology component below to understand its technical role in our system builds.
         </p>
 
-        {/* Tab Buttons grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mb-10">
-          {Object.keys(techStack).map((key) => (
+        {/* Tab Buttons flex layout */}
+        <div className="flex flex-wrap justify-center gap-3 mb-10">
+          {techStackList.map((tech, idx) => (
             <button
-              key={key}
-              onClick={() => setSelectedTech(key)}
-              className={`px-3 py-3 rounded-2xl text-[10px] font-mono font-bold tracking-wider uppercase border transition-all duration-300 ${
-                selectedTech === key 
+              key={idx}
+              onClick={() => setSelectedTechIdx(idx)}
+              className={`px-4 py-3 rounded-2xl text-[10px] font-mono font-bold tracking-wider uppercase border transition-all duration-300 ${
+                selectedTechIdx === idx 
                   ? 'bg-white text-black border-white shadow-lg' 
                   : 'text-neutral-400 bg-white/[0.02] border-white/5 hover:border-white/15'
               }`}
             >
-              {techStack[key].name}
+              {tech.name}
             </button>
           ))}
         </div>
@@ -549,22 +538,22 @@ export default function ServiceApp() {
         <div className="p-8 rounded-3xl bg-[#09090d]/80 border border-white/5 hover:border-cyan-500/20 shadow-2xl backdrop-blur-xl relative overflow-hidden min-h-[160px] text-left transition-all">
           <div className="absolute top-4 right-6">
             <span className="font-mono text-[8px] font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
-              {techStack[selectedTech].badge}
+              {activeTech.badge || 'Core Stack'}
             </span>
           </div>
           
           <AnimatePresence mode="wait">
             <motion.div
-              key={selectedTech}
+              key={selectedTechIdx}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
               className="space-y-4"
             >
-              <h4 className="font-display font-extrabold text-base text-white">{techStack[selectedTech].name}</h4>
+              <h4 className="font-display font-extrabold text-base text-white">{activeTech.name}</h4>
               <p className="font-light text-neutral-400 text-xs sm:text-sm leading-relaxed max-w-2xl">
-                {techStack[selectedTech].role}
+                {activeTech.role}
               </p>
             </motion.div>
           </AnimatePresence>

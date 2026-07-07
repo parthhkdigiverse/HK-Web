@@ -1,7 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useContent } from '../context/ContentContext';
 
-export default function ServiceWeb() {
+export default function ServiceWeb({ overrideContent }) {
+  const { content: liveContent } = useContent();
+  const content = overrideContent || liveContent;
+
+  // Find current Web service details from database with flexible matching
+  const serviceData = content?.services?.find(s => 
+    s.href === '#service-web' || 
+    s.href === 'service-web' || 
+    s.href === '/service-web' ||
+    (s.title && s.title.toLowerCase().includes('web'))
+  ) || {};
+
   // 1. Particle positions for Cinematic Hero Background
   const [particles, setParticles] = useState([]);
   const heroRef = useRef(null);
@@ -47,56 +59,34 @@ export default function ServiceWeb() {
   // 2. Speed vs Bloat State
   const [performanceMode, setPerformanceMode] = useState('optimized'); // 'bloated' | 'optimized'
   
-  // 3. Feature Wireframe Graph Checklist States
-  const [features, setFeatures] = useState({
-    webgl: true,
-    db: true,
-    cicd: false,
-    admin: false
-  });
+  // 3. Feature Wireframe Graph Checklist States (Mapped dynamically from serviceData)
+  const [activeFeatures, setActiveFeatures] = useState([]);
+  
+  useEffect(() => {
+    if (serviceData.inner_features) {
+      setActiveFeatures(serviceData.inner_features.map((_, i) => i < 2)); // Default first 2 active
+    }
+  }, [serviceData]);
 
-  const toggleFeature = (key) => {
-    setFeatures(prev => ({ ...prev, [key]: !prev[key] }));
+  const toggleFeature = (index) => {
+    setActiveFeatures(prev => {
+      const copy = [...prev];
+      copy[index] = !copy[index];
+      return copy;
+    });
   };
 
   // 4. Laptop Mockup Frame Tabs State
   const [mockupTab, setMockupTab] = useState('luxury'); // 'luxury' | 'neon' | 'editorial'
 
   // 5. Tech Stack Selector State
-  const [selectedTech, setSelectedTech] = useState('react');
-
-  const techStack = {
-    react: {
-      name: 'React.js',
-      role: 'Frontend core framework that enables component reusability, quick routing, and reactive virtual DOM state updates.',
-      badge: 'Interactive UI'
-    },
-    nextjs: {
-      name: 'Next.js',
-      role: 'Server-side rendering (SSR), static site generation (SSG), and optimized image parameters for rapid load times.',
-      badge: 'SEO & Speed'
-    },
-    framer: {
-      name: 'Framer Motion',
-      role: 'Enables high-fidelity physics-based interactions, spring dynamics, and entrance keyframes for layout blocks.',
-      badge: 'Gestures & Animations'
-    },
-    three: {
-      name: 'Three.js (WebGL)',
-      role: 'Renders custom GPU-accelerated 3D shaders, organic particle meshes, and immersive canvas environments directly in the browser.',
-      badge: 'WebGL Graphics'
-    },
-    fastapi: {
-      name: 'FastAPI (Python)',
-      role: 'Powers secure backend API gateways, microservices, and databases with high performance and automatic documentation.',
-      badge: 'API Core'
-    },
-    postgres: {
-      name: 'PostgreSQL',
-      role: 'Enterprise-grade relational database for structural data, system parameters, transaction logs, and secure user entries.',
-      badge: 'Database Layer'
-    }
-  };
+  const [selectedTechIdx, setSelectedTechIdx] = useState(0);
+  const techStackList = serviceData.inner_tech_stack || [
+    { name: 'React.js', badge: 'Interactive UI', role: 'Component architecture enabling fast component rendering.' },
+    { name: 'FastAPI (Python)', badge: 'API Core', role: 'API endpoints with automatic async route processing.' },
+    { name: 'PostgreSQL', badge: 'Database', role: 'Secure transactional storage and query indexing layers.' }
+  ];
+  const activeTech = techStackList[selectedTechIdx] || techStackList[0] || {};
 
   return (
     <div className="relative min-h-screen bg-[#030307] text-neutral-300 font-sans pb-24 overflow-x-hidden">
@@ -147,7 +137,7 @@ export default function ServiceWeb() {
             transition={{ duration: 0.6 }}
             className="font-mono text-[10px] uppercase tracking-[0.4em] text-amber-500 font-light block"
           >
-            // Web Engineering Studio
+            {serviceData.page_subtitle || "// Web Engineering Studio"}
           </motion.span>
           <motion.h1 
             initial={{ opacity: 0, y: 15 }}
@@ -155,8 +145,7 @@ export default function ServiceWeb() {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="font-display text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight text-white leading-tight"
           >
-            Architecting High-Fidelity <br />
-            <span className="text-neutral-400 font-light italic">Web Spaces</span>
+            {serviceData.page_hero_title || "Architecting High-Fidelity Web Spaces"}
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0 }}
@@ -164,7 +153,7 @@ export default function ServiceWeb() {
             transition={{ duration: 0.8, delay: 0.3 }}
             className="font-light text-neutral-400 text-sm sm:text-lg max-w-xl mx-auto leading-relaxed"
           >
-            We replace rigid standard templates with custom component architecture. Hand-coded for visual wow-factor, Lighthouse speeds, and scaling parameters.
+            {serviceData.page_hero_desc || "We replace rigid standard templates with custom component architecture. Hand-coded for visual wow-factor, Lighthouse speeds, and scaling parameters."}
           </motion.p>
         </div>
       </section>
@@ -331,33 +320,32 @@ export default function ServiceWeb() {
           
           {/* Checklist side (Left - 4 columns) */}
           <div className="lg:col-span-4 flex flex-col gap-4 justify-center">
-            {[
-              { key: 'webgl', label: 'WebGL Custom Canvas', desc: 'Renders GPU shaders and particle meshes' },
-              { key: 'db', label: 'Zero-Trust DB Mesh', desc: 'Secure PostgreSQL parameters' },
-              { key: 'cicd', label: 'Automated CI/CD', desc: 'Continuous testing & Docker hooks' },
-              { key: 'admin', label: 'Admin CMS Panel', desc: 'Custom content builder access' }
-            ].map(item => (
+            {(serviceData.inner_features || [
+              { title: 'Cinematic Frontends', desc: 'GPU-accelerated interface layouts with smooth gesture physics.' },
+              { title: 'Distributed Backend Integration', desc: 'Secure backend microservices configured for horizontal auto-scaling.' },
+              { title: 'Continuous Integration Flow', desc: 'Automated CI/CD pipelines deploying builds directly to cloud nodes.' }
+            ]).map((item, idx) => (
               <div 
-                key={item.key}
-                onClick={() => toggleFeature(item.key)}
-                className={`p-5 rounded-2xl border transition-all cursor-pointer select-none ${
-                  features[item.key] 
+                key={idx}
+                onClick={() => toggleFeature(idx)}
+                className={`p-5 rounded-2xl border transition-all cursor-pointer select-none text-left ${
+                  activeFeatures[idx] 
                     ? 'bg-amber-500/5 border-amber-500/30 shadow-md' 
                     : 'bg-white/[0.01] border-white/5 hover:border-white/10'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
-                    features[item.key] ? 'border-amber-400 bg-amber-400' : 'border-neutral-600'
+                    activeFeatures[idx] ? 'border-amber-400 bg-amber-400' : 'border-neutral-600'
                   }`}>
-                    {features[item.key] && (
+                    {activeFeatures[idx] && (
                       <svg className="w-3 h-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                       </svg>
                     )}
                   </div>
                   <div>
-                    <h4 className="font-display font-bold text-xs text-white">{item.label}</h4>
+                    <h4 className="font-display font-bold text-xs text-white">{item.title}</h4>
                     <p className="text-[10px] text-neutral-500 mt-0.5">{item.desc}</p>
                   </div>
                 </div>
@@ -376,7 +364,7 @@ export default function ServiceWeb() {
               <line x1="80" y1="150" x2="200" y2="150" stroke="#3b82f6" strokeWidth="1.5" />
               
               {/* Edge -> WebGL */}
-              {features.webgl && (
+              {activeFeatures[0] && (
                 <path d="M 200 150 Q 275 80 350 80" fill="none" stroke="#fbbf24" strokeWidth="2" strokeDasharray="5,5" className="animate-[dash_10s_linear_infinite]" />
               )}
               
@@ -384,17 +372,17 @@ export default function ServiceWeb() {
               <line x1="200" y1="150" x2="350" y2="150" stroke="#10b981" strokeWidth="1.5" />
 
               {/* FastAPI -> DB */}
-              {features.db && (
+              {activeFeatures[1] && (
                 <path d="M 350 150 Q 425 220 500 220" fill="none" stroke="#6366f1" strokeWidth="2" strokeDasharray="5,5" className="animate-[dash_10s_linear_infinite]" />
               )}
 
               {/* FastAPI -> Admin */}
-              {features.admin && (
+              {activeFeatures[2] && (
                 <path d="M 350 150 Q 425 80 500 80" fill="none" stroke="#ec4899" strokeWidth="2" />
               )}
 
               {/* Edge -> CI/CD */}
-              {features.cicd && (
+              {activeFeatures[3] && (
                 <path d="M 200 150 Q 275 220 350 220" fill="none" stroke="#a855f7" strokeWidth="2" strokeDasharray="4,4" />
               )}
 
@@ -408,24 +396,24 @@ export default function ServiceWeb() {
               <text x="200" y="153" fill="white" fontSize="8" fontFamily="monospace" textAnchor="middle">EDGE CDN</text>
 
               {/* WebGL Canvas Node */}
-              <circle cx="350" cy="80" r="25" fill="#09090d" stroke={features.webgl ? "#fbbf24" : "rgba(255,255,255,0.05)"} strokeWidth="2" />
-              <text x="350" y="83" fill={features.webgl ? "white" : "#444"} fontSize="8" fontFamily="monospace" textAnchor="middle">WEBGL</text>
+              <circle cx="350" cy="80" r="25" fill="#09090d" stroke={activeFeatures[0] ? "#fbbf24" : "rgba(255,255,255,0.05)"} strokeWidth="2" />
+              <text x="350" y="83" fill={activeFeatures[0] ? "white" : "#444"} fontSize="8" fontFamily="monospace" textAnchor="middle">WEBGL</text>
 
               {/* FastAPI Node */}
               <circle cx="350" cy="150" r="25" fill="#09090d" stroke="#10b981" strokeWidth="2" />
               <text x="350" y="153" fill="white" fontSize="8" fontFamily="monospace" textAnchor="middle">FASTAPI</text>
 
               {/* CI/CD Node */}
-              <circle cx="350" cy="220" r="25" fill="#09090d" stroke={features.cicd ? "#a855f7" : "rgba(255,255,255,0.05)"} strokeWidth="2" />
-              <text x="350" y="223" fill={features.cicd ? "white" : "#444"} fontSize="8" fontFamily="monospace" textAnchor="middle">CI / CD</text>
+              <circle cx="350" cy="220" r="25" fill="#09090d" stroke={activeFeatures[3] ? "#a855f7" : "rgba(255,255,255,0.05)"} strokeWidth="2" />
+              <text x="350" y="223" fill={activeFeatures[3] ? "white" : "#444"} fontSize="8" fontFamily="monospace" textAnchor="middle">CI / CD</text>
 
               {/* Admin Panel Node */}
-              <circle cx="500" cy="80" r="25" fill="#09090d" stroke={features.admin ? "#ec4899" : "rgba(255,255,255,0.05)"} strokeWidth="2" />
-              <text x="500" y="83" fill={features.admin ? "white" : "#444"} fontSize="8" fontFamily="monospace" textAnchor="middle">ADMIN</text>
+              <circle cx="500" cy="80" r="25" fill="#09090d" stroke={activeFeatures[2] ? "#ec4899" : "rgba(255,255,255,0.05)"} strokeWidth="2" />
+              <text x="500" y="83" fill={activeFeatures[2] ? "white" : "#444"} fontSize="8" fontFamily="monospace" textAnchor="middle">ADMIN</text>
 
               {/* DB Node */}
-              <circle cx="500" cy="220" r="25" fill="#09090d" stroke={features.db ? "#6366f1" : "rgba(255,255,255,0.05)"} strokeWidth="2" />
-              <text x="500" y="223" fill={features.db ? "white" : "#444"} fontSize="8" fontFamily="monospace" textAnchor="middle">DB MESH</text>
+              <circle cx="500" cy="220" r="25" fill="#09090d" stroke={activeFeatures[1] ? "#6366f1" : "rgba(255,255,255,0.05)"} strokeWidth="2" />
+              <text x="500" y="223" fill={activeFeatures[1] ? "white" : "#444"} fontSize="8" fontFamily="monospace" textAnchor="middle">DB MESH</text>
 
             </svg>
 
@@ -552,19 +540,19 @@ export default function ServiceWeb() {
           Click on any technology component below to understand its technical role in our system builds.
         </p>
 
-        {/* Tab Buttons grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mb-10">
-          {Object.keys(techStack).map((key) => (
+        {/* Tab Buttons flex layout */}
+        <div className="flex flex-wrap justify-center gap-3 mb-10">
+          {techStackList.map((tech, idx) => (
             <button
-              key={key}
-              onClick={() => setSelectedTech(key)}
-              className={`px-3 py-3 rounded-2xl text-[10px] font-mono font-bold tracking-wider uppercase border transition-all duration-300 ${
-                selectedTech === key 
+              key={idx}
+              onClick={() => setSelectedTechIdx(idx)}
+              className={`px-4 py-3 rounded-2xl text-[10px] font-mono font-bold tracking-wider uppercase border transition-all duration-300 ${
+                selectedTechIdx === idx 
                   ? 'bg-white text-black border-white shadow-lg' 
                   : 'text-neutral-400 bg-white/[0.02] border-white/5 hover:border-white/15'
               }`}
             >
-              {techStack[key].name}
+              {tech.name}
             </button>
           ))}
         </div>
@@ -573,22 +561,22 @@ export default function ServiceWeb() {
         <div className="p-8 rounded-3xl bg-[#09090d]/80 border border-white/5 hover:border-amber-500/20 shadow-2xl backdrop-blur-xl relative overflow-hidden min-h-[160px] text-left transition-all">
           <div className="absolute top-4 right-6">
             <span className="font-mono text-[8px] font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400">
-              {techStack[selectedTech].badge}
+              {activeTech.badge || 'Core Stack'}
             </span>
           </div>
           
           <AnimatePresence mode="wait">
             <motion.div
-              key={selectedTech}
+              key={selectedTechIdx}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
               className="space-y-4"
             >
-              <h4 className="font-display font-extrabold text-base text-white">{techStack[selectedTech].name}</h4>
+              <h4 className="font-display font-extrabold text-base text-white">{activeTech.name}</h4>
               <p className="font-light text-neutral-400 text-xs sm:text-sm leading-relaxed max-w-2xl">
-                {techStack[selectedTech].role}
+                {activeTech.role}
               </p>
             </motion.div>
           </AnimatePresence>

@@ -1,7 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useContent } from '../context/ContentContext';
 
-export default function ServiceSocialMedia() {
+export default function ServiceSocialMedia({ overrideContent }) {
+  const { content: liveContent } = useContent();
+  const content = overrideContent || liveContent;
+  const serviceData = content?.services?.find(s => 
+    s.href === '#service-social-media-management' || 
+    s.href === 'service-social-media-management' || 
+    s.href === '/service-social-media-management' ||
+    (s.title && (s.title.toLowerCase().includes('social') || s.title.toLowerCase().includes('media')))
+  ) || {};
+
   // 1. Particle positions for Cinematic Hero Background
   const [particles, setParticles] = useState([]);
   const heroRef = useRef(null);
@@ -61,40 +71,13 @@ export default function ServiceSocialMedia() {
   const [mockupTab, setMockupTab] = useState('linkedin'); // 'linkedin' | 'instagram' | 'twitter'
 
   // 5. Tech Stack Selector State
-  const [selectedTech, setSelectedTech] = useState('photoshop');
-
-  const techStack = {
-    photoshop: {
-      name: 'Adobe Photoshop',
-      role: 'Crafts high-fidelity layouts, composite editorial graphic plates, and pixel-perfect image visual adjustments.',
-      badge: 'Visual Design'
-    },
-    illustrator: {
-      name: 'Adobe Illustrator',
-      role: 'Engineers vector logo assets, structural icons, editorial brand shapes, and clean brand packaging layouts.',
-      badge: 'Vector Graphics'
-    },
-    premiere: {
-      name: 'Adobe Premiere / AE',
-      role: 'Produces fluid video micro-animations, reels transition cuts, audio synchronization, and visual effects pipelines.',
-      badge: 'Motion Video'
-    },
-    figma: {
-      name: 'Figma Teams',
-      role: 'Facilitates cooperative UI wireframing, post grid puzzle curation, and real-time client feedback templates.',
-      badge: 'Collaborative Layout'
-    },
-    buffer: {
-      name: 'Buffer Scheduler',
-      role: 'Automates multi-channel distribution calendars, managing scheduled queues across LinkedIn, Twitter, and Meta.',
-      badge: 'Social Automation'
-    },
-    canva: {
-      name: 'Canva Pro APIs',
-      role: 'Enables quick collaborative template reviews, sharing draft outlines, and managing rapid brand asset libraries.',
-      badge: 'Asset Sharing'
-    }
-  };
+  const [selectedTechIdx, setSelectedTechIdx] = useState(0);
+  const techStackList = serviceData.inner_tech_stack || [
+    { name: 'Adobe Photoshop', badge: 'Visual Design', role: 'Crafts high-fidelity layouts, composite editorial graphic plates, and pixel-perfect image visual adjustments.' },
+    { name: 'Adobe Illustrator', badge: 'Vector Graphics', role: 'Engineers vector logo assets, structural icons, editorial brand shapes, and clean brand packaging layouts.' },
+    { name: 'Adobe Premiere / AE', badge: 'Motion Video', role: 'Produces fluid video micro-animations, reels transition cuts, audio synchronization, and visual effects pipelines.' }
+  ];
+  const activeTech = techStackList[selectedTechIdx] || techStackList[0] || {};
 
   return (
     <div className="relative min-h-screen bg-[#030307] text-neutral-300 font-sans pb-24 overflow-x-hidden">
@@ -145,7 +128,7 @@ export default function ServiceSocialMedia() {
             transition={{ duration: 0.6 }}
             className="font-mono text-[10px] uppercase tracking-[0.4em] text-pink-400 font-light block"
           >
-            // Brand Management Agency
+            {serviceData.page_subtitle || "// Brand Management Agency"}
           </motion.span>
           <motion.h1 
             initial={{ opacity: 0, y: 15 }}
@@ -153,8 +136,7 @@ export default function ServiceSocialMedia() {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="font-display text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight text-white leading-tight"
           >
-            Curating Immersive <br />
-            <span className="text-neutral-400 font-light italic">Brand Stories</span>
+            {serviceData.page_hero_title || "Curating Immersive Brand Stories"}
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0 }}
@@ -162,7 +144,7 @@ export default function ServiceSocialMedia() {
             transition={{ duration: 0.8, delay: 0.3 }}
             className="font-light text-neutral-400 text-sm sm:text-lg max-w-xl mx-auto leading-relaxed"
           >
-            We structure editorial visual grids, creating bespoke brand design manuals and high-end digital assets that stand out across global networks.
+            {serviceData.page_hero_desc || "We structure editorial visual grids, creating bespoke brand design manuals and high-end digital assets that stand out across global networks."}
           </motion.p>
         </div>
       </section>
@@ -521,19 +503,19 @@ export default function ServiceSocialMedia() {
           Click on any technology component below to understand its technical role in our system builds.
         </p>
 
-        {/* Tab Buttons grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mb-10">
-          {Object.keys(techStack).map((key) => (
+        {/* Tab Buttons flex layout */}
+        <div className="flex flex-wrap justify-center gap-3 mb-10">
+          {techStackList.map((tech, idx) => (
             <button
-              key={key}
-              onClick={() => setSelectedTech(key)}
-              className={`px-3 py-3 rounded-2xl text-[10px] font-mono font-bold tracking-wider uppercase border transition-all duration-300 ${
-                selectedTech === key 
+              key={idx}
+              onClick={() => setSelectedTechIdx(idx)}
+              className={`px-4 py-3 rounded-2xl text-[10px] font-mono font-bold tracking-wider uppercase border transition-all duration-300 ${
+                selectedTechIdx === idx 
                   ? 'bg-white text-black border-white shadow-lg' 
                   : 'text-neutral-400 bg-white/[0.02] border-white/5 hover:border-white/15'
               }`}
             >
-              {techStack[key].name}
+              {tech.name}
             </button>
           ))}
         </div>
@@ -542,22 +524,22 @@ export default function ServiceSocialMedia() {
         <div className="p-8 rounded-3xl bg-[#09090d]/80 border border-white/5 hover:border-pink-500/20 shadow-2xl backdrop-blur-xl relative overflow-hidden min-h-[160px] text-left transition-all">
           <div className="absolute top-4 right-6">
             <span className="font-mono text-[8px] font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-pink-500/10 border border-pink-500/20 text-pink-400">
-              {techStack[selectedTech].badge}
+              {activeTech.badge || 'Core Stack'}
             </span>
           </div>
           
           <AnimatePresence mode="wait">
             <motion.div
-              key={selectedTech}
+              key={selectedTechIdx}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
               className="space-y-4"
             >
-              <h4 className="font-display font-extrabold text-base text-white">{techStack[selectedTech].name}</h4>
+              <h4 className="font-display font-extrabold text-base text-white">{activeTech.name}</h4>
               <p className="font-light text-neutral-400 text-xs sm:text-sm leading-relaxed max-w-2xl">
-                {techStack[selectedTech].role}
+                {activeTech.role}
               </p>
             </motion.div>
           </AnimatePresence>

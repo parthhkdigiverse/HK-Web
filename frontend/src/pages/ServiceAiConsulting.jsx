@@ -1,7 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useContent } from '../context/ContentContext';
 
-export default function ServiceAiConsulting() {
+export default function ServiceAiConsulting({ overrideContent }) {
+  const { content: liveContent } = useContent();
+  const content = overrideContent || liveContent;
+  const serviceData = content?.services?.find(s => 
+    s.href === '#service-ai-consulting' || 
+    s.href === 'service-ai-consulting' || 
+    s.href === '/service-ai-consulting' ||
+    (s.title && s.title.toLowerCase().includes('ai'))
+  ) || {};
+
   // 1. Particle positions for Cinematic Hero Background
   const [particles, setParticles] = useState([]);
   const heroRef = useRef(null);
@@ -61,40 +71,13 @@ export default function ServiceAiConsulting() {
   const [mockupTab, setMockupTab] = useState('agent'); // 'agent' | 'rag' | 'prompt'
 
   // 5. Tech Stack Selector State
-  const [selectedTech, setSelectedTech] = useState('openai');
-
-  const techStack = {
-    openai: {
-      name: 'OpenAI GPT-4o API',
-      role: 'Integrated for complex reasoning tasks, strategic planning, conversational logic, and structured JSON outputs.',
-      badge: 'Reasoning Models'
-    },
-    anthropic: {
-      name: 'Anthropic Claude 3.5',
-      role: 'Utilized for long-context file processing, code generation tasks, detailed reports writing, and advanced parsing.',
-      badge: 'Context Processing'
-    },
-    langchain: {
-      name: 'LangChain (Python)',
-      role: 'Core framework for managing multi-agent workflows, memory retrieval caches, custom tool bindings, and prompt schedules.',
-      badge: 'Agent Orchestration'
-    },
-    llama: {
-      name: 'Llama 3 (Meta)',
-      role: 'Hosted locally or on private clouds (e.g. AWS/GCP) to process sensitive user queries without external API leaks.',
-      badge: 'Private LLM'
-    },
-    chromadb: {
-      name: 'ChromaDB / Pinecone',
-      role: 'Vector databases utilized for semantic search matching, parsing user document caches, and RAG contextual fetches.',
-      badge: 'Vector Index'
-    },
-    huggingface: {
-      name: 'Hugging Face',
-      role: 'Repository of custom model weights, embeddings generation tools, and localized tokenizer configurations.',
-      badge: 'Model Weight repo'
-    }
-  };
+  const [selectedTechIdx, setSelectedTechIdx] = useState(0);
+  const techStackList = serviceData.inner_tech_stack || [
+    { name: 'OpenAI GPT-4o API', badge: 'Reasoning Models', role: 'Integrated for complex reasoning tasks, strategic planning, conversational logic, and structured JSON outputs.' },
+    { name: 'Anthropic Claude 3.5', badge: 'Context Processing', role: 'Utilized for long-context file processing, code generation tasks, detailed reports writing, and advanced parsing.' },
+    { name: 'LangChain (Python)', badge: 'Agent Orchestration', role: 'Core framework for managing multi-agent workflows, memory retrieval caches, custom tool bindings, and prompt schedules.' }
+  ];
+  const activeTech = techStackList[selectedTechIdx] || techStackList[0] || {};
 
   return (
     <div className="relative min-h-screen bg-[#030307] text-neutral-300 font-sans pb-24 overflow-x-hidden">
@@ -145,7 +128,7 @@ export default function ServiceAiConsulting() {
             transition={{ duration: 0.6 }}
             className="font-mono text-[10px] uppercase tracking-[0.4em] text-rose-400 font-light block"
           >
-            // Intelligent Systems Studio
+            {serviceData.page_subtitle || "// Intelligent Systems Studio"}
           </motion.span>
           <motion.h1 
             initial={{ opacity: 0, y: 15 }}
@@ -153,8 +136,7 @@ export default function ServiceAiConsulting() {
             transition={{ duration: 0.6, delay: 0.15 }}
             className="font-display text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight text-white leading-tight"
           >
-            Engineering Intelligent <br />
-            <span className="text-neutral-400 font-light italic">AI Agents</span>
+            {serviceData.page_hero_title || "Engineering Intelligent AI Agents"}
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0 }}
@@ -162,7 +144,7 @@ export default function ServiceAiConsulting() {
             transition={{ duration: 0.8, delay: 0.3 }}
             className="font-light text-neutral-400 text-sm sm:text-lg max-w-xl mx-auto leading-relaxed"
           >
-            We evaluate workflow friction, deploying custom prompt pipelines, RAG semantic searches, and autonomous tool call systems.
+            {serviceData.page_hero_desc || "We evaluate workflow friction, deploying custom prompt pipelines, RAG semantic searches, and autonomous tool call systems."}
           </motion.p>
         </div>
       </section>
@@ -522,19 +504,19 @@ export default function ServiceAiConsulting() {
           Click on any technology component below to understand its technical role in our system builds.
         </p>
 
-        {/* Tab Buttons grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mb-10">
-          {Object.keys(techStack).map((key) => (
+        {/* Tab Buttons flex layout */}
+        <div className="flex flex-wrap justify-center gap-3 mb-10">
+          {techStackList.map((tech, idx) => (
             <button
-              key={key}
-              onClick={() => setSelectedTech(key)}
-              className={`px-3 py-3 rounded-2xl text-[10px] font-mono font-bold tracking-wider uppercase border transition-all duration-300 ${
-                selectedTech === key 
+              key={idx}
+              onClick={() => setSelectedTechIdx(idx)}
+              className={`px-4 py-3 rounded-2xl text-[10px] font-mono font-bold tracking-wider uppercase border transition-all duration-300 ${
+                selectedTechIdx === idx 
                   ? 'bg-white text-black border-white shadow-lg' 
                   : 'text-neutral-400 bg-white/[0.02] border-white/5 hover:border-white/15'
               }`}
             >
-              {techStack[key].name}
+              {tech.name}
             </button>
           ))}
         </div>
@@ -543,22 +525,22 @@ export default function ServiceAiConsulting() {
         <div className="p-8 rounded-3xl bg-[#09090d]/80 border border-white/5 hover:border-rose-500/20 shadow-2xl backdrop-blur-xl relative overflow-hidden min-h-[160px] text-left transition-all">
           <div className="absolute top-4 right-6">
             <span className="font-mono text-[8px] font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400">
-              {techStack[selectedTech].badge}
+              {activeTech.badge || 'Core Stack'}
             </span>
           </div>
           
           <AnimatePresence mode="wait">
             <motion.div
-              key={selectedTech}
+              key={selectedTechIdx}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
               className="space-y-4"
             >
-              <h4 className="font-display font-extrabold text-base text-white">{techStack[selectedTech].name}</h4>
+              <h4 className="font-display font-extrabold text-base text-white">{activeTech.name}</h4>
               <p className="font-light text-neutral-400 text-xs sm:text-sm leading-relaxed max-w-2xl">
-                {techStack[selectedTech].role}
+                {activeTech.role}
               </p>
             </motion.div>
           </AnimatePresence>
