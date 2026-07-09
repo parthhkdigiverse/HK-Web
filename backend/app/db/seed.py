@@ -202,12 +202,9 @@ DEFAULT_CULTURE = [
 ]
 
 DEFAULT_PEOPLE = [
-    # Enterprise Root (Level 0)
-    {"name": "HariKrushn DigiVerse LLP", "role": "Parent Organization", "bio": "Empowering global enterprises through high-concurrency cloud systems, bespoke CRM software, and customized AI orchestrations.", "level": 0, "icon": "🏢", "dept": "ENTERPRISE", "image": "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": None, "sort_order": 0, "status": "published", "x": 550, "y": 50},
-
     # Founders (Level 1)
-    {"name": "Radhe Patel", "role": "Co-Founder & CEO", "bio": "Leading strategic partnerships, vision, and growth. Radhe aligns complex commercial needs with exceptional digital delivery.", "level": 1, "icon": "⚡", "dept": "FOUNDER", "image": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "HariKrushn DigiVerse LLP", "sort_order": 1, "status": "published", "x": 350, "y": 180},
-    {"name": "Prince Patel", "role": "Co-Founder & Managing Partner", "bio": "Overseeing global operations, legal structures, and commercial growth strategy for HariKrushn DigiVerse.", "level": 1, "icon": "👑", "dept": "FOUNDER", "image": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "HariKrushn DigiVerse LLP", "sort_order": 2, "status": "published", "x": 750, "y": 180},
+    {"name": "Radhe Patel", "role": "Co-Founder & CEO", "bio": "Leading strategic partnerships, vision, and growth. Radhe aligns complex commercial needs with exceptional digital delivery.", "level": 1, "icon": "⚡", "dept": "FOUNDER", "image": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": None, "sort_order": 0, "status": "published", "x": 350, "y": 150},
+    {"name": "Prince Patel", "role": "Co-Founder & Managing Partner", "bio": "Overseeing global operations, legal structures, and commercial growth strategy for HariKrushn DigiVerse.", "level": 1, "icon": "👑", "dept": "FOUNDER", "image": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": None, "sort_order": 1, "status": "published", "x": 750, "y": 150},
     
     # C-Suite (Level 2)
     {"name": "Krushn Patel", "role": "Chief Technology Officer", "bio": "Pioneering system architectures, custom database layers, and robust AI orchestrations. Krushn codes systems that scale to millions.", "level": 2, "icon": "🛡️", "dept": "C-SUITE / TECH", "image": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "Radhe Patel", "sort_order": 2, "status": "published", "x": 200, "y": 300},
