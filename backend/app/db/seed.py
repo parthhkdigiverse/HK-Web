@@ -95,7 +95,59 @@ DEFAULT_ABOUT_US = {
         {"title": "AI Orchestration Suite", "desc": "Servers dedicated to caching prompts and hosting sandboxed local LLM loops.", "img": "/images/gallery/ai_orchestrator.png", "size": "col-span-2 row-span-1"},
         {"title": "Cinematic Review Deck", "desc": "High-fidelity screens configured to audit front-end animations at 120 FPS.", "img": "/images/gallery/cinematic_review.png", "size": "col-span-1 row-span-1"},
         {"title": "Launch Celebration Area", "desc": "Recreational space dedicated to team milestones and collaborative growth.", "img": "/images/gallery/launch_celebration.png", "size": "col-span-2 row-span-1"}
-    ]
+    ],
+    "personal_letter": {
+        "eyebrow": "// Personal Letter",
+        "title": "Crafting the Infinite Digital",
+        "founders": [
+            {
+                "name": "Radhe Patel",
+                "role": "Co-Founder & CEO",
+                "img": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&h=500&q=80",
+                "signatureTitle": "Radhe Patel, CEO"
+            },
+            {
+                "name": "Prince Patel",
+                "role": "Co-Founder & Partner",
+                "img": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&h=500&q=80",
+                "signatureTitle": "Prince Patel, Partner"
+            }
+        ],
+        "paragraphs": [
+            "Dear Partners & Clients,",
+            "From the moment we envisioned HariKrushn DigiVerse, our goal was clear: to create corporate platforms that combine structural engineering with luxury aesthetics. Software should not just be functional; it should be an asset that inspires trust and is satisfying to interact with.",
+            "We do not believe in taking shortcuts. Every system configuration, cloud setup, and animation path we build is designed with precision. We are committed to fostering deep engineering partnerships, helping your team scale into the next phase of digital business with confidence.",
+            "Thank you for trusting us with your core technology architectures."
+        ]
+    },
+    "timeline_operational": {
+        "eyebrow": "// Operational Lifecycle",
+        "title": "Development Standards",
+        "steps": [
+            {"step": "Discovery", "label": "01", "desc": "Aligning business needs with technical deliverables, specifying database matrices and system blueprints."},
+            {"step": "Architecture", "label": "02", "desc": "Drafting data models, serverless endpoint paths, caching grids, load handling, and folder schemas."},
+            {"step": "UI/UX Design", "label": "03", "desc": "Crafting luxury glassmorphic layouts, customized typography matrices, responsive systems, and gestural motions."},
+            {"step": "Development", "label": "04", "desc": "Coding responsive structures, clean React components, fast FastAPI routes, clean logic, and TDD validations."},
+            {"step": "Quality Assurance", "label": "05", "desc": "Rigorous manual tests, automated Selenium scripts, concurrency validation, and memory leak analysis."},
+            {"step": "Deployment", "label": "06", "desc": "Setting CI/CD integration checkpoints, cloud assets, and SSL certificates."},
+            {"step": "Continuous Improvement", "label": "07", "desc": "Analyzing user telemetry, updating databases, tuning speeds, and updating emerging packages."}
+        ]
+    },
+    "office_locations": {
+        "eyebrow": "// Corporate Nodes",
+        "title": "Office Locations",
+        "offices": [
+            {"location": "Dubai Headquarters", "code": "UAE-HQ", "address": "Techno Hub, Silicon Oasis, Dubai, United Arab Emirates", "contact": "hello@hkdigiverse.com"},
+            {"location": "Surat Development Hub", "code": "IN-DEV", "address": "401, HariKrushn Tower, VIP Road, Surat, GJ 395007, India", "contact": "surat@hkdigiverse.com"},
+            {"location": "Future Expansion Nodes", "code": "US/UK-EXP", "address": "Planning operations hubs in London and New York tech hubs.", "contact": "expansion@hkdigiverse.com"}
+        ]
+    },
+    "manifesto": {
+        "eyebrow": "// Company Manifesto",
+        "quote1": "We don't just build software. We build digital ecosystems.",
+        "quote2": "We don't follow technology. We create the future with it.",
+        "footnote": "// Every line of code should create measurable business value."
+    }
 }
 
 DEFAULT_CULTURE = [
@@ -150,15 +202,43 @@ DEFAULT_CULTURE = [
 ]
 
 DEFAULT_PEOPLE = [
-    {"name": "Radhe Patel", "role": "Co-Founder & CEO", "bio": "Leading strategic partnerships, vision, and growth. Radhe aligns complex commercial needs with exceptional digital delivery.", "level": 1, "icon": "⚡", "dept": "FOUNDER", "image": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": None, "sort_order": 0, "status": "published"},
-    {"name": "Prince Patel", "role": "Co-Founder & Managing Partner", "bio": "Overseeing global operations, legal structures, and commercial growth strategy for HariKrushn DigiVerse.", "level": 1, "icon": "👑", "dept": "FOUNDER", "image": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": None, "sort_order": 1, "status": "published"},
-    {"name": "Krushn Patel", "role": "Chief Technology Officer", "bio": "Pioneering system architectures, custom database layers, and robust AI orchestrations. Krushn codes systems that scale to millions.", "level": 2, "icon": "🛡️", "dept": "C-SUITE / TECH", "image": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "Radhe Patel", "sort_order": 2, "status": "published"},
-    {"name": "Arjun Shah", "role": "Chief Design Officer", "bio": "Shaping the digital craftsmanship ethos. Arjun creates high-end interactive visuals, smooth motion layouts, and premium user flows.", "level": 2, "icon": "📐", "dept": "C-SUITE / DESIGN", "image": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "Radhe Patel", "sort_order": 3, "status": "published"},
-    {"name": "Pooja Mehta", "role": "Chief AI Officer", "bio": "Integrating LLMs, custom training agent pipelines, and automated intelligence layers that streamline complex business workflows.", "level": 2, "icon": "🧠", "dept": "C-SUITE / AI", "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "Prince Patel", "sort_order": 4, "status": "published"},
-    {"name": "Neha Sharma", "role": "Chief Marketing Officer", "bio": "Leading business scaling, operational excellence, client strategy, and product delivery management for international accounts.", "level": 2, "icon": "📈", "dept": "C-SUITE / GROWTH", "image": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "Prince Patel", "sort_order": 5, "status": "published"},
-    {"name": "Vikram Rathod", "role": "Software Dev Lead", "bio": "Crafting fluid React interfaces and interactive visual layers with high-performance styling and custom motion graphics.", "level": 3, "icon": "💻", "dept": "DEVELOPMENT", "image": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "Krushn Patel", "sort_order": 6, "status": "published"},
-    {"name": "Aarav Singhania", "role": "Senior Fullstack Developer", "bio": "Architecting secure RESTful/GraphQL APIs, database schemas, and microservice infrastructure for high availability.", "level": 4, "icon": "⚙️", "dept": "DEVELOPMENT", "image": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "Vikram Rathod", "sort_order": 7, "status": "published"},
-    {"name": "Neil D'Souza", "role": "Frontend Intern", "bio": "Specializing in premium animations, user interactions, and CSS optimization across platforms.", "level": 5, "icon": "🎨", "dept": "DEVELOPMENT", "image": "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "Aarav Singhania", "sort_order": 8, "status": "published"}
+    # Enterprise Root (Level 0)
+    {"name": "HariKrushn DigiVerse LLP", "role": "Parent Organization", "bio": "Empowering global enterprises through high-concurrency cloud systems, bespoke CRM software, and customized AI orchestrations.", "level": 0, "icon": "🏢", "dept": "ENTERPRISE", "image": "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": None, "sort_order": 0, "status": "published", "x": 550, "y": 50},
+
+    # Founders (Level 1)
+    {"name": "Radhe Patel", "role": "Co-Founder & CEO", "bio": "Leading strategic partnerships, vision, and growth. Radhe aligns complex commercial needs with exceptional digital delivery.", "level": 1, "icon": "⚡", "dept": "FOUNDER", "image": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "HariKrushn DigiVerse LLP", "sort_order": 1, "status": "published", "x": 350, "y": 180},
+    {"name": "Prince Patel", "role": "Co-Founder & Managing Partner", "bio": "Overseeing global operations, legal structures, and commercial growth strategy for HariKrushn DigiVerse.", "level": 1, "icon": "👑", "dept": "FOUNDER", "image": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "HariKrushn DigiVerse LLP", "sort_order": 2, "status": "published", "x": 750, "y": 180},
+    
+    # C-Suite (Level 2)
+    {"name": "Krushn Patel", "role": "Chief Technology Officer", "bio": "Pioneering system architectures, custom database layers, and robust AI orchestrations. Krushn codes systems that scale to millions.", "level": 2, "icon": "🛡️", "dept": "C-SUITE / TECH", "image": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "Radhe Patel", "sort_order": 2, "status": "published", "x": 200, "y": 300},
+    {"name": "Arjun Shah", "role": "Chief Design Officer", "bio": "Shaping the digital craftsmanship ethos. Arjun creates high-end interactive visuals, smooth motion layouts, and premium user flows.", "level": 2, "icon": "📐", "dept": "C-SUITE / DESIGN", "image": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "Radhe Patel", "sort_order": 3, "status": "published", "x": 450, "y": 300},
+    {"name": "Pooja Mehta", "role": "Chief AI Officer", "bio": "Integrating LLMs, custom training agent pipelines, and automated intelligence layers that streamline complex business workflows.", "level": 2, "icon": "🧠", "dept": "C-SUITE / AI", "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "Prince Patel", "sort_order": 4, "status": "published", "x": 700, "y": 300},
+    {"name": "Neha Sharma", "role": "Chief Marketing Officer", "bio": "Leading business scaling, operational excellence, client strategy, and product delivery management for international accounts.", "level": 2, "icon": "📈", "dept": "C-SUITE / GROWTH", "image": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "Prince Patel", "sort_order": 5, "status": "published", "x": 950, "y": 300},
+    
+    # Software Development Column (CTO)
+    {"name": "Vikram Rathod", "role": "Software Dev Lead", "bio": "Crafting fluid React interfaces and interactive visual layers with high-performance styling and custom motion graphics.", "level": 3, "icon": "💻", "dept": "DEVELOPMENT", "image": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "Krushn Patel", "sort_order": 6, "status": "published", "x": 100, "y": 480},
+    {"name": "Aarav Singhania", "role": "Senior Fullstack Developer", "bio": "Architecting secure RESTful/GraphQL APIs, database schemas, and microservice infrastructure for high availability.", "level": 4, "icon": "⚙️", "dept": "DEVELOPMENT", "image": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "Vikram Rathod", "sort_order": 7, "status": "published", "x": 100, "y": 660},
+    {"name": "Neil D'Souza", "role": "Frontend Intern", "bio": "Specializing in premium animations, user interactions, and CSS optimization across platforms.", "level": 5, "icon": "🎨", "dept": "DEVELOPMENT", "image": "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "Aarav Singhania", "sort_order": 8, "status": "published", "x": 100, "y": 840},
+    
+    # Product & QA Column (CTO)
+    {"name": "Simran Kaur", "role": "Product & QA Lead", "bio": "Managing strategic client communications, technical roadmaps, and cross-functional engineering deliverables.", "level": 3, "icon": "🤝", "dept": "PRODUCT & QA", "image": "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "Krushn Patel", "sort_order": 9, "status": "published", "x": 350, "y": 480},
+    {"name": "Dev Patel", "role": "Senior QA Engineer", "bio": "Optimizing server load, DevOps CI/CD deployments, and cloud scalability across multi-region networks.", "level": 4, "icon": "🚀", "dept": "PRODUCT & QA", "image": "https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "Simran Kaur", "sort_order": 10, "status": "published", "x": 350, "y": 660},
+    {"name": "Meera Nair", "role": "Product Testing Intern", "bio": "Structuring internal workflows, employee onboarding automation, and resource loading metrics.", "level": 5, "icon": "📋", "dept": "PRODUCT & QA", "image": "https://images.unsplash.com/photo-1554151228-14d9def656e4?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "Dev Patel", "sort_order": 11, "status": "published", "x": 350, "y": 840},
+    
+    # UI/UX & Design Column (CDO)
+    {"name": "Diya Joshi", "role": "Creative & UI/UX Lead", "bio": "Designing user-centered product flows, high-fidelity mockups, and unified design system architectures.", "level": 3, "icon": "✏️", "dept": "CREATIVE & DESIGN", "image": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "Arjun Shah", "sort_order": 12, "status": "published", "x": 600, "y": 480},
+    {"name": "Isha Verma", "role": "Senior UI Designer", "bio": "Creating cinematic transitions, svg web animations, and premium micro-interactions that make interfaces feel alive.", "level": 4, "icon": "🎨", "dept": "CREATIVE & DESIGN", "image": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "Diya Joshi", "sort_order": 13, "status": "published", "x": 600, "y": 660},
+    {"name": "Zara Khan", "role": "UI/UX Intern", "bio": "Collaborating on luxury layout frames, high-end vector branding assets, and client prototypes.", "level": 5, "icon": "📐", "dept": "CREATIVE & DESIGN", "image": "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "Isha Verma", "sort_order": 14, "status": "published", "x": 600, "y": 840},
+    
+    # AI Research Column (CAIO)
+    {"name": "Kabir Malhotra", "role": "AI Research Lead", "bio": "Directing multi-agent network strategies, prompt compiler layers, and local vector indexing pipelines.", "level": 3, "icon": "🧠", "dept": "AI RESEARCH", "image": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "Pooja Mehta", "sort_order": 15, "status": "published", "x": 850, "y": 480},
+    {"name": "Rohan Das", "role": "Senior AI Engineer", "bio": "Tuning localized RAG models, semantic embedding matrices, and device-level agent routines.", "level": 4, "icon": "⚡", "dept": "AI RESEARCH", "image": "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "Kabir Malhotra", "sort_order": 16, "status": "published", "x": 850, "y": 660},
+    {"name": "Kabir Das", "role": "AI Intern", "bio": "Testing cognitive automation flows, custom dataset compilation, and prompt evaluation tests.", "level": 5, "icon": "💡", "dept": "AI RESEARCH", "image": "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "Rohan Das", "sort_order": 17, "status": "published", "x": 850, "y": 840},
+    
+    # Marketing & Brand Column (CMO)
+    {"name": "Yash Wardhan", "role": "Marketing & Brand Lead", "bio": "Coordinating international accounts, brand identity scaling, and digital narrative distributions.", "level": 3, "icon": "📈", "dept": "MARKETING", "image": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "Neha Sharma", "sort_order": 18, "status": "published", "x": 1100, "y": 480},
+    {"name": "Ananya Sen", "role": "Senior Digital Marketer", "bio": "Designing analytics campaigns, conversion optimization charts, and luxury social marketing briefs.", "level": 4, "icon": "🎯", "dept": "MARKETING", "image": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "Yash Wardhan", "sort_order": 19, "status": "published", "x": 1100, "y": 660},
+    {"name": "Simran Sen", "role": "Digital Marketing Intern", "bio": "Managing content placement tracking, SEO campaign metrics, and press distribution logs.", "level": 5, "icon": "📣", "dept": "MARKETING", "image": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150&h=150&q=80", "parent_id": "Ananya Sen", "sort_order": 20, "status": "published", "x": 1100, "y": 840}
 ]
 
 DEFAULT_AWARDS = [
@@ -680,6 +760,104 @@ DEFAULT_INDUSTRY_PROJECTS = [
   }
 ]
 
+DEFAULT_CONTACT_SETTINGS = {
+    "identifier": "contact_page_settings",
+    "title": "Let's Create Together",
+    "subtitle": "Have a project in mind, want to inquire about custom solutions, or simply want to say hello? We'd love to hear from you.",
+    "email_hello": "hello@harikrushndigiverse.com",
+    "email_join": "join@harikrushndigiverse.com",
+    "phone": "+91 98765 43210",
+    "stats": [
+        {"label": "2-4 Hour Response", "value": "Mon — Sat", "icon": "time"},
+        {"label": "Global Clients", "value": "India • USA • UK • UAE", "icon": "globe"},
+        {"label": "Free Consultation", "value": "No obligation quote", "icon": "shield"}
+    ]
+}
+
+DEFAULT_CAREER_SETTINGS = {
+    "identifier": "career_page_settings",
+    "title": "Build the Future",
+    "subtitle": "We are always looking for exceptional engineers, designers, and strategists obsessed with visual, motion, and backend perfection.",
+    "philosophy_eyebrow": "// Our Philosophy",
+    "philosophy_title": "Why Join HariKrushn Digiverse?",
+    "philosophy_desc": "We don't just build software — we engineer premium digital experiences that set industry benchmarks."
+}
+
+DEFAULT_VENTURES_SETTINGS = {
+    "identifier": "ventures_page_settings",
+    "overline": "// Our Initiatives",
+    "title": "Digiverse Ventures",
+    "subtitle": "Beyond client work, we build, incubate, and run initiatives that create lasting social and economic impact across India."
+}
+
+DEFAULT_CULTURE_SETTINGS = {
+    "identifier": "culture_page_settings",
+    "subtitle": "// Where Code Meets Art",
+    "title": "Our Culture",
+    "description": "At HariKrushn DigiVerse LLP, our culture is the foundation of innovation, collaboration, and impact. We don't just build digital solutions, we build trust and long-term relationships.",
+    "gridSubtitle": "Life at HK DigiVerse",
+    "gridTitle": "More Than Work. It's Our Way of Life.",
+    "gridDescription": "At HK DigiVerse LLP, we believe that a strong culture builds a strong team. Here's what makes our workplace inspiring, engaging, and truly our own.",
+    "widgetSubtitle": "// Interactive Widget",
+    "widgetTitle": "Art & Logic Equilibrium",
+    "widgetDescription": "We operate at the intersection of fine digital art and deep system logic. Adjust the slider below to observe how the structures sync.",
+    "manifestoSubtitle": "// Manifesto Protocol",
+    "manifestoTitle": "The Culture Code",
+    "manifestoFilename": "hk_culture_protocol.json",
+    "manifestoCode": '{\n  "organization": "HariKrushn DigiVerse LLP",\n  "ethos": "Bespoke Digital Craftsmanship",\n  "foundationalRule": "Zero generic templates, 100% custom architectures",\n  "executionStandards": {\n    "designFrameRate": 120,\n    "backendQuality": "TDD + Strict API health parameters",\n    "deliveryPipeline": "Automated CI/CD gates"\n  },\n  "communicationCode": [\n    "High trust, absolute ownership",\n    "Low meetings, maximum coding flow",\n    "Constructive, transparent feedback loops"\n  ]\n}'
+}
+
+DEFAULT_STRATEGIC_DIRECTIVES = [
+  {
+    "year": "2026",
+    "month": "",
+    "theme": "Cognitive Ecosystems",
+    "subtitle": "INTELLIGENCE LAYER [V6.8]",
+    "glowColor": "rgba(251, 191, 36, 0.15)",
+    "badgeColor": "text-amber-400 bg-amber-500/10 border-amber-500/20",
+    "vision": "Lead the global transition into edge-intelligence systems, autonomous visual frameworks, and secure multi-agent node coordination.",
+    "mission": "Deliver responsive 3D spatial viewport components, real-time context management APIs, and local vector database caching mechanisms.",
+    "kpis": [
+      "Sub-100ms multi-agent loop responses",
+      "Unified spatial viewport components",
+      "Robust client-side encryption layers"
+    ],
+    "sort_order": 0
+  },
+  {
+    "year": "2025",
+    "month": "",
+    "theme": "Decentralized Systems",
+    "subtitle": "SPATIAL WEB CONTEXT [V5.0]",
+    "glowColor": "rgba(16, 185, 129, 0.15)",
+    "badgeColor": "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+    "vision": "Pioneer immersive, decentralized application architectures that scale to millions of concurrent sessions globally.",
+    "mission": "Construct real-time transaction graphs, secure peer-to-peer data transport channels, and performant state synchronization layers.",
+    "kpis": [
+      "Peer-to-peer transport synchronizations",
+      "Zero-downtime ledger migration keys",
+      "Adaptive viewport frame pacing scripts"
+    ],
+    "sort_order": 1
+  },
+  {
+    "year": "2024",
+    "month": "",
+    "theme": "Strategic Blueprints",
+    "subtitle": "SYSTEM ARCHITECTURES [V4.2]",
+    "glowColor": "rgba(168, 85, 247, 0.15)",
+    "badgeColor": "text-purple-400 bg-purple-500/10 border-purple-500/20",
+    "vision": "Establish HariKrushn as a leading architect of high-concurrency cloud ecosystems, custom CRM software, and data management matrices for global enterprises.",
+    "mission": "Deploy secure, multi-tenant databases and automated signing portals that reduce human administrative overhead by 80% and scale operational speeds.",
+    "kpis": [
+      "Zero-downtime migration protocols",
+      "Unified client management databases",
+      "High-throughput microservices mesh"
+    ],
+    "sort_order": 2
+  }
+]
+
 
 def seed_database():
     load_dotenv()
@@ -740,7 +918,12 @@ def seed_database():
         "contact_faqs": (DEFAULT_CONTACT_FAQS, "q"),
         "services_subpages": (DEFAULT_SERVICES_SUBPAGES, "identifier"),
         "industries": (DEFAULT_INDUSTRIES, "slug"),
-        "industry_projects": (DEFAULT_INDUSTRY_PROJECTS, "title")
+        "industry_projects": (DEFAULT_INDUSTRY_PROJECTS, "title"),
+        "contact_settings": ([DEFAULT_CONTACT_SETTINGS], "identifier"),
+        "career_settings": ([DEFAULT_CAREER_SETTINGS], "identifier"),
+        "ventures_settings": ([DEFAULT_VENTURES_SETTINGS], "identifier"),
+        "culture_settings": ([DEFAULT_CULTURE_SETTINGS], "identifier"),
+        "strategic_directives": (DEFAULT_STRATEGIC_DIRECTIVES, "theme")
     }
 
     for coll_name, (data_list, key) in seed_map.items():

@@ -40,6 +40,21 @@ export default function OurCulture() {
   // State for Art & Logic Interactive Balance
   const [balanceVal, setBalanceVal] = useState(50);
 
+  const settings = content?.culture_settings || {
+    subtitle: "// Where Code Meets Art",
+    title: "Our Culture",
+    description: "At HariKrushn DigiVerse LLP, our culture is the foundation of innovation, collaboration, and impact. We don't just build digital solutions, we build trust and long-term relationships.",
+    gridSubtitle: "Life at HK DigiVerse",
+    gridTitle: "More Than Work. It's Our Way of Life.",
+    gridDescription: "At HK DigiVerse LLP, we believe that a strong culture builds a strong team. Here's what makes our workplace inspiring, engaging, and truly our own.",
+    widgetSubtitle: "// Interactive Widget",
+    widgetTitle: "Art & Logic Equilibrium",
+    widgetDescription: "We operate at the intersection of fine digital art and deep system logic. Adjust the slider below to observe how the structures sync.",
+    manifestoSubtitle: "// Manifesto Protocol",
+    manifestoTitle: "The Culture Code",
+    manifestoFilename: "hk_culture_protocol.json"
+  };
+
   const activities = (content?.our_culture || []).map(item => ({
     ...item,
     icon: iconMap[item.icon] || iconMap.learning
@@ -54,13 +69,13 @@ export default function OurCulture() {
 
       <div className="text-center mb-24 relative z-10 pt-8 space-y-4">
         <span className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.4em] text-neutral-500 font-light block mb-3">
-          // Where Code Meets Art
+          {settings.subtitle}
         </span>
         <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white max-w-4xl mx-auto leading-tight">
-          Our Culture
+          {settings.title}
         </h1>
         <p className="font-light text-neutral-400 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-          At HariKrushn DigiVerse LLP, our culture is the foundation of innovation, collaboration, and impact. We don't just build digital solutions, we build trust and long-term relationships.
+          {settings.description}
         </p>
       </div>
 
@@ -70,13 +85,13 @@ export default function OurCulture() {
       <section className="max-w-[1600px] w-full mx-auto px-4 mb-32 relative z-10 text-center">
         <div className="mb-16 space-y-4">
           <span className="font-mono text-[10px] uppercase tracking-[0.4em] text-red-500 font-semibold block">
-            Life at HK DigiVerse
+            {settings.gridSubtitle}
           </span>
           <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight">
-            More Than Work. It's Our Way of Life.
+            {settings.gridTitle}
           </h2>
           <p className="font-light text-neutral-400 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-            At HK DigiVerse LLP, we believe that a strong culture builds a strong team. Here's what makes our workplace inspiring, engaging, and truly our own.
+            {settings.gridDescription}
           </p>
         </div>
 
@@ -118,10 +133,10 @@ export default function OurCulture() {
           III. INTERACTIVE ART & LOGIC BALANCE COMPASS
           ────────────────────────────────────────────────── */}
       <section className="max-w-6xl mx-auto px-4 mb-32 relative z-10 text-center">
-        <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest text-amber-500 block mb-3">// Interactive Widget</span>
-        <h2 className="font-display text-3xl sm:text-4xl font-bold text-white tracking-tight mb-4">Art & Logic Equilibrium</h2>
+        <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest text-amber-500 block mb-3">{settings.widgetSubtitle}</span>
+        <h2 className="font-display text-3xl sm:text-4xl font-bold text-white tracking-tight mb-4">{settings.widgetTitle}</h2>
         <p className="font-light text-neutral-400 text-sm sm:text-base max-w-lg mx-auto mb-12">
-          We operate at the intersection of fine digital art and deep system logic. Adjust the slider below to observe how the structures sync.
+          {settings.widgetDescription}
         </p>
 
         {/* Dual State Canvas */}
@@ -200,8 +215,8 @@ export default function OurCulture() {
           ────────────────────────────────────────────────── */}
       <section className="max-w-6xl mx-auto px-4 relative z-10 text-left">
         <div className="text-center mb-16">
-          <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-400 block mb-3">// Manifesto Protocol</span>
-          <h2 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">The Culture Code</h2>
+          <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-400 block mb-3">{settings.manifestoSubtitle || "// Manifesto Protocol"}</span>
+          <h2 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">{settings.manifestoTitle || "The Culture Code"}</h2>
         </div>
 
         {/* Glassmorphic IDE Terminal Window */}
@@ -219,28 +234,28 @@ export default function OurCulture() {
               <span className="w-3 h-3 rounded-full bg-amber-500/80 inline-block" />
               <span className="w-3 h-3 rounded-full bg-emerald-500/80 inline-block" />
             </div>
-            <span className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold">hk_culture_protocol.json</span>
+            <span className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold">{settings.manifestoFilename || "hk_culture_protocol.json"}</span>
             <div className="w-8 h-1" />
           </div>
 
           {/* Syntax Code area */}
-          <div className="p-6 sm:p-8 space-y-2 text-neutral-400 leading-relaxed overflow-x-auto whitespace-pre">
-            <div><span className="text-indigo-400">{"{"}</span></div>
-            <div>  <span className="text-sky-400">"organization"</span>: <span className="text-amber-300">"HariKrushn DigiVerse LLP"</span>,</div>
-            <div>  <span className="text-sky-400">"ethos"</span>: <span className="text-amber-300">"Bespoke Digital Craftsmanship"</span>,</div>
-            <div>  <span className="text-sky-400">"foundationalRule"</span>: <span className="text-amber-300">"Zero generic templates, 100% custom architectures"</span>,</div>
-            <div>  <span className="text-sky-400">"executionStandards"</span>: <span className="text-indigo-400">{"{"}</span></div>
-            <div>    <span className="text-sky-400">"designFrameRate"</span>: <span className="text-rose-400">120</span>, <span className="text-neutral-600">// Target FPS for animations</span></div>
-            <div>    <span className="text-sky-400">"backendQuality"</span>: <span className="text-amber-300">"TDD + Strict API health parameters"</span>,</div>
-            <div>    <span className="text-sky-400">"deliveryPipeline"</span>: <span className="text-amber-300">"Automated CI/CD gates"</span></div>
-            <div>  <span className="text-indigo-400">{"}"}</span>,</div>
-            <div>  <span className="text-sky-400">"communicationCode"</span>: <span className="text-indigo-400">{"["}</span></div>
-            <div>    <span className="text-amber-300">"High trust, absolute ownership"</span>,</div>
-            <div>    <span className="text-amber-300">"Low meetings, maximum coding flow"</span>,</div>
-            <div>    <span className="text-amber-300">"Constructive, transparent feedback loops"</span></div>
-            <div>  <span className="text-indigo-400">{"]"}</span></div>
-            <div><span className="text-indigo-400">{"}"}</span></div>
-          </div>
+          <pre className="p-6 sm:p-8 text-neutral-400 leading-relaxed overflow-x-auto whitespace-pre font-mono text-xs sm:text-sm bg-black/30">
+            {settings.manifestoCode || `{
+  "organization": "HariKrushn DigiVerse LLP",
+  "ethos": "Bespoke Digital Craftsmanship",
+  "foundationalRule": "Zero generic templates, 100% custom architectures",
+  "executionStandards": {
+    "designFrameRate": 120,
+    "backendQuality": "TDD + Strict API health parameters",
+    "deliveryPipeline": "Automated CI/CD gates"
+  },
+  "communicationCode": [
+    "High trust, absolute ownership",
+    "Low meetings, maximum coding flow",
+    "Constructive, transparent feedback loops"
+  ]
+}`}
+          </pre>
         </motion.div>
       </section>
 

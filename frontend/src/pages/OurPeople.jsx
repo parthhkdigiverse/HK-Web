@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useContent } from '../context/ContentContext';
+import OrganigramCanvas from '../components/OrganigramCanvas';
 
 /* ─────────────────────────── DEFAULT DATA FALLBACKS ─────────────────────────── */
 const DEFAULT_FOUNDERS = [
@@ -1156,9 +1157,26 @@ export default function OurPeople() {
     CMO: true
   });
 
+  // Preview / Editor State
+  const isPreviewMode = window.location.hash.includes('preview');
+  const [viewMode, setViewMode] = useState('map'); // 'map' or 'tree'
+  const [selectedNodeName, setSelectedNodeName] = useState(null);
+
+  const { updatePeople } = useContent(); // context update helper if any, but we sync via parent message
+
   const handleSelect = useCallback((member) => {
     setActiveMember(member ? member.name : null);
-  }, []);
+    setSelectedNodeName(member ? member.name : null);
+    if (isPreviewMode && window.parent) {
+      window.parent.postMessage({ type: 'ORGANIGRAM_NODE_SELECTED', name: member ? member.name : null }, '*');
+    }
+  }, [isPreviewMode]);
+
+  const handleCanvasChange = (nextPeople) => {
+    if (isPreviewMode && window.parent) {
+      window.parent.postMessage({ type: 'ORGANIGRAM_UPDATE', people: nextPeople }, '*');
+    }
+  };
 
   const toggleExec = (key) => {
     setExpandedExecs(prev => ({
@@ -1166,6 +1184,19 @@ export default function OurPeople() {
       [key]: !prev[key]
     }));
   };
+
+  // Sync selection from parent
+  useEffect(() => {
+    const handleMessage = (event) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data && event.data.type === 'UPDATE_CMS_PREVIEW') {
+        // If a node was selected in the left panel, highlight it on the canvas
+        // Wait, the parent doesn't explicitly send selectedNodeName, but we can track it
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   return (
     <div className="relative pt-4 pb-16 overflow-hidden">
@@ -1189,55 +1220,123 @@ export default function OurPeople() {
       </div>
 
       {/* ── Section Header ── */}
-      <div className="text-center mb-20 relative z-10 pt-8">
+      <div className="text-center mb-12 relative z-10 pt-8">
         <span className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.4em] text-neutral-500 font-light block mb-3">
           // System Hierarchy
         </span>
         <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white mb-6">
           Our People
         </h1>
-        <p className="font-light text-neutral-400 text-sm max-w-lg mx-auto leading-relaxed">
+        <p className="font-light text-neutral-400 text-sm max-w-lg mx-auto leading-relaxed mb-8">
           The constellation of minds engineering the future at HariKrushn DigiVerse.
         </p>
+
+        {/* View Mode Toggle Buttons */}
+        {!isPreviewMode && (
+          <div className="inline-flex p-1 bg-white/5 border border-white/10 rounded-xl relative z-20">
+            <button
+              onClick={() => setViewMode('map')}
+              className={`px-4 py-2 text-[10px] font-semibold uppercase tracking-widest rounded-lg transition-all ${viewMode === 'map' ? 'bg-white text-black' : 'text-neutral-400 hover:text-white'}`}
+            >
+              Constellation Map
+            </button>
+            <button
+              onClick={() => setViewMode('tree')}
+              className={`px-4 py-2 text-[10px] font-semibold uppercase tracking-widest rounded-lg transition-all ${viewMode === 'tree' ? 'bg-white text-black' : 'text-neutral-400 hover:text-white'}`}
+            >
+              Tree Hierarchy
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* ── Desktop Constellation Tree (Full Page Width) ── */}
-      <div className="hidden lg:block w-full pb-32 pt-12 relative">
-        <div
-          className="absolute inset-0 rounded-3xl border border-white/[0.03] overflow-hidden"
-          style={{
-            backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.015) 1px, transparent 0)',
-            backgroundSize: '48px 48px'
-          }}
-        >
-          <StarParticles />
-        </div>
-
-        {/* Changed max-w-7xl to w-full max-w-full px-6 lg:px-16 xl:px-24 */}
-        <div className="w-full max-w-full px-6 lg:px-16 xl:px-24 relative z-10">
-          <DesktopTree 
-            activeMember={activeMember} 
-            onSelect={handleSelect} 
-            expandedExecs={expandedExecs}
-            toggleExec={toggleExec}
-            hoveredNode={hoveredNode}
-            setHoveredNode={setHoveredNode}
-            parentMap={parentMap}
-            founders={founders}
-            cLevels={cLevels}
-            departments={clonedDeps}
+      {/* ── Interactive Constellation Canvas ── */}
+      {viewMode === 'map' || isPreviewMode ? (
+        <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12 relative z-10">
+          <OrganigramCanvas
+            people={peopleList}
+            onChange={handleCanvasChange}
+            onSelectNode={(node) => handleSelect(node)}
+            selectedNodeName={selectedNodeName}
+            isEditMode={isPreviewMode}
           />
+          
+          {/* Selected Member Detail Card (overlay) */}
+          {activeMember && (
+            <div className="mt-6 p-6 bg-neutral-900/90 border border-white/10 rounded-2xl max-w-md mx-auto text-left relative overflow-hidden backdrop-blur-md">
+              <div className="absolute top-0 right-0 p-3">
+                <button onClick={() => handleSelect(null)} className="text-neutral-500 hover:text-white text-xs">✕ Close</button>
+              </div>
+              {(() => {
+                const member = peopleList.find(p => p.name === activeMember);
+                if (!member) return null;
+                return (
+                  <div className="flex gap-4 items-start">
+                    <div className="w-16 h-16 rounded-xl overflow-hidden bg-neutral-800 border border-white/10 flex-shrink-0">
+                      {member.image ? (
+                        <img src={member.image} alt={member.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xl">{member.icon || '👤'}</div>
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white flex items-center gap-1.5">
+                        {member.name} <span className="text-sm">{member.icon}</span>
+                      </h3>
+                      <p className="text-xs text-rose-400 font-medium">{member.role}</p>
+                      {member.dept && (
+                        <span className="inline-block mt-2 px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[9px] font-mono text-neutral-400 uppercase">
+                          {member.dept}
+                        </span>
+                      )}
+                      <p className="text-xs text-neutral-400 leading-relaxed mt-3 font-light">{member.bio}</p>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
         </div>
-      </div>
+      ) : (
+        /* ── Desktop Constellation Tree (Full Page Width) ── */
+        <div className="hidden lg:block w-full pb-32 pt-12 relative">
+          <div
+            className="absolute inset-0 rounded-3xl border border-white/[0.03] overflow-hidden"
+            style={{
+              backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.015) 1px, transparent 0)',
+              backgroundSize: '48px 48px'
+            }}
+          >
+            <StarParticles />
+          </div>
 
-      {/* ── Mobile/Tablet Layout ── */}
-      <div className="lg:hidden w-full flex justify-center pb-12 px-4 relative z-10">
-        <div className="w-full max-w-md flex flex-col gap-6">
-          {mobileTreeData.map((rootNode) => (
-            <MobileTreeNode key={rootNode.name} node={rootNode} activeMember={activeMember} onSelect={handleSelect} />
-          ))}
+          <div className="w-full max-w-full px-6 lg:px-16 xl:px-24 relative z-10">
+            <DesktopTree 
+              activeMember={activeMember} 
+              onSelect={handleSelect} 
+              expandedExecs={expandedExecs}
+              toggleExec={toggleExec}
+              hoveredNode={hoveredNode}
+              setHoveredNode={setHoveredNode}
+              parentMap={parentMap}
+              founders={founders}
+              cLevels={cLevels}
+              departments={clonedDeps}
+            />
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* ── Mobile/Tablet Accordion Layout ── */}
+      {!isPreviewMode && viewMode === 'tree' && (
+        <div className="lg:hidden w-full flex justify-center pb-12 px-4 relative z-10">
+          <div className="w-full max-w-md flex flex-col gap-6">
+            {mobileTreeData.map((rootNode) => (
+              <MobileTreeNode key={rootNode.name} node={rootNode} activeMember={activeMember} onSelect={handleSelect} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

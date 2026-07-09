@@ -49,6 +49,24 @@ const yearMetaData = {
   }
 };
 
+const monthToNum = (m) => {
+  if (!m) return 0;
+  const mClean = m.toLowerCase().trim();
+  const months = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+  const shortMonths = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+  
+  let idx = months.indexOf(mClean);
+  if (idx !== -1) return idx + 1;
+  
+  idx = shortMonths.indexOf(mClean);
+  if (idx !== -1) return idx + 1;
+  
+  const num = parseInt(mClean);
+  if (!isNaN(num) && num >= 1 && num <= 12) return num;
+  
+  return 0;
+};
+
 const getYearMeta = (year) => {
   return yearMetaData[year] || yearMetaData["2024"];
 };
@@ -199,53 +217,68 @@ export default function OurStory() {
   const { content } = useContent();
   const milestones = content?.milestones || [];
 
-  // Filter out years before 2023
-  const baseMilestones = milestones
-    .filter(item => parseInt(item.year) >= 2023);
+  const finalMilestones = [...milestones];
 
-  // Dynamically append 2025 and 2026 milestones if not already in the backend database
-  const finalMilestones = [...baseMilestones];
-  const has2025 = baseMilestones.some(m => m.year === "2025");
-  const has2026 = baseMilestones.some(m => m.year === "2026");
+  // Sort final milestones list descending (latest year & month at top)
+  finalMilestones.sort((a, b) => {
+    const yearDiff = parseInt(b.year) - parseInt(a.year);
+    if (yearDiff !== 0) return yearDiff;
+    return monthToNum(b.month) - monthToNum(a.month);
+  });
 
-  if (!has2025) {
-    finalMilestones.push({
-      year: "2025",
-      title: "Spatial Web & Autonomous Agents",
-      description: "Pioneered decentralized multi-agent architectures and immersive 3D spatial viewports that set new benchmarks for human-computer interaction."
-    });
-  }
-  if (!has2026) {
-    finalMilestones.push({
-      year: "2026",
-      title: "The Cognitive Ecosystem",
-      description: "Leading the global transition into edge-intelligence systems, autonomous visual frameworks, and secure multi-agent node coordination."
-    });
-  }
-
-  // Sort final milestones list descending so that the latest year (2026) is at the top
-  finalMilestones.sort((a, b) => parseInt(b.year) - parseInt(a.year));
-
-  const [activeYear, setActiveYear] = useState("2026");
+  const [activeDirectiveId, setActiveDirectiveId] = useState("");
   const [activeYearIndex, setActiveYearIndex] = useState("");
   const [isMobile, setIsMobile] = useState(false);
 
-  // Merge database strategic directives dynamically
-  const dbDirectives = {};
-  (content?.strategic_directives || []).forEach(item => {
-    const staticStyle = strategicDirectives[item.year] || strategicDirectives["2025"];
-    dbDirectives[item.year] = {
-      ...staticStyle,
-      ...item
-    };
-  });
-
-  const combinedDirectives = {
-    ...strategicDirectives,
-    ...dbDirectives
+  const getDirectiveId = (d) => {
+    return d.month ? `${d.month}-${d.year}` : d.year;
   };
 
-  const activeDirective = combinedDirectives[activeYear] || combinedDirectives["2025"];
+  const rawDirectives = content?.strategic_directives || [];
+  const finalDirectives = rawDirectives.length > 0
+    ? rawDirectives.map(d => {
+        const staticStyle = strategicDirectives[d.year] || strategicDirectives["2025"];
+        return {
+          theme: d.theme || staticStyle.theme,
+          color: d.color || staticStyle.color,
+          glowColor: d.glowColor || staticStyle.glowColor,
+          badgeColor: d.badgeColor || staticStyle.badgeColor,
+          vision: d.vision || staticStyle.vision,
+          mission: d.mission || staticStyle.mission,
+          kpis: d.kpis || staticStyle.kpis || [],
+          year: d.year,
+          month: d.month || ""
+        };
+      })
+    : Object.keys(strategicDirectives).map(yr => ({
+        ...strategicDirectives[yr],
+        year: yr,
+        month: ""
+      }));
+
+  finalDirectives.sort((a, b) => {
+    const yearDiff = parseInt(b.year) - parseInt(a.year);
+    if (yearDiff !== 0) return yearDiff;
+    return monthToNum(b.month) - monthToNum(a.month);
+  });
+
+  const activeDirective = finalDirectives.find(d => getDirectiveId(d) === activeDirectiveId) || finalDirectives[0] || {
+    theme: "Cognitive Ecosystem & Edge AI",
+    color: "from-blue-500/10 to-cyan-500/5 border-blue-500/20",
+    glowColor: "rgba(59, 130, 246, 0.15)",
+    badgeColor: "text-blue-400 bg-blue-500/10 border-blue-500/20",
+    vision: "",
+    mission: "",
+    kpis: [],
+    year: "2026",
+    month: ""
+  };
+
+  useEffect(() => {
+    if (finalDirectives.length > 0 && !activeDirectiveId) {
+      setActiveDirectiveId(getDirectiveId(finalDirectives[0]));
+    }
+  }, [finalDirectives, activeDirectiveId]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -283,7 +316,8 @@ export default function OurStory() {
     const observer = new IntersectionObserver(handleIntersection, observerOptions);
 
     finalMilestones.forEach((item) => {
-      const el = document.getElementById(item.year);
+      const targetId = item.month ? `${item.month}-${item.year}` : item.year;
+      const el = document.getElementById(targetId);
       if (el) observer.observe(el);
     });
 
@@ -364,17 +398,20 @@ export default function OurStory() {
           </div>
           {finalMilestones.map((item) => {
             const yearStr = item.year;
-            const isTargetActive = activeYearIndex === yearStr;
+            const monthStr = item.month ? `${item.month.substring(0, 3)} ` : '';
+            const labelStr = `${monthStr}${yearStr}`;
+            const targetId = item.month ? `${item.month}-${item.year}` : item.year;
+            const isTargetActive = activeYearIndex === targetId;
             return (
               <button
-                key={yearStr}
-                onClick={() => scrollToSection(yearStr)}
+                key={item.year + '-' + (item.month || '')}
+                onClick={() => scrollToSection(targetId)}
                 className={`py-2 px-3 rounded-xl font-mono text-[9px] tracking-wider text-left transition-all duration-300 cursor-pointer ${isTargetActive
                     ? 'bg-white/10 text-white border-l-2 border-white pl-2 shadow-[0_0_12px_rgba(255,255,255,0.05)] font-bold'
                     : 'text-neutral-400 hover:text-white pl-3 hover:bg-white/[0.02]'
                   }`}
               >
-                {yearStr}
+                {labelStr}
               </button>
             );
           })}
@@ -411,10 +448,11 @@ export default function OurStory() {
           {finalMilestones.map((item, index) => {
             const cardVariants = getCardVariants(index);
             const meta = getYearMeta(item.year);
+            const targetId = item.month ? `${item.month}-${item.year}` : item.year;
             return (
               <div
-                id={item.year}
-                key={item.year + '-' + index}
+                id={targetId}
+                key={targetId + '-' + index}
                 className={`flex flex-col md:flex-row relative items-start md:items-center ${index % 2 === 0 ? 'md:flex-row-reverse' : ''
                   }`}
               >
@@ -462,7 +500,9 @@ export default function OurStory() {
                       style={{ backgroundColor: meta.glowColor }}
                     />
 
-                    <span className="font-mono text-xs sm:text-sm uppercase tracking-widest text-neutral-500 font-light block mb-2 relative z-10">{item.year}</span>
+                    <span className="font-mono text-xs sm:text-sm uppercase tracking-widest text-neutral-500 font-light block mb-2 relative z-10">
+                      {item.month ? `${item.month} ` : ''}{item.year}
+                    </span>
                     <h3 className="font-display text-xl sm:text-2xl font-semibold text-white mb-3 group-hover:text-neutral-200 transition-colors relative z-10">{item.title}</h3>
                     <p className="font-light text-neutral-400 text-sm sm:text-base leading-relaxed relative z-10 mb-4">{item.description}</p>
 
@@ -470,7 +510,7 @@ export default function OurStory() {
                     <div className="mt-4 pt-4 border-t border-white/5 space-y-2.5 relative z-10">
                       <div className="font-mono text-[10px] sm:text-xs uppercase tracking-widest text-neutral-500 font-medium">// KEY DELIVERABLES</div>
                       <ul className="space-y-1.5">
-                        {meta.highlights.map((highlight, idx) => (
+                        {(item.highlights || meta.highlights || []).map((highlight, idx) => (
                           <li key={idx} className="flex items-center gap-2.5 text-xs sm:text-sm text-neutral-400 font-light">
                             <span
                               className="w-1.5 h-1.5 rounded-full flex-shrink-0"
@@ -507,19 +547,21 @@ export default function OurStory() {
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex justify-center gap-4 mb-16">
-          {Object.keys(strategicDirectives).reverse().map((year) => {
-            const isActive = activeYear === year;
+        <div className="flex flex-wrap justify-center gap-3 mb-16">
+          {finalDirectives.map((d) => {
+            const dId = getDirectiveId(d);
+            const isActive = activeDirectiveId === dId;
+            const label = d.month ? `${d.month} ${d.year}` : `${d.year}`;
             return (
-              <Magnetic key={year} speed={0.4}>
+              <Magnetic key={dId} speed={0.4}>
                 <button
-                  onClick={() => setActiveYear(year)}
+                  onClick={() => setActiveDirectiveId(dId)}
                   className={`px-6 py-3 rounded-full font-mono text-[10px] tracking-widest border transition-all duration-500 cursor-pointer ${isActive
                       ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)] font-bold'
                       : 'bg-transparent text-neutral-400 border-white/10 hover:text-white hover:border-white/30'
                     }`}
                 >
-                  {year} Directive
+                  {label}
                 </button>
               </Magnetic>
             );
@@ -530,7 +572,7 @@ export default function OurStory() {
         <div className="relative min-h-[380px] md:min-h-[280px]">
           <AnimatePresence mode="wait">
             <motion.div
-              key={activeYear}
+              key={activeDirectiveId}
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
@@ -552,7 +594,9 @@ export default function OurStory() {
                     <span className={`px-3.5 py-1 border rounded text-[9px] font-mono tracking-widest font-light ${activeDirective.badgeColor}`}>
                       VISION DIRECTIVE
                     </span>
-                    <span className="font-mono text-xs text-neutral-600 font-light">{activeYear} // STRATEGY</span>
+                    <span className="font-mono text-xs text-neutral-600 font-light">
+                      {activeDirective.month ? `${activeDirective.month} ` : ''}{activeDirective.year} // STRATEGY
+                    </span>
                   </div>
 
                   <p className="text-white text-base font-light leading-relaxed mb-6 z-10 relative">
@@ -580,7 +624,9 @@ export default function OurStory() {
                     <span className={`px-3.5 py-1 border rounded text-[9px] font-mono tracking-widest font-light ${activeDirective.badgeColor}`}>
                       MISSION PARAMETERS
                     </span>
-                    <span className="font-mono text-xs text-neutral-600 font-light">{activeYear} // EXECUTION</span>
+                    <span className="font-mono text-xs text-neutral-600 font-light">
+                      {activeDirective.month ? `${activeDirective.month} ` : ''}{activeDirective.year} // EXECUTION
+                    </span>
                   </div>
 
                   <p className="text-white text-base font-light leading-relaxed mb-6 z-10 relative">
@@ -592,7 +638,7 @@ export default function OurStory() {
                 <div className="space-y-3 z-10 relative border-t border-white/5 pt-4">
                   <div className="font-mono text-[9px] uppercase tracking-widest text-neutral-500">// KEY DELIVERABLES</div>
                   <ul className="space-y-2">
-                    {activeDirective.kpis.map((kpi, idx) => (
+                    {(activeDirective.kpis || []).map((kpi, idx) => (
                       <li key={idx} className="flex items-center gap-2.5 text-xs text-neutral-400 font-light">
                         <span className="w-1.5 h-1.5 rounded-full bg-white/40 flex-shrink-0" />
                         <span>{kpi}</span>

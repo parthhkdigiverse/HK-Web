@@ -2,6 +2,21 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, useScroll, useSpring, useTransform, AnimatePresence, useMotionValue } from 'framer-motion';
 import { useContent } from '../context/ContentContext';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8008';
+
+const resolveImageUrl = (imgSrc) => {
+  if (!imgSrc) return '';
+  const normalizedSrc = imgSrc.replace(/\\/g, '/');
+  if (normalizedSrc.startsWith('http://') || normalizedSrc.startsWith('https://') || normalizedSrc.startsWith('data:')) {
+    return normalizedSrc;
+  }
+  const cleanSrc = normalizedSrc.startsWith('/') ? normalizedSrc : '/' + normalizedSrc;
+  if (cleanSrc.startsWith('/uploads')) {
+    return `${API_URL}${cleanSrc}`;
+  }
+  return cleanSrc;
+};
+
 // Workspace card sub-component with 3D Perspective Tilt Effect
 function WorkspaceCard({ room, idx }) {
   const cardRef = useRef(null);
@@ -46,7 +61,7 @@ function WorkspaceCard({ room, idx }) {
       className={`break-inside-avoid relative rounded-2xl overflow-hidden border border-white/5 bg-[#0a0a0f] group cursor-pointer ${room.size || 'h-72'}`}
     >
       <img 
-        src={room.img} 
+        src={resolveImageUrl(room.img)} 
         alt={room.title} 
         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
         loading="lazy"
@@ -92,6 +107,63 @@ export default function AboutUs() {
     title: "Our Mission",
     text: "Architect fully autonomous multi-agent networks that execute secure device-level tasks, rendering real-time responsive spatial grids."
   };
+
+  const personalLetter = aboutUs.personal_letter || {
+    eyebrow: "// Personal Letter",
+    title: "Crafting the Infinite Digital",
+    founders: [
+      {
+        name: "Radhe Patel",
+        role: "Co-Founder & CEO",
+        img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&h=500&q=80",
+        signatureTitle: "Radhe Patel, CEO"
+      },
+      {
+        name: "Prince Patel",
+        role: "Co-Founder & Partner",
+        img: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&h=500&q=80",
+        signatureTitle: "Prince Patel, Partner"
+      }
+    ],
+    paragraphs: [
+      "Dear Partners & Clients,",
+      "From the moment we envisioned HariKrushn DigiVerse, our goal was clear: to create corporate platforms that combine structural engineering with luxury aesthetics. Software should not just be functional; it should be an asset that inspires trust and is satisfying to interact with.",
+      "We do not believe in taking shortcuts. Every system configuration, cloud setup, and animation path we build is designed with precision. We are committed to fostering deep engineering partnerships, helping your team scale into the next phase of digital business with confidence.",
+      "Thank you for trusting us with your core technology architectures."
+    ]
+  };
+
+  const timelineOperational = aboutUs.timeline_operational || {
+    eyebrow: "// Operational Lifecycle",
+    title: "Development Standards",
+    steps: [
+      {step: "Discovery", label: "01", desc: "Aligning business needs with technical deliverables, specifying database matrices and system blueprints."},
+      {step: "Architecture", label: "02", desc: "Drafting data models, serverless endpoint paths, caching grids, load handling, and folder schemas."},
+      {step: "UI/UX Design", label: "03", desc: "Crafting luxury glassmorphic layouts, customized typography matrices, responsive systems, and gestural motions."},
+      {step: "Development", label: "04", desc: "Coding responsive structures, clean React components, fast FastAPI routes, clean logic, and TDD validations."},
+      {step: "Quality Assurance", label: "05", desc: "Rigorous manual tests, automated Selenium scripts, concurrency validation, and memory leak analysis."},
+      {step: "Deployment", label: "06", desc: "Setting CI/CD integration checkpoints, cloud assets, and SSL certificates."},
+      {step: "Continuous Improvement", label: "07", desc: "Analyzing user telemetry, updating databases, tuning speeds, and updating emerging packages."}
+    ]
+  };
+
+  const officeLocations = aboutUs.office_locations || {
+    eyebrow: "// Corporate Nodes",
+    title: "Office Locations",
+    offices: [
+      {location: "Dubai Headquarters", code: "UAE-HQ", address: "Techno Hub, Silicon Oasis, Dubai, United Arab Emirates", contact: "hello@hkdigiverse.com"},
+      {location: "Surat Development Hub", code: "IN-DEV", address: "401, HariKrushn Tower, VIP Road, Surat, GJ 395007, India", contact: "surat@hkdigiverse.com"},
+      {location: "Future Expansion Nodes", code: "US/UK-EXP", address: "Planning operations hubs in London and New York tech hubs.", contact: "expansion@hkdigiverse.com"}
+    ]
+  };
+
+  const manifesto = aboutUs.manifesto || {
+    eyebrow: "// Company Manifesto",
+    quote1: "We don't just build software. We build digital ecosystems.",
+    quote2: "We don't follow technology. We create the future with it.",
+    footnote: "// Every line of code should create measurable business value."
+  };
+
   const dnaValues = aboutUs.dna_values || [
     { name: 'Innovation', desc: 'Pushing technical boundaries to create custom, forward-thinking architectures.' },
     { name: 'Ownership', desc: 'Taking complete accountability for code execution, product quality, and business impact.' },
@@ -266,13 +338,13 @@ export default function AboutUs() {
               className="bg-[#0a0a0f]/80 border border-white/5 p-2 rounded-2xl shadow-xl overflow-hidden aspect-[4/5] relative group"
             >
               <img 
-                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&h=500&q=80" 
-                alt="Radhe Patel" 
+                src={resolveImageUrl(personalLetter.founders?.[0]?.img) || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&h=500&q=80"} 
+                alt={personalLetter.founders?.[0]?.name || "Radhe Patel"} 
                 className="w-full h-full object-cover rounded-xl filter grayscale group-hover:grayscale-0 transition-all duration-700"
               />
               <div className="absolute bottom-4 left-4 right-4 bg-black/60 backdrop-blur-md border border-white/5 p-3 rounded-lg text-left">
-                <h4 className="font-display font-bold text-xs text-white">Radhe Patel</h4>
-                <p className="font-mono text-[10px] uppercase tracking-wider text-neutral-400 mt-0.5">Co-Founder & CEO</p>
+                <h4 className="font-display font-bold text-xs text-white">{personalLetter.founders?.[0]?.name || "Radhe Patel"}</h4>
+                <p className="font-mono text-[10px] uppercase tracking-wider text-neutral-400 mt-0.5">{personalLetter.founders?.[0]?.role || "Co-Founder & CEO"}</p>
               </div>
             </motion.div>
             
@@ -281,72 +353,83 @@ export default function AboutUs() {
               className="bg-[#0a0a0f]/80 border border-white/5 p-2 rounded-2xl shadow-xl overflow-hidden aspect-[4/5] relative group mt-8 lg:mt-12"
             >
               <img 
-                src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&h=500&q=80" 
-                alt="Prince Patel" 
+                src={resolveImageUrl(personalLetter.founders?.[1]?.img) || "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&h=500&q=80"} 
+                alt={personalLetter.founders?.[1]?.name || "Prince Patel"} 
                 className="w-full h-full object-cover rounded-xl filter grayscale group-hover:grayscale-0 transition-all duration-700"
               />
               <div className="absolute bottom-4 left-4 right-4 bg-black/60 backdrop-blur-md border border-white/5 p-3 rounded-lg text-left">
-                <h4 className="font-display font-bold text-xs text-white">Prince Patel</h4>
-                <p className="font-mono text-[10px] uppercase tracking-wider text-neutral-400 mt-0.5">Co-Founder & Partner</p>
+                <h4 className="font-display font-bold text-xs text-white">{personalLetter.founders?.[1]?.name || "Prince Patel"}</h4>
+                <p className="font-mono text-[10px] uppercase tracking-wider text-neutral-400 mt-0.5">{personalLetter.founders?.[1]?.role || "Co-Founder & Partner"}</p>
               </div>
             </motion.div>
           </div>
 
           {/* Vision Letter (Right side) */}
           <div className="lg:col-span-7 space-y-6 text-left">
-            <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest text-amber-400">// Personal Letter</span>
-            <h3 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">Crafting the Infinite Digital</h3>
+            <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest text-amber-400">{personalLetter.eyebrow}</span>
+            <h3 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">{personalLetter.title}</h3>
             <div className="font-light text-neutral-300 text-sm sm:text-base leading-relaxed space-y-4 border-t border-white/5 pt-6">
-              <p>
-                Dear Partners & Clients,
-              </p>
-              <p>
-                From the moment we envisioned HariKrushn DigiVerse, our goal was clear: to create corporate platforms that combine structural engineering with luxury aesthetics. Software should not just be functional; it should be an asset that inspires trust and is satisfying to interact with.
-              </p>
-              <p>
-                We do not believe in taking shortcuts. Every system configuration, cloud setup, and animation path we build is designed with precision. We are committed to fostering deep engineering partnerships, helping your team scale into the next phase of digital business with confidence.
-              </p>
-              <p>
-                Thank you for trusting us with your core technology architectures.
-              </p>
+              {(personalLetter.paragraphs || []).map((p, idx) => (
+                <p key={idx}>{p}</p>
+              ))}
             </div>
             
             {/* Dynamic Hand-drawn Signatures */}
             <div className="flex gap-12 pt-8 border-t border-white/5 items-center">
               <div className="space-y-1">
-                {/* SVG path representing Radhe Patel signature */}
-                <svg className="w-28 h-8 text-neutral-300" viewBox="0 0 150 40" fill="none">
-                  <motion.path
-                    d="M 15 25 Q 30 10 45 25 T 75 22 T 105 18 T 135 25"
-                    stroke="currentColor"
-                    strokeWidth="1.75"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    initial={{ pathLength: 0 }}
-                    whileInView={{ pathLength: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 1.8, delay: 0.4, ease: "easeInOut" }}
-                  />
-                </svg>
-                <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">Radhe Patel, CEO</p>
+                {/* SVG path or Image representing Radhe Patel signature */}
+                {personalLetter.founders?.[0]?.signatureImg ? (
+                  <div className="h-8 flex items-center mb-1">
+                    <img 
+                      src={resolveImageUrl(personalLetter.founders[0].signatureImg)} 
+                      alt="Radhe Patel Signature" 
+                      className="h-full object-contain max-h-8 max-w-[120px]" 
+                    />
+                  </div>
+                ) : (
+                  <svg className="w-28 h-8 text-neutral-300" viewBox="0 0 150 40" fill="none">
+                    <motion.path
+                      d="M 15 25 Q 30 10 45 25 T 75 22 T 105 18 T 135 25"
+                      stroke="currentColor"
+                      strokeWidth="1.75"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      initial={{ pathLength: 0 }}
+                      whileInView={{ pathLength: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 1.8, delay: 0.4, ease: "easeInOut" }}
+                    />
+                  </svg>
+                )}
+                <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">{personalLetter.founders?.[0]?.signatureTitle || "Radhe Patel, CEO"}</p>
               </div>
               <div className="w-[1px] h-8 bg-white/10" />
               <div className="space-y-1">
-                {/* SVG path representing Prince Patel signature */}
-                <svg className="w-28 h-8 text-neutral-300" viewBox="0 0 150 40" fill="none">
-                  <motion.path
-                    d="M 20 20 C 40 38 65 12 85 28 T 115 18 T 130 22"
-                    stroke="currentColor"
-                    strokeWidth="1.75"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    initial={{ pathLength: 0 }}
-                    whileInView={{ pathLength: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 1.8, delay: 0.5, ease: "easeInOut" }}
-                  />
-                </svg>
-                <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">Prince Patel, Partner</p>
+                {/* SVG path or Image representing Prince Patel signature */}
+                {personalLetter.founders?.[1]?.signatureImg ? (
+                  <div className="h-8 flex items-center mb-1">
+                    <img 
+                      src={resolveImageUrl(personalLetter.founders[1].signatureImg)} 
+                      alt="Prince Patel Signature" 
+                      className="h-full object-contain max-h-8 max-w-[120px]" 
+                    />
+                  </div>
+                ) : (
+                  <svg className="w-28 h-8 text-neutral-300" viewBox="0 0 150 40" fill="none">
+                    <motion.path
+                      d="M 20 20 C 40 38 65 12 85 28 T 115 18 T 130 22"
+                      stroke="currentColor"
+                      strokeWidth="1.75"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      initial={{ pathLength: 0 }}
+                      whileInView={{ pathLength: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 1.8, delay: 0.5, ease: "easeInOut" }}
+                    />
+                  </svg>
+                )}
+                <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">{personalLetter.founders?.[1]?.signatureTitle || "Prince Patel, Partner"}</p>
               </div>
             </div>
           </div>
@@ -532,8 +615,8 @@ export default function AboutUs() {
           ────────────────────────────────────────────────── */}
       <section ref={timelineRef} className="py-28 border-b border-white/5 relative z-10">
         <div className="max-w-7xl mx-auto px-4 text-left">
-          <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest text-neutral-400 block mb-3">// Operational Lifecycle</span>
-          <h2 className="font-display text-3xl sm:text-4xl font-bold text-white tracking-tight mb-20">Development Standards</h2>
+          <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest text-neutral-400 block mb-3">{timelineOperational.eyebrow}</span>
+          <h2 className="font-display text-3xl sm:text-4xl font-bold text-white tracking-tight mb-20">{timelineOperational.title}</h2>
 
           <div className="relative pl-8 md:pl-0">
             {/* Vertical timeline connector */}
@@ -545,18 +628,10 @@ export default function AboutUs() {
             </div>
 
             <div className="space-y-16">
-              {[
-                { step: 'Discovery', label: '01', desc: 'Aligning business needs with technical deliverables, specifying database matrices and system blueprints.' },
-                { step: 'Architecture', label: '02', desc: 'Drafting data models, serverless endpoint paths, caching grids, load handling, and folder schemas.' },
-                { step: 'UI/UX Design', label: '03', desc: 'Crafting luxury glassmorphic layouts, customized typography matrices, responsive systems, and gestural motions.' },
-                { step: 'Development', label: '04', desc: 'Coding responsive structures, clean React components, fast FastAPI routes, clean logic, and TDD validations.' },
-                { step: 'Quality Assurance', label: '05', desc: 'Rigorous manual tests, automated Selenium scripts, concurrency validation, and memory leak analysis.' },
-                { step: 'Deployment', label: '06', desc: 'Setting CI/CD integration checkpoints, cloud assets, and SSL certificates.' },
-                { step: 'Continuous Improvement', label: '07', desc: 'Analyzing user telemetry, updating databases, tuning speeds, and updating emerging packages.' }
-              ].map((item, idx) => {
+              {(timelineOperational.steps || []).map((item, idx) => {
                 const isEven = idx % 2 === 0;
                 return (
-                  <div key={item.step} className="grid grid-cols-1 md:grid-cols-2 items-center relative">
+                  <div key={idx} className="grid grid-cols-1 md:grid-cols-2 items-center relative">
                     
                     {/* Node Dot Indicator */}
                     <div className="absolute left-3.5 md:left-1/2 top-1.5 w-3 h-3 rounded-full bg-black border-2 border-amber-400 -translate-x-1/2 z-10 shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
@@ -592,17 +667,13 @@ export default function AboutUs() {
           ────────────────────────────────────────────────── */}
       <section className="py-28 border-b border-white/5 relative z-10">
         <div className="max-w-7xl mx-auto px-4 text-left">
-          <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest text-neutral-400 block mb-3">// Corporate Nodes</span>
-          <h2 className="font-display text-3xl sm:text-4xl font-bold text-white tracking-tight mb-16">Office Locations</h2>
+          <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest text-neutral-400 block mb-3">{officeLocations.eyebrow}</span>
+          <h2 className="font-display text-3xl sm:text-4xl font-bold text-white tracking-tight mb-16">{officeLocations.title}</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              { location: 'Dubai Headquarters', code: 'UAE-HQ', address: 'Techno Hub, Silicon Oasis, Dubai, United Arab Emirates', contact: 'hello@hkdigiverse.com' },
-              { location: 'Surat Development Hub', code: 'IN-DEV', address: '401, HariKrushn Tower, VIP Road, Surat, GJ 395007, India', contact: 'surat@hkdigiverse.com' },
-              { location: 'Future Expansion Nodes', code: 'US/UK-EXP', address: 'Planning operations hubs in London and New York tech hubs.', contact: 'expansion@hkdigiverse.com' }
-            ].map((office, idx) => (
+            {(officeLocations.offices || []).map((office, idx) => (
               <motion.div 
-                key={office.location}
+                key={idx}
                 initial={{ opacity: 0, scale: 0.98 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
@@ -641,7 +712,7 @@ export default function AboutUs() {
             className="flex items-center justify-center gap-4 mb-2"
           >
             <span className="w-8 h-[0.5px] bg-white/20"></span>
-            <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest text-neutral-500">// Company Manifesto</span>
+            <span className="font-mono text-[10px] sm:text-xs uppercase tracking-widest text-neutral-500">{manifesto.eyebrow}</span>
             <span className="w-8 h-[0.5px] bg-white/20"></span>
           </motion.div>
 
@@ -653,8 +724,7 @@ export default function AboutUs() {
               transition={{ duration: 0.8, delay: 0.1 }}
               className="font-display text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight text-white max-w-4xl mx-auto leading-tight"
             >
-              "We don't just build software. <br />
-              <span className="text-neutral-400 font-light italic">We build digital ecosystems.</span>"
+              "{manifesto.quote1}"
             </motion.h2>
 
             <motion.div 
@@ -672,8 +742,7 @@ export default function AboutUs() {
               transition={{ duration: 0.8, delay: 0.4 }}
               className="font-display text-xl sm:text-2xl lg:text-3xl font-medium text-neutral-300 max-w-2xl mx-auto leading-relaxed"
             >
-              "We don't follow technology. <br />
-              We create the future with it."
+              "{manifesto.quote2}"
             </motion.h3>
 
             <motion.p 
@@ -683,7 +752,7 @@ export default function AboutUs() {
               transition={{ duration: 0.8, delay: 0.6 }}
               className="font-mono text-xs sm:text-sm uppercase tracking-widest text-neutral-500 pt-8"
             >
-              // Every line of code should create measurable business value.
+              {manifesto.footnote}
             </motion.p>
           </div>
         </div>

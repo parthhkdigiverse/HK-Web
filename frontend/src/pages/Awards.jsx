@@ -412,7 +412,7 @@ export default function Awards() {
                     <div className="p-8 rounded-3xl bg-[#09090d]/60 border border-white/5 space-y-6">
                       <h3 className="font-display text-lg font-bold text-white tracking-tight">// Award Key Highlights</h3>
                       <ul className="space-y-4">
-                        {activeAward.highlights.map((highlight, idx) => (
+                        {activeAward.highlights && activeAward.highlights.map((highlight, idx) => (
                           <li key={idx} className="flex items-start gap-3 text-xs sm:text-sm text-neutral-300 font-light">
                             <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-2 flex-shrink-0" />
                             <span>{highlight}</span>

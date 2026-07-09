@@ -76,6 +76,9 @@ export default function AdminPanel() {
   // Upload states
   const [isUploadingVideo, setIsUploadingVideo] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  
+  // Organigram selection state
+  const [selectedNodeName, setSelectedNodeName] = useState(null);
 
   const iframeRef = useRef(null);
 
@@ -257,7 +260,11 @@ export default function AdminPanel() {
             vision: { ...DEFAULT_CONTENT.about_us.vision, ...(draft.about_us?.vision || {}) },
             mission: { ...DEFAULT_CONTENT.about_us.mission, ...(draft.about_us?.mission || {}) },
             dna_values: draft.about_us?.dna_values || DEFAULT_CONTENT.about_us.dna_values,
-            workspace_rooms: draft.about_us?.workspace_rooms || DEFAULT_CONTENT.about_us.workspace_rooms
+            workspace_rooms: draft.about_us?.workspace_rooms || DEFAULT_CONTENT.about_us.workspace_rooms,
+            personal_letter: { ...DEFAULT_CONTENT.about_us.personal_letter, ...(draft.about_us?.personal_letter || {}) },
+            timeline_operational: { ...DEFAULT_CONTENT.about_us.timeline_operational, ...(draft.about_us?.timeline_operational || {}) },
+            office_locations: { ...DEFAULT_CONTENT.about_us.office_locations, ...(draft.about_us?.office_locations || {}) },
+            manifesto: { ...DEFAULT_CONTENT.about_us.manifesto, ...(draft.about_us?.manifesto || {}) }
           },
           site_settings: {
             ...DEFAULT_CONTENT.site_settings,
@@ -345,11 +352,21 @@ export default function AdminPanel() {
       if (event.data && event.data.type === 'CMS_PREVIEW_READY') {
         // Iframe is ready, push current state immediately
         syncIframe(currentContent);
+      } else if (event.data && event.data.type === 'ORGANIGRAM_UPDATE') {
+        const nextContent = JSON.parse(JSON.stringify(currentContent));
+        nextContent.people = event.data.people;
+        pushState(nextContent);
+        
+        // Auto Save to database
+        saveDraft(nextContent, password);
+        setIsDirty(false);
+      } else if (event.data && event.data.type === 'ORGANIGRAM_NODE_SELECTED') {
+        setSelectedNodeName(event.data.name);
       }
     };
     window.addEventListener('message', handlePreviewMessages);
     return () => window.removeEventListener('message', handlePreviewMessages);
-  }, [currentContent]);
+  }, [currentContent, password]);
 
   // Send a message to scroll the iframe when the active tab changes
   useEffect(() => {
@@ -1098,6 +1115,160 @@ export default function AdminPanel() {
     pushState(nextContent);
   };
 
+  const updateDnaValue = (index, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.about_us.dna_values) {
+      nextContent.about_us.dna_values = [];
+    }
+    nextContent.about_us.dna_values[index][field] = value;
+    pushState(nextContent);
+  };
+
+  const addDnaValue = () => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.about_us.dna_values) {
+      nextContent.about_us.dna_values = [];
+    }
+    nextContent.about_us.dna_values.push({
+      name: 'New Ethos Value',
+      desc: 'Describe this core value...'
+    });
+    pushState(nextContent);
+  };
+
+  const deleteDnaValue = (index) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    nextContent.about_us.dna_values.splice(index, 1);
+    pushState(nextContent);
+  };
+
+  // Personal Letter handlers
+  const updatePersonalLetterField = (field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.about_us.personal_letter) {
+      nextContent.about_us.personal_letter = {};
+    }
+    nextContent.about_us.personal_letter[field] = value;
+    pushState(nextContent);
+  };
+
+  const updateFounderField = (index, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.about_us.personal_letter) nextContent.about_us.personal_letter = {};
+    if (!nextContent.about_us.personal_letter.founders) nextContent.about_us.personal_letter.founders = [];
+    if (!nextContent.about_us.personal_letter.founders[index]) {
+      nextContent.about_us.personal_letter.founders[index] = {};
+    }
+    nextContent.about_us.personal_letter.founders[index][field] = value;
+    pushState(nextContent);
+  };
+
+  const updateLetterParagraph = (index, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.about_us.personal_letter) nextContent.about_us.personal_letter = {};
+    if (!nextContent.about_us.personal_letter.paragraphs) nextContent.about_us.personal_letter.paragraphs = [];
+    nextContent.about_us.personal_letter.paragraphs[index] = value;
+    pushState(nextContent);
+  };
+
+  const addLetterParagraph = () => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.about_us.personal_letter) nextContent.about_us.personal_letter = {};
+    if (!nextContent.about_us.personal_letter.paragraphs) nextContent.about_us.personal_letter.paragraphs = [];
+    nextContent.about_us.personal_letter.paragraphs.push("New paragraph text...");
+    pushState(nextContent);
+  };
+
+  const deleteLetterParagraph = (index) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.about_us.personal_letter.paragraphs) return;
+    nextContent.about_us.personal_letter.paragraphs.splice(index, 1);
+    pushState(nextContent);
+  };
+
+  // Timeline Operational Lifecycle handlers
+  const updateTimelineOperationalField = (field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.about_us.timeline_operational) {
+      nextContent.about_us.timeline_operational = {};
+    }
+    nextContent.about_us.timeline_operational[field] = value;
+    pushState(nextContent);
+  };
+
+  const updateTimelineStep = (index, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.about_us.timeline_operational) nextContent.about_us.timeline_operational = {};
+    if (!nextContent.about_us.timeline_operational.steps) nextContent.about_us.timeline_operational.steps = [];
+    nextContent.about_us.timeline_operational.steps[index][field] = value;
+    pushState(nextContent);
+  };
+
+  const addTimelineStep = () => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.about_us.timeline_operational) nextContent.about_us.timeline_operational = {};
+    if (!nextContent.about_us.timeline_operational.steps) nextContent.about_us.timeline_operational.steps = [];
+    nextContent.about_us.timeline_operational.steps.push({
+      step: 'New Step Name',
+      label: String(nextContent.about_us.timeline_operational.steps.length + 1).padStart(2, '0'),
+      desc: 'Describe this operational phase...'
+    });
+    pushState(nextContent);
+  };
+
+  const deleteTimelineStep = (index) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    nextContent.about_us.timeline_operational.steps.splice(index, 1);
+    pushState(nextContent);
+  };
+
+  // Office Locations handlers
+  const updateOfficeLocationsField = (field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.about_us.office_locations) {
+      nextContent.about_us.office_locations = {};
+    }
+    nextContent.about_us.office_locations[field] = value;
+    pushState(nextContent);
+  };
+
+  const updateOfficeField = (index, field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.about_us.office_locations) nextContent.about_us.office_locations = {};
+    if (!nextContent.about_us.office_locations.offices) nextContent.about_us.office_locations.offices = [];
+    nextContent.about_us.office_locations.offices[index][field] = value;
+    pushState(nextContent);
+  };
+
+  const addOfficeField = () => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.about_us.office_locations) nextContent.about_us.office_locations = {};
+    if (!nextContent.about_us.office_locations.offices) nextContent.about_us.office_locations.offices = [];
+    nextContent.about_us.office_locations.offices.push({
+      location: 'New Office Location',
+      code: 'NODE-EXP',
+      address: 'Describe the office address...',
+      contact: 'contact@hkdigiverse.com'
+    });
+    pushState(nextContent);
+  };
+
+  const deleteOfficeField = (index) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    nextContent.about_us.office_locations.offices.splice(index, 1);
+    pushState(nextContent);
+  };
+
+  // Manifesto handlers
+  const updateManifestoField = (field, value) => {
+    const nextContent = JSON.parse(JSON.stringify(currentContent));
+    if (!nextContent.about_us.manifesto) {
+      nextContent.about_us.manifesto = {};
+    }
+    nextContent.about_us.manifesto[field] = value;
+    pushState(nextContent);
+  };
+
   // Culture handlers
   const updateCultureItem = (index, field, value) => {
     const nextContent = JSON.parse(JSON.stringify(currentContent));
@@ -1138,14 +1309,16 @@ export default function AdminPanel() {
     const nextContent = JSON.parse(JSON.stringify(currentContent));
     if (!nextContent.people) nextContent.people = [];
     nextContent.people.push({
-      name: 'New Member',
+      name: 'New Member ' + (nextContent.people.length + 1),
       role: 'Engineer / Designer',
       bio: 'Detail bio...',
       level: 4,
       icon: '💻',
       dept: 'DEVELOPMENT',
       image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&h=150&q=80',
-      parent_id: 'Vikram Rathod'
+      parent_id: null,
+      x: 600,
+      y: 980
     });
     pushState(nextContent);
   };
@@ -1159,7 +1332,11 @@ export default function AdminPanel() {
   // Awards handlers
   const updateAwardItem = (index, field, value) => {
     const nextContent = JSON.parse(JSON.stringify(currentContent));
-    nextContent.awards[index][field] = value;
+    if (field === 'highlights') {
+      nextContent.awards[index].highlights = value.split('\n').map(h => h.trim()).filter(Boolean);
+    } else {
+      nextContent.awards[index][field] = value;
+    }
     pushState(nextContent);
   };
 
@@ -1175,7 +1352,9 @@ export default function AdminPanel() {
       category: 'company',
       recipient: 'HariKrushn DigiVerse LLP',
       img: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&w=600&h=400&q=80',
-      longDescription: 'Expanded detail...'
+      longDescription: 'Expanded detail...',
+      highlights: [],
+      impactStats: []
     });
     pushState(nextContent);
   };
@@ -4114,11 +4293,12 @@ export default function AdminPanel() {
 
           {/* 4. ABOUT US CMS PANEL */}
           {activeTab === 'about_us' && currentContent.about_us && (
-            <div className="space-y-6">
-              <h3 className="font-mono text-[10px] uppercase tracking-wider text-white">// About Us Overview</h3>
+            <div className="space-y-6 animate-fadeIn">
+              <h3 className="font-mono text-[10px] uppercase tracking-wider text-white">// About Us Editor</h3>
               
-              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4">
-                <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Philosophy</h4>
+              {/* SECTION 1: COMPANY PHILOSOPHY */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-rose-400">// Section 1: Company Philosophy</span>
                 <div className="space-y-1">
                   <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Title</label>
                   <input
@@ -4134,7 +4314,7 @@ export default function AdminPanel() {
                     rows={3}
                     value={currentContent.about_us.philosophy?.quote || ''}
                     onChange={(e) => updateAboutUsField('philosophy', 'quote', e.target.value)}
-                    className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none resize-none"
+                    className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none resize-none leading-normal"
                   />
                 </div>
                 <div className="space-y-1">
@@ -4143,13 +4323,14 @@ export default function AdminPanel() {
                     rows={4}
                     value={currentContent.about_us.philosophy?.description || ''}
                     onChange={(e) => updateAboutUsField('philosophy', 'description', e.target.value)}
-                    className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none resize-none"
+                    className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none resize-none leading-relaxed"
                   />
                 </div>
               </div>
 
-              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4">
-                <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Vision & Mission</h4>
+              {/* SECTION 2: VISION & MISSION */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-rose-400">// Section 2: Vision & Mission</span>
                 <div className="space-y-1">
                   <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Vision Title</label>
                   <input
@@ -4165,10 +4346,10 @@ export default function AdminPanel() {
                     rows={3}
                     value={currentContent.about_us.vision?.text || ''}
                     onChange={(e) => updateAboutUsField('vision', 'text', e.target.value)}
-                    className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none resize-none"
+                    className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none resize-none leading-relaxed"
                   />
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-1 border-t border-white/5 pt-3">
                   <label className="font-mono text-[8px] uppercase tracking-widest text-neutral-500 block">Mission Title</label>
                   <input
                     type="text"
@@ -4183,14 +4364,262 @@ export default function AdminPanel() {
                     rows={3}
                     value={currentContent.about_us.mission?.text || ''}
                     onChange={(e) => updateAboutUsField('mission', 'text', e.target.value)}
-                    className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none resize-none"
+                    className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none resize-none leading-relaxed"
                   />
                 </div>
               </div>
 
-              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4">
+              {/* SECTION 3: PERSONAL LETTER / FOUNDERS MESSAGE */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-rose-400">// Section 3: Founders Letter</span>
+                <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Eyebrow</label>
+                      <input
+                        type="text"
+                        value={currentContent.about_us.personal_letter?.eyebrow || ''}
+                        onChange={(e) => updatePersonalLetterField('eyebrow', e.target.value)}
+                        className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Letter Title</label>
+                      <input
+                        type="text"
+                        value={currentContent.about_us.personal_letter?.title || ''}
+                        onChange={(e) => updatePersonalLetterField('title', e.target.value)}
+                        className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Founders registry */}
+                  <div className="space-y-4 pt-2 border-t border-white/5 mt-2">
+                    <h5 className="font-mono text-[9px] text-neutral-400 uppercase tracking-widest">// Co-Founders Profiles</h5>
+                    {([0, 1]).map((index) => {
+                      const founder = currentContent.about_us.personal_letter?.founders?.[index] || {};
+                      return (
+                        <div key={index} className="p-3 bg-black/40 border border-white/5 rounded-lg space-y-2">
+                          <span className="font-mono text-[9px] text-neutral-500">Founder #{index + 1} ({index === 0 ? "CEO" : "Partner"})</span>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="font-mono text-[8px] text-neutral-500 block">Name</label>
+                              <input
+                                type="text"
+                                value={founder.name || ''}
+                                onChange={(e) => updateFounderField(index, 'name', e.target.value)}
+                                className="w-full px-2 py-1 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="font-mono text-[8px] text-neutral-500 block">Role Caption</label>
+                              <input
+                                type="text"
+                                value={founder.role || ''}
+                                onChange={(e) => updateFounderField(index, 'role', e.target.value)}
+                                className="w-full px-2 py-1 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="font-mono text-[8px] text-neutral-500 block">Signature Label Text</label>
+                            <input
+                              type="text"
+                              value={founder.signatureTitle || ''}
+                              onChange={(e) => updateFounderField(index, 'signatureTitle', e.target.value)}
+                              className="w-full px-2 py-1 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Profile Photo</label>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                placeholder="Photo URL"
+                                value={founder.img || ''}
+                                onChange={(e) => updateFounderField(index, 'img', e.target.value)}
+                                className="flex-1 px-2 py-1 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                              />
+                              <label className="px-2 py-1 bg-white/5 border border-white/10 rounded text-[8px] text-neutral-400 hover:text-white cursor-pointer flex items-center">
+                                Upload
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={async (e) => {
+                                    const file = e.target.files[0]; if (!file) return;
+                                    const formData = new FormData(); formData.append('file', file);
+                                    try {
+                                      const res = await fetch(API_URL + '/api/upload/image', { method: 'POST', body: formData });
+                                      if (res.ok) {
+                                        const data = await res.json();
+                                        updateFounderField(index, 'img', data.imageUrl);
+                                      }
+                                    } catch (err) { console.error(err); }
+                                  }}
+                                />
+                              </label>
+                            </div>
+                            {founder.img && (
+                              <div className="mt-1 w-16 h-20 bg-black/50 rounded border border-white/5 overflow-hidden">
+                                <img src={founder.img} alt="Preview" className="w-full h-full object-cover animate-fadeIn" />
+                              </div>
+                            )}
+                          </div>
+
+                          <div>
+                            <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Signature Image (Optional - transparent background)</label>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                placeholder="Signature Image URL"
+                                value={founder.signatureImg || ''}
+                                onChange={(e) => updateFounderField(index, 'signatureImg', e.target.value)}
+                                className="flex-1 px-2 py-1 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                              />
+                              <label className="px-2 py-1 bg-white/5 border border-white/10 rounded text-[8px] text-neutral-400 hover:text-white cursor-pointer flex items-center">
+                                Upload
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={async (e) => {
+                                    const file = e.target.files[0]; if (!file) return;
+                                    const formData = new FormData(); formData.append('file', file);
+                                    try {
+                                      const res = await fetch(API_URL + '/api/upload/image', { method: 'POST', body: formData });
+                                      if (res.ok) {
+                                        const data = await res.json();
+                                        updateFounderField(index, 'signatureImg', data.imageUrl);
+                                      }
+                                    } catch (err) { console.error(err); }
+                                  }}
+                                />
+                              </label>
+                            </div>
+                            {founder.signatureImg && (
+                              <div className="mt-1 p-1 bg-neutral-900 rounded border border-white/5 inline-block">
+                                <img src={founder.signatureImg} alt="Signature Preview" className="h-8 object-contain max-w-[120px]" />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Letter Paragraphs editor */}
+                  <div className="space-y-3 pt-2 border-t border-white/5 mt-2">
+                    <div className="flex justify-between items-center">
+                      <span className="font-mono text-[9px] text-neutral-400 uppercase tracking-widest">// Letter Paragraphs</span>
+                      <button
+                        onClick={addLetterParagraph}
+                        className="px-2 py-1 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors"
+                      >
+                        + Add Paragraph
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {(currentContent.about_us.personal_letter?.paragraphs || []).map((paragraph, pIdx) => (
+                        <div key={pIdx} className="flex gap-2 items-start">
+                          <span className="font-mono text-[9px] text-neutral-500 pt-2">#{pIdx+1}</span>
+                          <textarea
+                            rows={3}
+                            value={paragraph}
+                            onChange={(e) => updateLetterParagraph(pIdx, e.target.value)}
+                            className="flex-1 px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed"
+                          />
+                          <button
+                            onClick={() => deleteLetterParagraph(pIdx)}
+                            className="px-2 py-1.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded mt-1"
+                          >
+                            Del
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 4: DNA ETHOS VALUES */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
                 <div className="flex justify-between items-center">
-                  <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Workspace Rooms ({currentContent.about_us.workspace_rooms?.length || 0})</h4>
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-rose-400">// Section 4: DNA Ethos Values</span>
+                  <button
+                    onClick={addDnaValue}
+                    className="px-2 py-1 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors"
+                  >
+                    + Add DNA Value
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  {(currentContent.about_us.dna_values || []).map((value, index) => (
+                    <div key={index} className="p-4 bg-black/40 border border-white/5 rounded-xl space-y-3">
+                      <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                        <span className="font-mono text-[9px] text-neutral-500 font-bold">{value.name || 'New DNA Value'}</span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            disabled={index === 0}
+                            onClick={() => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              const arr = nextContent.about_us.dna_values;
+                              [arr[index - 1], arr[index]] = [arr[index], arr[index - 1]];
+                              pushState(nextContent);
+                            }}
+                            className={`px-1.5 py-0.5 text-[9px] font-mono rounded border ${index === 0 ? 'text-neutral-600 border-white/5 cursor-not-allowed' : 'text-neutral-400 border-white/10 hover:text-white hover:border-white/20 cursor-pointer'}`}
+                          >▲</button>
+                          <button
+                            disabled={index === (currentContent.about_us.dna_values || []).length - 1}
+                            onClick={() => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              const arr = nextContent.about_us.dna_values;
+                              [arr[index], arr[index + 1]] = [arr[index + 1], arr[index]];
+                              pushState(nextContent);
+                            }}
+                            className={`px-1.5 py-0.5 text-[9px] font-mono rounded border ${index === (currentContent.about_us.dna_values || []).length - 1 ? 'text-neutral-600 border-white/5 cursor-not-allowed' : 'text-neutral-400 border-white/10 hover:text-white hover:border-white/20 cursor-pointer'}`}
+                          >▼</button>
+                          <button
+                            onClick={() => deleteDnaValue(index)}
+                            className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Value Name</label>
+                          <input
+                            type="text"
+                            placeholder="Name"
+                            value={value.name || ''}
+                            onChange={(e) => updateDnaValue(index, 'name', e.target.value)}
+                            className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Value Description</label>
+                          <textarea
+                            placeholder="Description"
+                            rows={2}
+                            value={value.desc || ''}
+                            onChange={(e) => updateDnaValue(index, 'desc', e.target.value)}
+                            className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* SECTION 5: WORKSPACE GALLERY ROOMS */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
+                <div className="flex justify-between items-center">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-rose-400">// Section 5: Workspace Rooms ({currentContent.about_us.workspace_rooms?.length || 0})</span>
                   <button
                     onClick={addWorkspaceRoom}
                     className="px-3 py-1.5 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors"
@@ -4200,139 +4629,777 @@ export default function AdminPanel() {
                 </div>
                 <div className="space-y-4">
                   {(currentContent.about_us.workspace_rooms || []).map((room, index) => (
-                    <div key={index} className="p-4 bg-black/40 border border-white/5 rounded-xl space-y-3 text-left">
+                    <div key={index} className="p-4 bg-black/40 border border-white/5 rounded-xl space-y-3">
                       <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                        <span className="font-mono text-[9px] text-neutral-500">Room #{index + 1}</span>
-                        <button
-                          onClick={() => deleteWorkspaceRoom(index)}
-                          className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded"
-                        >
-                          Delete
-                        </button>
+                        <span className="font-mono text-[9px] text-neutral-500 font-bold">{room.title || 'New Workspace Room'}</span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            disabled={index === 0}
+                            onClick={() => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              const arr = nextContent.about_us.workspace_rooms;
+                              [arr[index - 1], arr[index]] = [arr[index], arr[index - 1]];
+                              pushState(nextContent);
+                            }}
+                            className={`px-1.5 py-0.5 text-[9px] font-mono rounded border ${index === 0 ? 'text-neutral-600 border-white/5 cursor-not-allowed' : 'text-neutral-400 border-white/10 hover:text-white hover:border-white/20 cursor-pointer'}`}
+                          >▲</button>
+                          <button
+                            disabled={index === (currentContent.about_us.workspace_rooms || []).length - 1}
+                            onClick={() => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              const arr = nextContent.about_us.workspace_rooms;
+                              [arr[index], arr[index + 1]] = [arr[index + 1], arr[index]];
+                              pushState(nextContent);
+                            }}
+                            className={`px-1.5 py-0.5 text-[9px] font-mono rounded border ${index === (currentContent.about_us.workspace_rooms || []).length - 1 ? 'text-neutral-600 border-white/5 cursor-not-allowed' : 'text-neutral-400 border-white/10 hover:text-white hover:border-white/20 cursor-pointer'}`}
+                          >▼</button>
+                          <button
+                            onClick={() => deleteWorkspaceRoom(index)}
+                            className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </div>
                       <div className="space-y-2">
-                        <input
-                          type="text"
-                          placeholder="Room Title"
-                          value={room.title}
-                          onChange={(e) => updateWorkspaceRoom(index, 'title', e.target.value)}
-                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Image URL"
-                          value={room.img}
-                          onChange={(e) => updateWorkspaceRoom(index, 'img', e.target.value)}
-                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
-                        />
-                        <textarea
-                          placeholder="Description"
-                          rows={2}
-                          value={room.desc}
-                          onChange={(e) => updateWorkspaceRoom(index, 'desc', e.target.value)}
-                          className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none resize-none"
-                        />
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Room Title</label>
+                            <input
+                              type="text"
+                              placeholder="Room Title"
+                              value={room.title || ''}
+                              onChange={(e) => updateWorkspaceRoom(index, 'title', e.target.value)}
+                              className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Grid Size Layout Class</label>
+                            <select
+                              value={room.size || 'col-span-1 row-span-1'}
+                              onChange={(e) => updateWorkspaceRoom(index, 'size', e.target.value)}
+                              className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                            >
+                              <option value="col-span-1 row-span-1">col-span-1 row-span-1 (Small Standard Square)</option>
+                              <option value="col-span-2 row-span-1">col-span-2 row-span-1 (Wide Rectangle)</option>
+                              <option value="col-span-1 row-span-2">col-span-1 row-span-2 (Tall Rectangle)</option>
+                              <option value="col-span-2 row-span-2">col-span-2 row-span-2 (Large Square)</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Room Image</label>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              placeholder="Image URL"
+                              value={room.img || ''}
+                              onChange={(e) => updateWorkspaceRoom(index, 'img', e.target.value)}
+                              className="flex-1 px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                            />
+                            <label className="px-3 py-1.5 bg-white/5 border border-white/10 rounded text-[8px] text-neutral-400 hover:text-white cursor-pointer flex items-center">
+                              Upload
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={async (e) => {
+                                  const file = e.target.files[0]; if (!file) return;
+                                  const formData = new FormData(); formData.append('file', file);
+                                  try {
+                                    const res = await fetch(API_URL + '/api/upload/image', { method: 'POST', body: formData });
+                                    if (res.ok) {
+                                      const data = await res.json();
+                                      updateWorkspaceRoom(index, 'img', data.imageUrl);
+                                    }
+                                  } catch (err) { console.error(err); }
+                                }}
+                              />
+                            </label>
+                          </div>
+                          {room.img && (
+                            <div className="mt-2 w-28 h-20 bg-black/50 rounded-lg border border-white/5 overflow-hidden">
+                              <img src={room.img} alt="Preview" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                            </div>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Description</label>
+                          <textarea
+                            placeholder="Description"
+                            rows={2}
+                            value={room.desc || ''}
+                            onChange={(e) => updateWorkspaceRoom(index, 'desc', e.target.value)}
+                            className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none resize-none leading-relaxed"
+                          />
+                        </div>
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              {/* SECTION 6: DEVELOPMENT STANDARDS TIMELINE */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
+                <div className="flex justify-between items-center">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-rose-400">// Section 6: Development Standards</span>
+                  <button
+                    onClick={addTimelineStep}
+                    className="px-2 py-1 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors"
+                  >
+                    + Add Step
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2 pb-2 border-b border-white/5">
+                  <div>
+                    <label className="font-mono text-[8px] text-neutral-500 block">Eyebrow</label>
+                    <input
+                      type="text"
+                      value={currentContent.about_us.timeline_operational?.eyebrow || ''}
+                      onChange={(e) => updateTimelineOperationalField('eyebrow', e.target.value)}
+                      className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-mono text-[8px] text-neutral-500 block">Section Title</label>
+                    <input
+                      type="text"
+                      value={currentContent.about_us.timeline_operational?.title || ''}
+                      onChange={(e) => updateTimelineOperationalField('title', e.target.value)}
+                      className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {(currentContent.about_us.timeline_operational?.steps || []).map((stepItem, index) => (
+                    <div key={index} className="p-4 bg-black/40 border border-white/5 rounded-xl space-y-3">
+                      <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                        <span className="font-mono text-[9px] text-neutral-500 font-bold">{stepItem.step || 'New Step'}</span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            disabled={index === 0}
+                            onClick={() => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              const arr = nextContent.about_us.timeline_operational.steps;
+                              [arr[index - 1], arr[index]] = [arr[index], arr[index - 1]];
+                              pushState(nextContent);
+                            }}
+                            className={`px-1.5 py-0.5 text-[9px] font-mono rounded border ${index === 0 ? 'text-neutral-600 border-white/5 cursor-not-allowed' : 'text-neutral-400 border-white/10 hover:text-white hover:border-white/20 cursor-pointer'}`}
+                          >▲</button>
+                          <button
+                            disabled={index === (currentContent.about_us.timeline_operational.steps || []).length - 1}
+                            onClick={() => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              const arr = nextContent.about_us.timeline_operational.steps;
+                              [arr[index], arr[index + 1]] = [arr[index + 1], arr[index]];
+                              pushState(nextContent);
+                            }}
+                            className={`px-1.5 py-0.5 text-[9px] font-mono rounded border ${index === (currentContent.about_us.timeline_operational.steps || []).length - 1 ? 'text-neutral-600 border-white/5 cursor-not-allowed' : 'text-neutral-400 border-white/10 hover:text-white hover:border-white/20 cursor-pointer'}`}
+                          >▼</button>
+                          <button
+                            onClick={() => deleteTimelineStep(index)}
+                            className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="col-span-1">
+                            <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Label (e.g. 01)</label>
+                            <input
+                              type="text"
+                              value={stepItem.label || ''}
+                              onChange={(e) => updateTimelineStep(index, 'label', e.target.value)}
+                              className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Step Name</label>
+                            <input
+                              type="text"
+                              value={stepItem.step || ''}
+                              onChange={(e) => updateTimelineStep(index, 'step', e.target.value)}
+                              className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Description</label>
+                          <textarea
+                            placeholder="Description"
+                            rows={2}
+                            value={stepItem.desc || ''}
+                            onChange={(e) => updateTimelineStep(index, 'desc', e.target.value)}
+                            className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none resize-none leading-relaxed"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* SECTION 7: OFFICE LOCATIONS */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
+                <div className="flex justify-between items-center">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-rose-400">// Section 7: Office Locations</span>
+                  <button
+                    onClick={addOfficeField}
+                    className="px-2 py-1 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors"
+                  >
+                    + Add Office
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2 pb-2 border-b border-white/5">
+                  <div>
+                    <label className="font-mono text-[8px] text-neutral-500 block">Eyebrow</label>
+                    <input
+                      type="text"
+                      value={currentContent.about_us.office_locations?.eyebrow || ''}
+                      onChange={(e) => updateOfficeLocationsField('eyebrow', e.target.value)}
+                      className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-mono text-[8px] text-neutral-500 block">Section Title</label>
+                    <input
+                      type="text"
+                      value={currentContent.about_us.office_locations?.title || ''}
+                      onChange={(e) => updateOfficeLocationsField('title', e.target.value)}
+                      className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {(currentContent.about_us.office_locations?.offices || []).map((officeItem, index) => (
+                    <div key={index} className="p-4 bg-black/40 border border-white/5 rounded-xl space-y-3">
+                      <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                        <span className="font-mono text-[9px] text-neutral-500 font-bold">{officeItem.location || 'New Office'}</span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            disabled={index === 0}
+                            onClick={() => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              const arr = nextContent.about_us.office_locations.offices;
+                              [arr[index - 1], arr[index]] = [arr[index], arr[index - 1]];
+                              pushState(nextContent);
+                            }}
+                            className={`px-1.5 py-0.5 text-[9px] font-mono rounded border ${index === 0 ? 'text-neutral-600 border-white/5 cursor-not-allowed' : 'text-neutral-400 border-white/10 hover:text-white hover:border-white/20 cursor-pointer'}`}
+                          >▲</button>
+                          <button
+                            disabled={index === (currentContent.about_us.office_locations.offices || []).length - 1}
+                            onClick={() => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              const arr = nextContent.about_us.office_locations.offices;
+                              [arr[index], arr[index + 1]] = [arr[index + 1], arr[index]];
+                              pushState(nextContent);
+                            }}
+                            className={`px-1.5 py-0.5 text-[9px] font-mono rounded border ${index === (currentContent.about_us.office_locations.offices || []).length - 1 ? 'text-neutral-600 border-white/5 cursor-not-allowed' : 'text-neutral-400 border-white/10 hover:text-white hover:border-white/20 cursor-pointer'}`}
+                          >▼</button>
+                          <button
+                            onClick={() => deleteOfficeField(index)}
+                            className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="col-span-1">
+                            <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Code (e.g. IN-DEV)</label>
+                            <input
+                              type="text"
+                              value={officeItem.code || ''}
+                              onChange={(e) => updateOfficeField(index, 'code', e.target.value)}
+                              className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Location Name</label>
+                            <input
+                              type="text"
+                              value={officeItem.location || ''}
+                              onChange={(e) => updateOfficeField(index, 'location', e.target.value)}
+                              className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Address Details</label>
+                          <input
+                            type="text"
+                            value={officeItem.address || ''}
+                            onChange={(e) => updateOfficeField(index, 'address', e.target.value)}
+                            className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Contact Email</label>
+                          <input
+                            type="text"
+                            value={officeItem.contact || ''}
+                            onChange={(e) => updateOfficeField(index, 'contact', e.target.value)}
+                            className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* SECTION 8: COMPANY MANIFESTO QUOTES */}
+              <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-rose-400">// Section 8: Manifesto Quotes</span>
+                <div className="space-y-2">
+                  <div>
+                    <label className="font-mono text-[8px] text-neutral-500 block">Eyebrow</label>
+                    <input
+                      type="text"
+                      value={currentContent.about_us.manifesto?.eyebrow || ''}
+                      onChange={(e) => updateManifestoField('eyebrow', e.target.value)}
+                      className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-mono text-[8px] text-neutral-500 block">Manifesto Quote 1</label>
+                    <textarea
+                      rows={2}
+                      value={currentContent.about_us.manifesto?.quote1 || ''}
+                      onChange={(e) => updateManifestoField('quote1', e.target.value)}
+                      className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-mono text-[8px] text-neutral-500 block">Manifesto Quote 2</label>
+                    <textarea
+                      rows={2}
+                      value={currentContent.about_us.manifesto?.quote2 || ''}
+                      onChange={(e) => updateManifestoField('quote2', e.target.value)}
+                      className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-mono text-[8px] text-neutral-500 block">Footnote Caption</label>
+                    <input
+                      type="text"
+                      value={currentContent.about_us.manifesto?.footnote || ''}
+                      onChange={(e) => updateManifestoField('footnote', e.target.value)}
+                      className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
           {/* 5. LIFE & CULTURE CMS PANEL */}
+          {/* 5. LIFE & CULTURE CMS PANEL */}
           {activeTab === 'our_culture' && currentContent.our_culture && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Culture Aspects Registry ({currentContent.our_culture.length})</span>
-                <button
-                  onClick={addCultureItem}
-                  className="px-3 py-1.5 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors"
-                >
-                  + Add Culture Aspect
-                </button>
+            <div className="space-y-8 animate-fadeIn">
+              
+              {/* SECTION 1: HERO SECTION HEADERS */}
+              <div className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-rose-400">// Section 1: Hero Header</span>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Hero Eyebrow Subtitle</label>
+                    <input
+                      type="text"
+                      value={currentContent.culture_settings?.subtitle || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.culture_settings) nextContent.culture_settings = {};
+                        nextContent.culture_settings.subtitle = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Hero Title</label>
+                    <input
+                      type="text"
+                      value={currentContent.culture_settings?.title || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.culture_settings) nextContent.culture_settings = {};
+                        nextContent.culture_settings.title = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Hero Description</label>
+                  <textarea
+                    rows={2}
+                    value={currentContent.culture_settings?.description || ''}
+                    onChange={(e) => {
+                      const nextContent = JSON.parse(JSON.stringify(currentContent));
+                      if (!nextContent.culture_settings) nextContent.culture_settings = {};
+                      nextContent.culture_settings.description = e.target.value;
+                      pushState(nextContent);
+                    }}
+                    className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-normal"
+                  />
+                </div>
               </div>
 
-              <div className="space-y-4">
-                {currentContent.our_culture.map((item, index) => (
-                  <div key={index} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-3 text-left">
-                    <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                      <span className="font-mono text-[9px] text-neutral-500 font-bold">{item.title || 'New Culture Aspect'}</span>
-                      <button
-                        onClick={() => deleteCultureItem(index)}
-                        className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                    <div className="space-y-2">
-                      <input
-                        type="text"
-                        placeholder="Title"
-                        value={item.title}
-                        onChange={(e) => updateCultureItem(index, 'title', e.target.value)}
-                        className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Icon Identifier (learning, collab, celebrate, client, ownership, grow)"
-                        value={item.icon}
-                        onChange={(e) => updateCultureItem(index, 'icon', e.target.value)}
-                        className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Image URL"
-                        value={item.img}
-                        onChange={(e) => updateCultureItem(index, 'img', e.target.value)}
-                        className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
-                      />
-                      <textarea
-                        placeholder="Description"
-                        rows={2}
-                        value={item.desc}
-                        onChange={(e) => updateCultureItem(index, 'desc', e.target.value)}
-                        className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none resize-none"
-                      />
-                    </div>
+              {/* SECTION 2: LIFE AT HK GRID & ASPECT CARDS */}
+              <div className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-rose-400">// Section 2: Life at HK Grid</span>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Grid Eyebrow Subtitle</label>
+                    <input
+                      type="text"
+                      value={currentContent.culture_settings?.gridSubtitle || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.culture_settings) nextContent.culture_settings = {};
+                        nextContent.culture_settings.gridSubtitle = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                    />
                   </div>
-                ))}
+                  <div>
+                    <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Grid Title</label>
+                    <input
+                      type="text"
+                      value={currentContent.culture_settings?.gridTitle || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.culture_settings) nextContent.culture_settings = {};
+                        nextContent.culture_settings.gridTitle = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Grid Description</label>
+                  <textarea
+                    rows={2}
+                    value={currentContent.culture_settings?.gridDescription || ''}
+                    onChange={(e) => {
+                      const nextContent = JSON.parse(JSON.stringify(currentContent));
+                      if (!nextContent.culture_settings) nextContent.culture_settings = {};
+                      nextContent.culture_settings.gridDescription = e.target.value;
+                      pushState(nextContent);
+                    }}
+                    className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-normal"
+                  />
+                </div>
+
+                {/* Grid Aspect Cards */}
+                <div className="border-t border-white/5 pt-4 space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">Culture Aspect Cards ({currentContent.our_culture.length})</span>
+                    <button
+                      onClick={addCultureItem}
+                      className="px-2 py-1 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors"
+                    >
+                      + Add Aspect Card
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {currentContent.our_culture.map((item, index) => (
+                      <div key={index} className="p-4 bg-white/[0.01] border border-white/5 rounded-xl space-y-3">
+                        <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                          <span className="font-mono text-[9px] text-neutral-500 font-bold">{item.title || 'New Culture Aspect'}</span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              disabled={index === 0}
+                              onClick={() => {
+                                const nextContent = JSON.parse(JSON.stringify(currentContent));
+                                const arr = nextContent.our_culture;
+                                [arr[index - 1], arr[index]] = [arr[index], arr[index - 1]];
+                                pushState(nextContent);
+                              }}
+                              className={`px-1.5 py-0.5 text-[9px] font-mono rounded border ${index === 0 ? 'text-neutral-600 border-white/5 cursor-not-allowed' : 'text-neutral-400 border-white/10 hover:text-white hover:border-white/20 cursor-pointer'}`}
+                            >▲</button>
+                            <button
+                              disabled={index === (currentContent.our_culture || []).length - 1}
+                              onClick={() => {
+                                const nextContent = JSON.parse(JSON.stringify(currentContent));
+                                const arr = nextContent.our_culture;
+                                [arr[index], arr[index + 1]] = [arr[index + 1], arr[index]];
+                                pushState(nextContent);
+                              }}
+                              className={`px-1.5 py-0.5 text-[9px] font-mono rounded border ${index === (currentContent.our_culture || []).length - 1 ? 'text-neutral-600 border-white/5 cursor-not-allowed' : 'text-neutral-400 border-white/10 hover:text-white hover:border-white/20 cursor-pointer'}`}
+                            >▼</button>
+                            <button
+                              onClick={() => deleteCultureItem(index)}
+                              className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Title</label>
+                            <input
+                              type="text"
+                              placeholder="Title"
+                              value={item.title || ''}
+                              onChange={(e) => updateCultureItem(index, 'title', e.target.value)}
+                              className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Icon Identifier</label>
+                            <select
+                              value={item.icon || 'learning'}
+                              onChange={(e) => updateCultureItem(index, 'icon', e.target.value)}
+                              className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none"
+                            >
+                              <option value="learning">learning (Mortarboard)</option>
+                              <option value="collab">collab (Collaborative Team)</option>
+                              <option value="celebrate">celebrate (Light Bulb/Trophy)</option>
+                              <option value="client">client (Checkmark)</option>
+                              <option value="ownership">ownership (Shield)</option>
+                              <option value="grow">grow (Trend Chart)</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Aspect Image URL</label>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={item.img || ''}
+                              onChange={(e) => updateCultureItem(index, 'img', e.target.value)}
+                              className="flex-1 px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                            />
+                            <label className="px-3 py-1.5 bg-white/5 border border-white/10 rounded text-[8px] text-neutral-400 hover:text-white cursor-pointer flex items-center">
+                              Upload
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={async (e) => {
+                                  const file = e.target.files[0]; if (!file) return;
+                                  const formData = new FormData(); formData.append('file', file);
+                                  try {
+                                    const res = await fetch(API_URL + '/api/upload/image', { method: 'POST', body: formData });
+                                    if (res.ok) {
+                                      const data = await res.json();
+                                      updateCultureItem(index, 'img', data.imageUrl);
+                                    }
+                                  } catch (err) { console.error(err); }
+                                }}
+                              />
+                            </label>
+                          </div>
+                          {item.img && (
+                            <div className="mt-2 w-28 h-20 bg-black/50 rounded-lg border border-white/5 overflow-hidden">
+                              <img src={item.img} alt="Preview" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                            </div>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Description</label>
+                          <textarea
+                            placeholder="Description"
+                            rows={2}
+                            value={item.desc || ''}
+                            onChange={(e) => updateCultureItem(index, 'desc', e.target.value)}
+                            className="w-full px-3 py-2 bg-black border border-white/10 rounded-lg text-white text-xs focus:outline-none resize-none leading-relaxed"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
+
+              {/* SECTION 3: ART & LOGIC BALANCE COMPASS */}
+              <div className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-rose-400">// Section 3: Interactive Balance Compass</span>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Widget Eyebrow Subtitle</label>
+                    <input
+                      type="text"
+                      value={currentContent.culture_settings?.widgetSubtitle || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.culture_settings) nextContent.culture_settings = {};
+                        nextContent.culture_settings.widgetSubtitle = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Widget Title</label>
+                    <input
+                      type="text"
+                      value={currentContent.culture_settings?.widgetTitle || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.culture_settings) nextContent.culture_settings = {};
+                        nextContent.culture_settings.widgetTitle = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Widget Description</label>
+                  <textarea
+                    rows={2}
+                    value={currentContent.culture_settings?.widgetDescription || ''}
+                    onChange={(e) => {
+                      const nextContent = JSON.parse(JSON.stringify(currentContent));
+                      if (!nextContent.culture_settings) nextContent.culture_settings = {};
+                      nextContent.culture_settings.widgetDescription = e.target.value;
+                      pushState(nextContent);
+                    }}
+                    className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-normal"
+                  />
+                </div>
+              </div>
+
+              {/* SECTION 4: THE CULTURE CODE MANIFESTO */}
+              <div className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-rose-400">// Section 4: Culture Protocol Manifesto</span>
+                
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Manifesto Eyebrow</label>
+                    <input
+                      type="text"
+                      value={currentContent.culture_settings?.manifestoSubtitle || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.culture_settings) nextContent.culture_settings = {};
+                        nextContent.culture_settings.manifestoSubtitle = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Manifesto Title</label>
+                    <input
+                      type="text"
+                      value={currentContent.culture_settings?.manifestoTitle || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.culture_settings) nextContent.culture_settings = {};
+                        nextContent.culture_settings.manifestoTitle = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Manifesto Filename</label>
+                    <input
+                      type="text"
+                      value={currentContent.culture_settings?.manifestoFilename || ''}
+                      onChange={(e) => {
+                        const nextContent = JSON.parse(JSON.stringify(currentContent));
+                        if (!nextContent.culture_settings) nextContent.culture_settings = {};
+                        nextContent.culture_settings.manifestoFilename = e.target.value;
+                        pushState(nextContent);
+                      }}
+                      className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Manifesto Code Protocol (Valid JSON string)</label>
+                  <textarea
+                    rows={8}
+                    value={currentContent.culture_settings?.manifestoCode || ''}
+                    onChange={(e) => {
+                      const nextContent = JSON.parse(JSON.stringify(currentContent));
+                      if (!nextContent.culture_settings) nextContent.culture_settings = {};
+                      nextContent.culture_settings.manifestoCode = e.target.value;
+                      pushState(nextContent);
+                    }}
+                    className="w-full px-3 py-2 bg-black border border-white/10 rounded text-amber-400 font-mono text-[11px] focus:outline-none leading-relaxed"
+                    placeholder='{ ... }'
+                  />
+                </div>
+              </div>
+
             </div>
           )}
 
           {/* 6. TEAM MEMBERS CMS PANEL */}
-          {activeTab === 'people' && currentContent.people && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Organigram Team Registry ({currentContent.people.length})</span>
-                <button
-                  onClick={addPeopleItem}
-                  className="px-3 py-1.5 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors"
-                >
-                  + Add Member
-                </button>
-              </div>
+          {activeTab === 'people' && currentContent.people && (() => {
+            const selectedIndex = currentContent.people.findIndex(p => p.name === selectedNodeName);
+            const selectedItem = selectedIndex !== -1 ? currentContent.people[selectedIndex] : null;
 
-              <div className="space-y-4">
-                {currentContent.people.map((item, index) => (
-                  <div key={index} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-3 text-left">
+            return (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center pb-3 border-b border-white/5">
+                  <h3 className="font-mono text-[10px] uppercase tracking-wider text-white">
+                    {selectedItem ? `// Editing: ${selectedItem.name}` : '// Organigram Team Registry'}
+                  </h3>
+                  {selectedItem && (
+                    <button
+                      onClick={() => setSelectedNodeName(null)}
+                      className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/10 text-neutral-300 hover:text-white rounded text-[8px] font-mono font-semibold"
+                    >
+                      ← Back to List
+                    </button>
+                  )}
+                </div>
+
+                {selectedItem ? (
+                  <div className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-4 text-left animate-fadeIn">
                     <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                      <span className="font-mono text-[9px] text-neutral-500 font-bold">{item.name || 'New Member'}</span>
+                      <span className="font-mono text-[9px] text-neutral-400 uppercase tracking-widest">// Employee Properties</span>
                       <button
-                        onClick={() => deletePeopleItem(index)}
-                        className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded"
+                        onClick={() => {
+                          deletePeopleItem(selectedIndex);
+                          setSelectedNodeName(null);
+                        }}
+                        className="px-2.5 py-1 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded bg-red-500/5 hover:bg-red-500/10"
                       >
-                        Delete
+                        Delete Node
                       </button>
                     </div>
+
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Name</label>
                         <input
                           type="text"
-                          value={item.name}
-                          onChange={(e) => updatePeopleItem(index, 'name', e.target.value)}
+                          value={selectedItem.name}
+                          onChange={(e) => {
+                            const newName = e.target.value;
+                            updatePeopleItem(selectedIndex, 'name', newName);
+                            setSelectedNodeName(newName);
+                          }}
                           className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
                         />
                       </div>
@@ -4340,12 +5407,13 @@ export default function AdminPanel() {
                         <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Role</label>
                         <input
                           type="text"
-                          value={item.role}
-                          onChange={(e) => updatePeopleItem(index, 'role', e.target.value)}
+                          value={selectedItem.role}
+                          onChange={(e) => updatePeopleItem(selectedIndex, 'role', e.target.value)}
                           className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
                         />
                       </div>
                     </div>
+
                     <div className="grid grid-cols-3 gap-3">
                       <div>
                         <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Level (1-5)</label>
@@ -4353,8 +5421,8 @@ export default function AdminPanel() {
                           type="number"
                           min="1"
                           max="5"
-                          value={item.level}
-                          onChange={(e) => updatePeopleItem(index, 'level', e.target.value)}
+                          value={selectedItem.level}
+                          onChange={(e) => updatePeopleItem(selectedIndex, 'level', e.target.value)}
                           className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
                         />
                       </div>
@@ -4362,8 +5430,8 @@ export default function AdminPanel() {
                         <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Icon / Emoji</label>
                         <input
                           type="text"
-                          value={item.icon}
-                          onChange={(e) => updatePeopleItem(index, 'icon', e.target.value)}
+                          value={selectedItem.icon || ''}
+                          onChange={(e) => updatePeopleItem(selectedIndex, 'icon', e.target.value)}
                           className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
                         />
                       </div>
@@ -4371,47 +5439,131 @@ export default function AdminPanel() {
                         <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Department</label>
                         <input
                           type="text"
-                          value={item.dept}
-                          onChange={(e) => updatePeopleItem(index, 'dept', e.target.value)}
+                          value={selectedItem.dept || ''}
+                          onChange={(e) => updatePeopleItem(selectedIndex, 'dept', e.target.value)}
                           className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
                         />
                       </div>
                     </div>
+
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Manager ID (Name)</label>
-                        <input
-                          type="text"
-                          value={item.parent_id || ''}
-                          onChange={(e) => updatePeopleItem(index, 'parent_id', e.target.value || null)}
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Manager (Parent Name)</label>
+                        <select
+                          value={selectedItem.parent_id || ''}
+                          onChange={(e) => updatePeopleItem(selectedIndex, 'parent_id', e.target.value || null)}
                           className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
-                          placeholder="e.g. Radhe Patel"
-                        />
+                        >
+                          <option value="">No Parent (Root Node)</option>
+                          {currentContent.people.filter(p => p.name !== selectedItem.name).map(p => (
+                            <option key={p.name} value={p.name}>{p.name} ({p.role})</option>
+                          ))}
+                        </select>
                       </div>
                       <div>
                         <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Avatar Image URL</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={selectedItem.image || ''}
+                            onChange={(e) => updatePeopleItem(selectedIndex, 'image', e.target.value)}
+                            className="flex-1 px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                          />
+                          <label className="px-2.5 py-1 bg-white/5 border border-white/10 rounded text-[8px] text-neutral-400 hover:text-white cursor-pointer flex items-center">
+                            Upload
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={async (e) => {
+                                const file = e.target.files[0];
+                                if (!file) return;
+                                const formData = new FormData();
+                                formData.append('file', file);
+                                try {
+                                  const res = await fetch(API_URL + '/api/upload/image', { method: 'POST', body: formData });
+                                  if (res.ok) {
+                                    const data = await res.json();
+                                    updatePeopleItem(selectedIndex, 'image', data.imageUrl);
+                                  }
+                                } catch (err) {
+                                  console.error(err);
+                                }
+                              }}
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 pt-3 border-t border-white/5">
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">X Coordinate (Canvas)</label>
                         <input
-                          type="text"
-                          value={item.image}
-                          onChange={(e) => updatePeopleItem(index, 'image', e.target.value)}
+                          type="number"
+                          value={selectedItem.x || 100}
+                          onChange={(e) => updatePeopleItem(selectedIndex, 'x', parseInt(e.target.value) || 0)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Y Coordinate (Canvas)</label>
+                        <input
+                          type="number"
+                          value={selectedItem.y || 100}
+                          onChange={(e) => updatePeopleItem(selectedIndex, 'y', parseInt(e.target.value) || 0)}
                           className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
                         />
                       </div>
                     </div>
+
                     <div>
                       <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Short Bio</label>
                       <textarea
-                        rows={2}
-                        value={item.bio}
-                        onChange={(e) => updatePeopleItem(index, 'bio', e.target.value)}
-                        className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none"
+                        rows={3}
+                        value={selectedItem.bio || ''}
+                        onChange={(e) => updatePeopleItem(selectedIndex, 'bio', e.target.value)}
+                        className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed"
                       />
                     </div>
                   </div>
-                ))}
+                ) : (
+                  <div className="space-y-4 animate-fadeIn">
+                    <div className="p-6 bg-white/[0.01] border border-dashed border-white/10 rounded-2xl text-center space-y-3">
+                      <p className="text-xs text-neutral-400 leading-relaxed font-sans">
+                        💡 Direct visual editing is active. Click any node in the preview canvas to edit its properties, parent, coordinates, or to duplicate/delete it.
+                      </p>
+                      <button
+                        onClick={addPeopleItem}
+                        className="px-4 py-2 bg-white text-black font-semibold text-[9px] uppercase tracking-widest rounded-xl hover:bg-neutral-200 transition-colors cursor-pointer"
+                      >
+                        + Spawn New Employee Node
+                      </button>
+                    </div>
+
+                    <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4 space-y-3 text-left">
+                      <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">// Registry Index</h4>
+                      <div className="max-h-[300px] overflow-y-auto space-y-1.5 pr-1">
+                        {currentContent.people.map((p) => (
+                          <div 
+                            key={p.name}
+                            onClick={() => setSelectedNodeName(p.name)}
+                            className="p-2.5 bg-black/40 border border-white/5 hover:border-rose-500/20 hover:bg-rose-500/5 rounded-lg flex items-center justify-between cursor-pointer transition-all"
+                          >
+                            <div>
+                              <p className="text-xs font-bold text-white">{p.name}</p>
+                              <p className="text-[10px] text-neutral-400 mt-0.5">{p.role}</p>
+                            </div>
+                            <span className="text-[9px] font-mono text-neutral-500 uppercase">Level {p.level}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* 7. AWARDS & ACHIEVEMENTS CMS PANEL */}
           {activeTab === 'awards' && currentContent.awards && (
@@ -4431,19 +5583,51 @@ export default function AdminPanel() {
                   <div key={index} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-3 text-left">
                     <div className="flex justify-between items-center border-b border-white/5 pb-2">
                       <span className="font-mono text-[9px] text-neutral-500 font-bold">{item.title || 'New Award'}</span>
-                      <button
-                        onClick={() => deleteAwardItem(index)}
-                        className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded"
-                      >
-                        Delete
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          disabled={index === 0}
+                          onClick={() => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            const arr = nextContent.awards;
+                            const temp = arr[index]; arr[index] = arr[index - 1]; arr[index - 1] = temp;
+                            pushState(nextContent);
+                          }}
+                          className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
+                        >▲</button>
+                        <button
+                          disabled={index === currentContent.awards.length - 1}
+                          onClick={() => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            const arr = nextContent.awards;
+                            const temp = arr[index]; arr[index] = arr[index + 1]; arr[index + 1] = temp;
+                            pushState(nextContent);
+                          }}
+                          className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
+                        >▼</button>
+                        <button
+                          onClick={() => deleteAwardItem(index)}
+                          className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded cursor-pointer ml-1"
+                        >Delete</button>
+                      </div>
                     </div>
+
+                    {/* Title */}
+                    <div>
+                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Award Title</label>
+                      <input
+                        type="text"
+                        value={item.title || ''}
+                        onChange={(e) => updateAwardItem(index, 'title', e.target.value)}
+                        className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                      />
+                    </div>
+
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Slug ID</label>
                         <input
                           type="text"
-                          value={item.slug}
+                          value={item.slug || ''}
                           onChange={(e) => updateAwardItem(index, 'slug', e.target.value)}
                           className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
                         />
@@ -4452,18 +5636,19 @@ export default function AdminPanel() {
                         <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Year</label>
                         <input
                           type="text"
-                          value={item.year}
+                          value={item.year || ''}
                           onChange={(e) => updateAwardItem(index, 'year', e.target.value)}
                           className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
                         />
                       </div>
                     </div>
+
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Awarded By</label>
                         <input
                           type="text"
-                          value={item.by}
+                          value={item.by || ''}
                           onChange={(e) => updateAwardItem(index, 'by', e.target.value)}
                           className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
                         />
@@ -4472,37 +5657,59 @@ export default function AdminPanel() {
                         <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Recipient</label>
                         <input
                           type="text"
-                          value={item.recipient}
+                          value={item.recipient || ''}
                           onChange={(e) => updateAwardItem(index, 'recipient', e.target.value)}
                           className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
                         />
                       </div>
                     </div>
+
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Category (company / founders)</label>
                         <input
                           type="text"
-                          value={item.category}
+                          value={item.category || ''}
                           onChange={(e) => updateAwardItem(index, 'category', e.target.value)}
                           className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
                         />
                       </div>
-                      <div>
-                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Banner Image URL</label>
+                    </div>
+
+                    {/* Image with Preview & Upload */}
+                    <div>
+                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Banner Image URL</label>
+                      <div className="flex gap-2">
                         <input
                           type="text"
-                          value={item.img}
+                          value={item.img || ''}
                           onChange={(e) => updateAwardItem(index, 'img', e.target.value)}
-                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                          className="flex-1 px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
                         />
+                        <label className="px-3 py-1.5 bg-white/5 border border-white/10 rounded text-[8px] text-neutral-400 hover:text-white cursor-pointer flex items-center">
+                          Upload
+                          <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                            const file = e.target.files[0]; if (!file) return;
+                            const formData = new FormData(); formData.append('file', file);
+                            try {
+                              const res = await fetch(API_URL + '/api/upload/image', { method: 'POST', body: formData });
+                              if (res.ok) { const data = await res.json(); updateAwardItem(index, 'img', data.imageUrl); }
+                            } catch (err) { console.error(err); }
+                          }} />
+                        </label>
                       </div>
+                      {item.img && (
+                        <div className="mt-2 w-full h-32 bg-black/50 rounded-lg border border-white/5 overflow-hidden">
+                          <img src={item.img} alt="Preview" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                        </div>
+                      )}
                     </div>
+
                     <div>
                       <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Short Summary</label>
                       <textarea
                         rows={2}
-                        value={item.description}
+                        value={item.description || ''}
                         onChange={(e) => updateAwardItem(index, 'description', e.target.value)}
                         className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none"
                       />
@@ -4511,10 +5718,69 @@ export default function AdminPanel() {
                       <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Detailed Narrative</label>
                       <textarea
                         rows={3}
-                        value={item.longDescription}
+                        value={item.longDescription || ''}
                         onChange={(e) => updateAwardItem(index, 'longDescription', e.target.value)}
                         className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none"
                       />
+                    </div>
+
+                    {/* Key Highlights */}
+                    <div>
+                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Key Highlights (one per line)</label>
+                      <textarea
+                        rows={2}
+                        value={item.highlights ? item.highlights.join('\n') : ''}
+                        onChange={(e) => updateAwardItem(index, 'highlights', e.target.value)}
+                        className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none"
+                      />
+                    </div>
+
+                    {/* Impact Stats Builder */}
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <label className="font-mono text-[8px] text-neutral-500">Impact Stats</label>
+                        <button
+                          onClick={() => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            if (!nextContent.awards[index].impactStats) nextContent.awards[index].impactStats = [];
+                            nextContent.awards[index].impactStats.push({ label: 'New Stat', value: 'Value' });
+                            pushState(nextContent);
+                          }}
+                          className="text-[8px] text-emerald-400 font-mono cursor-pointer hover:text-emerald-300"
+                        >+ Add Stat</button>
+                      </div>
+                      <div className="space-y-1.5">
+                        {(item.impactStats || []).map((stat, si) => (
+                          <div key={si} className="flex gap-1.5 items-center">
+                            <input
+                              type="text" placeholder="Value" value={stat.value || ''}
+                              onChange={(e) => {
+                                const nextContent = JSON.parse(JSON.stringify(currentContent));
+                                nextContent.awards[index].impactStats[si].value = e.target.value;
+                                pushState(nextContent);
+                              }}
+                              className="w-1/3 px-2 py-1 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                            />
+                            <input
+                              type="text" placeholder="Label" value={stat.label || ''}
+                              onChange={(e) => {
+                                const nextContent = JSON.parse(JSON.stringify(currentContent));
+                                nextContent.awards[index].impactStats[si].label = e.target.value;
+                                pushState(nextContent);
+                              }}
+                              className="flex-1 px-2 py-1 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                            />
+                            <button
+                              onClick={() => {
+                                const nextContent = JSON.parse(JSON.stringify(currentContent));
+                                nextContent.awards[index].impactStats.splice(si, 1);
+                                pushState(nextContent);
+                              }}
+                              className="text-[8px] text-red-500 hover:text-red-400 px-1.5 cursor-pointer"
+                            >✕</button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -4540,40 +5806,82 @@ export default function AdminPanel() {
                   <div key={index} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-3 text-left">
                     <div className="flex justify-between items-center border-b border-white/5 pb-2">
                       <span className="font-mono text-[9px] text-neutral-500 font-bold">{item.title || 'New Post'}</span>
-                      <button
-                        onClick={() => deleteBlogItem(index)}
-                        className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded"
-                      >
-                        Delete
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          disabled={index === 0}
+                          onClick={() => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            const arr = nextContent.blogs;
+                            const temp = arr[index]; arr[index] = arr[index - 1]; arr[index - 1] = temp;
+                            pushState(nextContent);
+                          }}
+                          className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
+                        >▲</button>
+                        <button
+                          disabled={index === currentContent.blogs.length - 1}
+                          onClick={() => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            const arr = nextContent.blogs;
+                            const temp = arr[index]; arr[index] = arr[index + 1]; arr[index + 1] = temp;
+                            pushState(nextContent);
+                          }}
+                          className="w-5 h-5 bg-white/5 hover:bg-white/10 rounded flex items-center justify-center text-[8px] text-neutral-400 hover:text-white cursor-pointer disabled:opacity-30"
+                        >▼</button>
+                        <button
+                          onClick={() => deleteBlogItem(index)}
+                          className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded cursor-pointer ml-1"
+                        >Delete</button>
+                      </div>
                     </div>
+
+                    {/* Title */}
+                    <div>
+                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Post Title</label>
+                      <input
+                        type="text"
+                        value={item.title || ''}
+                        onChange={(e) => updateBlogItem(index, 'title', e.target.value)}
+                        className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                      />
+                    </div>
+
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Slug URL ID</label>
                         <input
                           type="text"
-                          value={item.slug}
+                          value={item.slug || ''}
                           onChange={(e) => updateBlogItem(index, 'slug', e.target.value)}
                           className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
                         />
                       </div>
                       <div>
-                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Publish Date</label>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Author</label>
                         <input
                           type="text"
-                          value={item.date}
-                          onChange={(e) => updateBlogItem(index, 'date', e.target.value)}
+                          value={item.author || ''}
+                          onChange={(e) => updateBlogItem(index, 'author', e.target.value)}
                           className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
                         />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+
+                    <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Author</label>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Publish Date</label>
                         <input
                           type="text"
-                          value={item.author}
-                          onChange={(e) => updateBlogItem(index, 'author', e.target.value)}
+                          value={item.date || ''}
+                          onChange={(e) => updateBlogItem(index, 'date', e.target.value)}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Read Time</label>
+                        <input
+                          type="text"
+                          value={item.readTime || ''}
+                          onChange={(e) => updateBlogItem(index, 'readTime', e.target.value)}
                           className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
                         />
                       </div>
@@ -4581,37 +5889,47 @@ export default function AdminPanel() {
                         <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Category</label>
                         <input
                           type="text"
-                          value={item.category}
+                          value={item.category || ''}
                           onChange={(e) => updateBlogItem(index, 'category', e.target.value)}
                           className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
                         />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Read Time</label>
+
+                    {/* Image with Preview & Upload */}
+                    <div>
+                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Post Image URL</label>
+                      <div className="flex gap-2">
                         <input
                           type="text"
-                          value={item.readTime}
-                          onChange={(e) => updateBlogItem(index, 'readTime', e.target.value)}
-                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
-                        />
-                      </div>
-                      <div>
-                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Post Image URL</label>
-                        <input
-                          type="text"
-                          value={item.image}
+                          value={item.image || ''}
                           onChange={(e) => updateBlogItem(index, 'image', e.target.value)}
-                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                          className="flex-1 px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
                         />
+                        <label className="px-3 py-1.5 bg-white/5 border border-white/10 rounded text-[8px] text-neutral-400 hover:text-white cursor-pointer flex items-center">
+                          Upload
+                          <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                            const file = e.target.files[0]; if (!file) return;
+                            const formData = new FormData(); formData.append('file', file);
+                            try {
+                              const res = await fetch(API_URL + '/api/upload/image', { method: 'POST', body: formData });
+                              if (res.ok) { const data = await res.json(); updateBlogItem(index, 'image', data.imageUrl); }
+                            } catch (err) { console.error(err); }
+                          }} />
+                        </label>
                       </div>
+                      {item.image && (
+                        <div className="mt-2 w-full h-32 bg-black/50 rounded-lg border border-white/5 overflow-hidden">
+                          <img src={item.image} alt="Preview" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                        </div>
+                      )}
                     </div>
+
                     <div>
                       <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Short Preview Description</label>
                       <textarea
                         rows={2}
-                        value={item.desc}
+                        value={item.desc || ''}
                         onChange={(e) => updateBlogItem(index, 'desc', e.target.value)}
                         className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none"
                       />
@@ -8138,13 +9456,14 @@ export default function AdminPanel() {
           {/* OUR STORY CMS PANEL */}
           {activeTab === 'our_story' && (
             <div className="space-y-6">
+              {/* ═══ MILESTONES SECTION ═══ */}
               <div className="flex justify-between items-center">
                 <span className="font-mono text-[10px] uppercase tracking-wider text-white">// Timeline Milestones ({currentContent.milestones?.length || 0})</span>
                 <button
                   onClick={() => {
                     const nextContent = JSON.parse(JSON.stringify(currentContent));
                     if (!nextContent.milestones) nextContent.milestones = [];
-                    nextContent.milestones.unshift({ year: '2027', title: 'New Milestone', description: 'Description of milestone...' });
+                    nextContent.milestones.unshift({ year: '2027', month: '', title: 'New Milestone', description: 'Description of milestone...', highlights: [] });
                     pushState(nextContent);
                   }}
                   className="px-3 py-1.5 bg-white text-black font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-neutral-200 transition-colors"
@@ -8157,19 +9476,42 @@ export default function AdminPanel() {
                 {(currentContent.milestones || []).map((item, index) => (
                   <div key={index} className="p-4 bg-white/[0.02] border border-white/5 rounded-xl space-y-3 text-left">
                     <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                      <span className="font-mono text-[9px] text-neutral-500 font-bold">{item.year || 'New Milestone'}</span>
-                      <button
-                        onClick={() => {
-                          const nextContent = JSON.parse(JSON.stringify(currentContent));
-                          nextContent.milestones.splice(index, 1);
-                          pushState(nextContent);
-                        }}
-                        className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded"
-                      >
-                        Delete
-                      </button>
+                      <span className="font-mono text-[9px] text-neutral-500 font-bold">{item.month ? `${item.month} ` : ''}{item.year || 'New Milestone'}</span>
+                      <div className="flex items-center gap-2">
+                        {/* Reorder Controls */}
+                        <button
+                          disabled={index === 0}
+                          onClick={() => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            const arr = nextContent.milestones;
+                            [arr[index - 1], arr[index]] = [arr[index], arr[index - 1]];
+                            pushState(nextContent);
+                          }}
+                          className={`px-1.5 py-0.5 text-[9px] font-mono rounded border ${index === 0 ? 'text-neutral-600 border-white/5 cursor-not-allowed' : 'text-neutral-400 border-white/10 hover:text-white hover:border-white/20 cursor-pointer'}`}
+                        >▲</button>
+                        <button
+                          disabled={index === (currentContent.milestones || []).length - 1}
+                          onClick={() => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            const arr = nextContent.milestones;
+                            [arr[index], arr[index + 1]] = [arr[index + 1], arr[index]];
+                            pushState(nextContent);
+                          }}
+                          className={`px-1.5 py-0.5 text-[9px] font-mono rounded border ${index === (currentContent.milestones || []).length - 1 ? 'text-neutral-600 border-white/5 cursor-not-allowed' : 'text-neutral-400 border-white/10 hover:text-white hover:border-white/20 cursor-pointer'}`}
+                        >▼</button>
+                        <button
+                          onClick={() => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            nextContent.milestones.splice(index, 1);
+                            pushState(nextContent);
+                          }}
+                          className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-4 gap-3">
                       <div className="col-span-1">
                         <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Year</label>
                         <input
@@ -8182,6 +9524,23 @@ export default function AdminPanel() {
                           }}
                           className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
                         />
+                      </div>
+                      <div className="col-span-1">
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Month (Optional)</label>
+                        <select
+                          value={item.month || ''}
+                          onChange={(e) => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            nextContent.milestones[index].month = e.target.value;
+                            pushState(nextContent);
+                          }}
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                        >
+                          <option value="">— None —</option>
+                          {["January","February","March","April","May","June","July","August","September","October","November","December"].map(m => (
+                            <option key={m} value={m}>{m}</option>
+                          ))}
+                        </select>
                       </div>
                       <div className="col-span-2">
                         <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Milestone Title</label>
@@ -8210,8 +9569,239 @@ export default function AdminPanel() {
                         className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed"
                       />
                     </div>
+                    <div>
+                      <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Key Deliverables / Highlights (one per line)</label>
+                      <textarea
+                        rows={3}
+                        value={(item.highlights || []).join('\n')}
+                        onChange={(e) => {
+                          const nextContent = JSON.parse(JSON.stringify(currentContent));
+                          nextContent.milestones[index].highlights = e.target.value.split('\n').filter(l => l.trim() !== '');
+                          pushState(nextContent);
+                        }}
+                        placeholder="e.g. Edge AI integration&#10;Autonomous visual state routers&#10;Leading spatial computing benchmarks"
+                        className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed"
+                      />
+                    </div>
                   </div>
                 ))}
+              </div>
+
+              {/* ═══ STRATEGIC DIRECTIVES (YEARLY VISION & MISSION) ═══ */}
+              <div className="mt-10 pt-8 border-t border-white/10">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-emerald-400">// Yearly Vision & Mission ({currentContent.strategic_directives?.length || 0})</span>
+                  <button
+                    onClick={() => {
+                      const nextContent = JSON.parse(JSON.stringify(currentContent));
+                      if (!nextContent.strategic_directives) nextContent.strategic_directives = [];
+                      nextContent.strategic_directives.unshift({
+                        year: String(new Date().getFullYear()),
+                        month: '',
+                        theme: 'New Directive Theme',
+                        color: 'from-blue-500/10 to-cyan-500/5 border-blue-500/20',
+                        glowColor: 'rgba(59, 130, 246, 0.15)',
+                        badgeColor: 'text-blue-400 bg-blue-500/10 border-blue-500/20',
+                        vision: 'Enter the vision statement...',
+                        mission: 'Enter the mission statement...',
+                        kpis: []
+                      });
+                      pushState(nextContent);
+                    }}
+                    className="px-3 py-1.5 bg-emerald-600 text-white font-semibold text-[8px] uppercase tracking-widest rounded hover:bg-emerald-500 transition-colors"
+                  >
+                    + Add Directive
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {(currentContent.strategic_directives || []).map((directive, dIdx) => (
+                    <div key={dIdx} className="p-5 bg-white/[0.02] border border-white/5 rounded-xl space-y-3 text-left">
+                      <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                        <span className="font-mono text-[9px] text-emerald-400 font-bold">
+                          {directive.month ? `${directive.month} ` : ''}{directive.year || 'New Directive'} — {directive.theme || 'Untitled'}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          {/* Reorder Controls */}
+                          <button
+                            disabled={dIdx === 0}
+                            onClick={() => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              const arr = nextContent.strategic_directives;
+                              [arr[dIdx - 1], arr[dIdx]] = [arr[dIdx], arr[dIdx - 1]];
+                              pushState(nextContent);
+                            }}
+                            className={`px-1.5 py-0.5 text-[9px] font-mono rounded border ${dIdx === 0 ? 'text-neutral-600 border-white/5 cursor-not-allowed' : 'text-neutral-400 border-white/10 hover:text-white hover:border-white/20 cursor-pointer'}`}
+                          >▲</button>
+                          <button
+                            disabled={dIdx === (currentContent.strategic_directives || []).length - 1}
+                            onClick={() => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              const arr = nextContent.strategic_directives;
+                              [arr[dIdx], arr[dIdx + 1]] = [arr[dIdx + 1], arr[dIdx]];
+                              pushState(nextContent);
+                            }}
+                            className={`px-1.5 py-0.5 text-[9px] font-mono rounded border ${dIdx === (currentContent.strategic_directives || []).length - 1 ? 'text-neutral-600 border-white/5 cursor-not-allowed' : 'text-neutral-400 border-white/10 hover:text-white hover:border-white/20 cursor-pointer'}`}
+                          >▼</button>
+                          <button
+                            onClick={() => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              nextContent.strategic_directives.splice(dIdx, 1);
+                              pushState(nextContent);
+                            }}
+                            className="px-2 py-0.5 text-[8px] text-red-500 hover:text-red-400 font-mono border border-red-500/10 hover:border-red-500/20 rounded"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Year / Month / Theme Row */}
+                      <div className="grid grid-cols-4 gap-3">
+                        <div className="col-span-1">
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Year</label>
+                          <input
+                            type="text"
+                            value={directive.year || ''}
+                            onChange={(e) => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              nextContent.strategic_directives[dIdx].year = e.target.value;
+                              pushState(nextContent);
+                            }}
+                            className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                          />
+                        </div>
+                        <div className="col-span-1">
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Month (Optional)</label>
+                          <select
+                            value={directive.month || ''}
+                            onChange={(e) => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              nextContent.strategic_directives[dIdx].month = e.target.value;
+                              pushState(nextContent);
+                            }}
+                            className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                          >
+                            <option value="">— None —</option>
+                            {["January","February","March","April","May","June","July","August","September","October","November","December"].map(m => (
+                              <option key={m} value={m}>{m}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="col-span-2">
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Theme</label>
+                          <input
+                            type="text"
+                            value={directive.theme || ''}
+                            onChange={(e) => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              nextContent.strategic_directives[dIdx].theme = e.target.value;
+                              pushState(nextContent);
+                            }}
+                            className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Vision & Mission Textareas */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Vision Statement</label>
+                          <textarea
+                            rows={3}
+                            value={directive.vision || ''}
+                            onChange={(e) => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              nextContent.strategic_directives[dIdx].vision = e.target.value;
+                              pushState(nextContent);
+                            }}
+                            className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed"
+                          />
+                        </div>
+                        <div>
+                          <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Mission Statement</label>
+                          <textarea
+                            rows={3}
+                            value={directive.mission || ''}
+                            onChange={(e) => {
+                              const nextContent = JSON.parse(JSON.stringify(currentContent));
+                              nextContent.strategic_directives[dIdx].mission = e.target.value;
+                              pushState(nextContent);
+                            }}
+                            className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed"
+                          />
+                        </div>
+                      </div>
+
+                      {/* KPIs (one per line) */}
+                      <div>
+                        <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">KPIs / Key Deliverables (one per line)</label>
+                        <textarea
+                          rows={3}
+                          value={(directive.kpis || []).join('\n')}
+                          onChange={(e) => {
+                            const nextContent = JSON.parse(JSON.stringify(currentContent));
+                            nextContent.strategic_directives[dIdx].kpis = e.target.value.split('\n').filter(l => l.trim() !== '');
+                            pushState(nextContent);
+                          }}
+                          placeholder="e.g. Autonomous prompt compilation loops&#10;Edge-native sub-10ms data sync&#10;Unified cognitive control panels"
+                          className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none resize-none leading-relaxed"
+                        />
+                      </div>
+
+                      {/* Style Configuration (Collapsible) */}
+                      <details className="group">
+                        <summary className="font-mono text-[8px] text-neutral-500 cursor-pointer hover:text-neutral-300 transition-colors uppercase tracking-wider">
+                          ▸ Style Configuration (color, glow, badge)
+                        </summary>
+                        <div className="grid grid-cols-3 gap-3 mt-2">
+                          <div>
+                            <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Color Class</label>
+                            <input
+                              type="text"
+                              value={directive.color || ''}
+                              onChange={(e) => {
+                                const nextContent = JSON.parse(JSON.stringify(currentContent));
+                                nextContent.strategic_directives[dIdx].color = e.target.value;
+                                pushState(nextContent);
+                              }}
+                              className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                              placeholder="from-blue-500/10 to-cyan-500/5 border-blue-500/20"
+                            />
+                          </div>
+                          <div>
+                            <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Glow Color (rgba/hex)</label>
+                            <input
+                              type="text"
+                              value={directive.glowColor || ''}
+                              onChange={(e) => {
+                                const nextContent = JSON.parse(JSON.stringify(currentContent));
+                                nextContent.strategic_directives[dIdx].glowColor = e.target.value;
+                                pushState(nextContent);
+                              }}
+                              className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                              placeholder="rgba(59, 130, 246, 0.15)"
+                            />
+                          </div>
+                          <div>
+                            <label className="font-mono text-[8px] text-neutral-500 block mb-0.5">Badge Color Class</label>
+                            <input
+                              type="text"
+                              value={directive.badgeColor || ''}
+                              onChange={(e) => {
+                                const nextContent = JSON.parse(JSON.stringify(currentContent));
+                                nextContent.strategic_directives[dIdx].badgeColor = e.target.value;
+                                pushState(nextContent);
+                              }}
+                              className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
+                              placeholder="text-blue-400 bg-blue-500/10 border-blue-500/20"
+                            />
+                          </div>
+                        </div>
+                      </details>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}

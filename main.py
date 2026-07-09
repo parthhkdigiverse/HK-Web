@@ -66,6 +66,69 @@ from app.db.seed import (
     DEFAULT_SERVICES_SUBPAGES
 )
 
+DEFAULT_STRATEGIC_DIRECTIVES = [
+  {
+    "year": "2026",
+    "month": "",
+    "theme": "Cognitive Ecosystem & Edge AI",
+    "color": "from-blue-500/10 to-cyan-500/5 border-blue-500/20",
+    "glowColor": "rgba(59, 130, 246, 0.15)",
+    "badgeColor": "text-blue-400 bg-blue-500/10 border-blue-500/20",
+    "vision": "Empower modern platforms with self-optimizing code nodes, localized LLMs, and zero-latency visual computing ecosystems.",
+    "mission": "Deploy robust, edge-native micro-agents and visual rendering engines that sync in real-time across decentralized client networks.",
+    "kpis": [
+      "Autonomous prompt compilation loops",
+      "Edge-native sub-10ms data sync",
+      "Unified cognitive control panels"
+    ]
+  },
+  {
+    "year": "2025",
+    "month": "",
+    "theme": "Decentralized Autonomy & Spatial Web",
+    "color": "from-emerald-500/10 to-teal-500/5 border-emerald-500/20",
+    "glowColor": "rgba(16, 185, 129, 0.15)",
+    "badgeColor": "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+    "vision": "Lead the evolution of visual human-computer interaction by bridging decentralized visual nodes with spatial web computing frameworks.",
+    "mission": "Architect fully autonomous multi-agent networks that execute secure device-level tasks, rendering real-time responsive spatial grids.",
+    "kpis": [
+      "Peer-to-peer visual state routers",
+      "Responsive 3D viewport systems",
+      "Local-first cryptographic databases"
+    ]
+  },
+  {
+    "year": "2024",
+    "month": "",
+    "theme": "Cognitive Intelligence & Cinematic Web",
+    "color": "from-amber-500/10 to-orange-500/5 border-amber-500/20",
+    "glowColor": "rgba(245, 158, 11, 0.15)",
+    "badgeColor": "text-amber-400 bg-amber-500/10 border-amber-500/20",
+    "vision": "Pioneer the application of customized LLM agents, vector database indexing pipelines, and fluid, high-fidelity user interfaces.",
+    "mission": "Integrate context-aware AI automations directly into client product structures, accompanied by 3D gestures and cinematic front-end animations.",
+    "kpis": [
+      "Dynamic prompt-caching networks",
+      "Framer Motion & WebGL fluid interfaces",
+      "Vector-based cognitive search nodes"
+    ]
+  },
+  {
+    "year": "2023",
+    "month": "",
+    "theme": "Enterprise Integration & Core CRM",
+    "color": "from-purple-500/10 to-indigo-500/5 border-purple-500/20",
+    "glowColor": "rgba(168, 85, 247, 0.15)",
+    "badgeColor": "text-purple-400 bg-purple-500/10 border-purple-500/20",
+    "vision": "Establish HariKrushn as a leading architect of high-concurrency cloud ecosystems, custom CRM software, and data management matrices for global enterprises.",
+    "mission": "Deploy secure, multi-tenant databases and automated signing portals that reduce human administrative overhead by 80% and scale operational speeds.",
+    "kpis": [
+      "Zero-downtime migration protocols",
+      "Unified client management databases",
+      "High-throughput microservices mesh"
+    ]
+  }
+]
+
 DEFAULT_CASE_STUDIES = [
   {
     "slug": "vesper",
@@ -535,6 +598,22 @@ DEFAULT_VENTURES_SETTINGS = {
     "subtitle": "Beyond client work, we build, incubate, and run initiatives that create lasting social and economic impact across India."
 }
 
+DEFAULT_CULTURE_SETTINGS = {
+    "subtitle": "// Where Code Meets Art",
+    "title": "Our Culture",
+    "description": "At HariKrushn DigiVerse LLP, our culture is the foundation of innovation, collaboration, and impact. We don't just build digital solutions, we build trust and long-term relationships.",
+    "gridSubtitle": "Life at HK DigiVerse",
+    "gridTitle": "More Than Work. It's Our Way of Life.",
+    "gridDescription": "At HK DigiVerse LLP, we believe that a strong culture builds a strong team. Here's what makes our workplace inspiring, engaging, and truly our own.",
+    "widgetSubtitle": "// Interactive Widget",
+    "widgetTitle": "Art & Logic Equilibrium",
+    "widgetDescription": "We operate at the intersection of fine digital art and deep system logic. Adjust the slider below to observe how the structures sync.",
+    "manifestoSubtitle": "// Manifesto Protocol",
+    "manifestoTitle": "The Culture Code",
+    "manifestoFilename": "hk_culture_protocol.json",
+    "manifestoCode": '{\n  "organization": "HariKrushn DigiVerse LLP",\n  "ethos": "Bespoke Digital Craftsmanship",\n  "foundationalRule": "Zero generic templates, 100% custom architectures",\n  "executionStandards": {\n    "designFrameRate": 120,\n    "backendQuality": "TDD + Strict API health parameters",\n    "deliveryPipeline": "Automated CI/CD gates"\n  },\n  "communicationCode": [\n    "High trust, absolute ownership",\n    "Low meetings, maximum coding flow",\n    "Constructive, transparent feedback loops"\n  ]\n}'
+}
+
 DEFAULT_CONTACT_SETTINGS = {
     "title": "Let's Create Together",
     "subtitle": "Have a project in mind, want to inquire about custom solutions, or simply want to say hello? We'd love to hear from you.",
@@ -689,7 +768,9 @@ DEFAULT_CONTENT = {
     "career_intern_form_fields": DEFAULT_INTERN_FORM_FIELDS,
     "career_philosophy_cards": DEFAULT_PHILOSOPHY_CARDS,
     "industries": DEFAULT_INDUSTRIES,
-    "industry_projects": DEFAULT_INDUSTRY_PROJECTS
+    "industry_projects": DEFAULT_INDUSTRY_PROJECTS,
+    "strategic_directives": DEFAULT_STRATEGIC_DIRECTIVES,
+    "culture_settings": DEFAULT_CULTURE_SETTINGS
 }
 
 # MongoDB connection cache
@@ -770,7 +851,8 @@ def compile_full_content(base_content: dict) -> dict:
         "about_us": ("about_us", "identifier", "about_us_content", DEFAULT_ABOUT_US),
         "contact_settings": ("contact_settings", "identifier", "contact_page_settings", DEFAULT_CONTACT_SETTINGS),
         "ventures_settings": ("ventures_settings", "identifier", "ventures_page_settings", DEFAULT_VENTURES_SETTINGS),
-        "career_settings": ("career_settings", "identifier", "career_page_settings", DEFAULT_CAREER_SETTINGS)
+        "career_settings": ("career_settings", "identifier", "career_page_settings", DEFAULT_CAREER_SETTINGS),
+        "culture_settings": ("culture_settings", "identifier", "culture_page_settings", DEFAULT_CULTURE_SETTINGS)
     }
     
     for key, (coll_name, query_field, query_val, fallback) in collections_map.items():
@@ -802,7 +884,8 @@ def compile_full_content(base_content: dict) -> dict:
         "career_intern_form_fields": ("career_intern_form_fields", "sort_order", DEFAULT_INTERN_FORM_FIELDS),
         "career_philosophy_cards": ("career_philosophy_cards", "sort_order", DEFAULT_PHILOSOPHY_CARDS),
         "industries": ("industries", "sort_order", DEFAULT_INDUSTRIES),
-        "industry_projects": ("industry_projects", "sort_order", DEFAULT_INDUSTRY_PROJECTS)
+        "industry_projects": ("industry_projects", "sort_order", DEFAULT_INDUSTRY_PROJECTS),
+        "strategic_directives": ("strategic_directives", "sort_order", DEFAULT_STRATEGIC_DIRECTIVES)
     }
     
     for key, (coll_name, sort_field, fallback) in list_collections_map.items():
@@ -919,6 +1002,14 @@ def save_normalized_draft(data: dict):
             upsert=True
         )
         
+    # Save culture_settings
+    if "culture_settings" in data:
+        mongo_db["culture_settings"].replace_one(
+            {"identifier": "culture_page_settings"},
+            {"identifier": "culture_page_settings", **data["culture_settings"]},
+            upsert=True
+        )
+        
     # Save list-based collections (clear and insert to keep sync)
     list_collections = {
         "our_culture": "our_culture",
@@ -941,7 +1032,8 @@ def save_normalized_draft(data: dict):
         "career_intern_form_fields": "career_intern_form_fields",
         "career_philosophy_cards": "career_philosophy_cards",
         "industries": "industries",
-        "industry_projects": "industry_projects"
+        "industry_projects": "industry_projects",
+        "strategic_directives": "strategic_directives"
     }
     
     for key, coll_name in list_collections.items():
