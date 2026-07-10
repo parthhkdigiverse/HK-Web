@@ -134,8 +134,11 @@ const BrandLogo = ({ logo, name, size }) => {
 
 export default function HomeSections({ overrideContent }) {
   const { content: globalContent } = useContent();
-  const activeContent = overrideContent || globalContent;
-  const { stats, services, sectors, brands } = activeContent;
+  const activeContent = overrideContent || globalContent || {};
+  const stats = activeContent.stats || [];
+  const services = activeContent.services || [];
+  const sectors = activeContent.sectors || [];
+  const brands = activeContent.brands;
 
   const defaultBrands = {
     show: true,

@@ -10,7 +10,7 @@ gsap.registerPlugin(ScrollTrigger);
 export default function HeroSection({ isLoaded, overrideContent }) {
   const { content: globalContent } = useContent();
   const activeContent = overrideContent || globalContent;
-  const { hero } = activeContent;
+  const hero = activeContent?.hero || {};
 
   const containerRef = useRef(null);
   const canvasRef = useRef(null);

@@ -393,7 +393,7 @@ function StarParticles() {
 }
 
 /* ───────────────────── VERTICAL PERSON CARD COMPONENT ───────────────────── */
-function PersonCard({ node, isActive, isDimmed, onHover, onClick, accent, hoveredNode, tooltipSide = 'right' }) {
+function PersonCard({ node, isActive, isDimmed, onHover, onClick, accent, hoveredNode, tooltipSide = 'right', isSelected }) {
   const isCLevel = node.level === 2;
 
   const cardId = `node-${node.name.replace(/\s+/g, '-').toLowerCase()}`;
@@ -418,11 +418,13 @@ function PersonCard({ node, isActive, isDimmed, onHover, onClick, accent, hovere
         isDimmed ? 'opacity-20 scale-[0.96] blur-[0.5px] pointer-events-none' : 'opacity-100 hover:scale-[1.04]'
       }`}
       style={{
-        borderColor: isActive ? accent.glowColor : 'rgba(255,255,255,0.06)',
-        boxShadow: isActive 
+        borderColor: isSelected ? '#f43f5e' : isActive ? accent.glowColor : 'rgba(255,255,255,0.06)',
+        boxShadow: isSelected
+          ? `0 0 25px rgba(244,63,94,0.4), 0 10px 30px rgba(0, 0, 0, 0.6)`
+          : isActive 
           ? `0 0 25px ${accent.glowColor}40, 0 10px 30px rgba(0, 0, 0, 0.6)` 
           : '0 8px 20px rgba(0, 0, 0, 0.4)',
-        zIndex: (isActive || showTooltip) ? 150 : 10
+        zIndex: (isActive || showTooltip || isSelected) ? 150 : 10
       }}
     >
       {/* Dynamic hover glow trace */}
@@ -532,7 +534,7 @@ function PersonCard({ node, isActive, isDimmed, onHover, onClick, accent, hovere
 }
 
 /* ───────────────────── DESKTOP CONSTELLATION TREE ───────────────────── */
-function DesktopTree({ activeMember, onSelect, expandedExecs, toggleExec, hoveredNode, setHoveredNode, parentMap, founders, cLevels, departments }) {
+function DesktopTree({ activeMember, onSelect, expandedExecs, toggleExec, hoveredNode, setHoveredNode, parentMap, founders, cLevels, departments, selectedNodeName }) {
   const treeContainerRef = useRef(null);
   const [connections, setConnections] = useState([]);
 
@@ -721,6 +723,7 @@ function DesktopTree({ activeMember, onSelect, expandedExecs, toggleExec, hovere
           onClick={() => {}}
           accent={levelAccents[1]}
           hoveredNode={hoveredNode}
+          isSelected={selectedNodeName === 'HariKrushn DigiVerse LLP'}
         />
       </div>
 
@@ -735,6 +738,7 @@ function DesktopTree({ activeMember, onSelect, expandedExecs, toggleExec, hovere
           accent={levelAccents[1]}
           hoveredNode={hoveredNode}
           tooltipSide="right"
+          isSelected={selectedNodeName === founders[0].name}
         />
         <PersonCard 
           node={founders[1]} 
@@ -745,6 +749,7 @@ function DesktopTree({ activeMember, onSelect, expandedExecs, toggleExec, hovere
           accent={levelAccents[1]}
           hoveredNode={hoveredNode}
           tooltipSide="left"
+          isSelected={selectedNodeName === founders[1].name}
         />
       </div>
 
@@ -762,10 +767,14 @@ function DesktopTree({ activeMember, onSelect, expandedExecs, toggleExec, hovere
             isActive={expandedExecs[key]}
             isDimmed={isNodeDimmed(exec.name)}
             onHover={setHoveredNode}
-            onClick={() => toggleExec(key)}
+            onClick={() => {
+              toggleExec(key);
+              onSelect(activeMember === exec.name ? null : exec);
+            }}
             accent={levelAccents[2]}
             hoveredNode={hoveredNode}
             tooltipSide={side}
+            isSelected={selectedNodeName === exec.name}
           />
         ))}
       </div>
@@ -792,6 +801,7 @@ function DesktopTree({ activeMember, onSelect, expandedExecs, toggleExec, hovere
                 accent={levelAccents[3]}
                 hoveredNode={hoveredNode}
                 tooltipSide="right"
+                isSelected={selectedNodeName === departments[0].lead.name}
               />
               <PersonCard 
                 node={departments[0].lead.employee} 
@@ -802,6 +812,7 @@ function DesktopTree({ activeMember, onSelect, expandedExecs, toggleExec, hovere
                 accent={levelAccents[4]}
                 hoveredNode={hoveredNode}
                 tooltipSide="right"
+                isSelected={selectedNodeName === departments[0].lead.employee.name}
               />
               <PersonCard 
                 node={departments[0].lead.employee.intern} 
@@ -812,6 +823,7 @@ function DesktopTree({ activeMember, onSelect, expandedExecs, toggleExec, hovere
                 accent={levelAccents[5]}
                 hoveredNode={hoveredNode}
                 tooltipSide="right"
+                isSelected={selectedNodeName === departments[0].lead.employee.intern.name}
               />
             </motion.div>
           )}
@@ -837,6 +849,7 @@ function DesktopTree({ activeMember, onSelect, expandedExecs, toggleExec, hovere
                 accent={levelAccents[3]}
                 hoveredNode={hoveredNode}
                 tooltipSide="right"
+                isSelected={selectedNodeName === departments[1].lead.name}
               />
               <PersonCard 
                 node={departments[1].lead.employee} 
@@ -847,6 +860,7 @@ function DesktopTree({ activeMember, onSelect, expandedExecs, toggleExec, hovere
                 accent={levelAccents[4]}
                 hoveredNode={hoveredNode}
                 tooltipSide="right"
+                isSelected={selectedNodeName === departments[1].lead.employee.name}
               />
               <PersonCard 
                 node={departments[1].lead.employee.intern} 
@@ -857,6 +871,7 @@ function DesktopTree({ activeMember, onSelect, expandedExecs, toggleExec, hovere
                 accent={levelAccents[5]}
                 hoveredNode={hoveredNode}
                 tooltipSide="right"
+                isSelected={selectedNodeName === departments[1].lead.employee.intern.name}
               />
             </motion.div>
           )}
@@ -882,6 +897,7 @@ function DesktopTree({ activeMember, onSelect, expandedExecs, toggleExec, hovere
                 accent={levelAccents[3]}
                 hoveredNode={hoveredNode}
                 tooltipSide="right"
+                isSelected={selectedNodeName === departments[2].lead.name}
               />
               <PersonCard 
                 node={departments[2].lead.employee} 
@@ -892,6 +908,7 @@ function DesktopTree({ activeMember, onSelect, expandedExecs, toggleExec, hovere
                 accent={levelAccents[4]}
                 hoveredNode={hoveredNode}
                 tooltipSide="right"
+                isSelected={selectedNodeName === departments[2].lead.employee.name}
               />
               <PersonCard 
                 node={departments[2].lead.employee.intern} 
@@ -902,6 +919,7 @@ function DesktopTree({ activeMember, onSelect, expandedExecs, toggleExec, hovere
                 accent={levelAccents[5]}
                 hoveredNode={hoveredNode}
                 tooltipSide="right"
+                isSelected={selectedNodeName === departments[2].lead.employee.intern.name}
               />
             </motion.div>
           )}
@@ -927,6 +945,7 @@ function DesktopTree({ activeMember, onSelect, expandedExecs, toggleExec, hovere
                 accent={levelAccents[3]}
                 hoveredNode={hoveredNode}
                 tooltipSide="left"
+                isSelected={selectedNodeName === departments[3].lead.name}
               />
               <PersonCard 
                 node={departments[3].lead.employee} 
@@ -937,6 +956,7 @@ function DesktopTree({ activeMember, onSelect, expandedExecs, toggleExec, hovere
                 accent={levelAccents[4]}
                 hoveredNode={hoveredNode}
                 tooltipSide="left"
+                isSelected={selectedNodeName === departments[3].lead.employee.name}
               />
               <PersonCard 
                 node={departments[3].lead.employee.intern} 
@@ -947,6 +967,7 @@ function DesktopTree({ activeMember, onSelect, expandedExecs, toggleExec, hovere
                 accent={levelAccents[5]}
                 hoveredNode={hoveredNode}
                 tooltipSide="left"
+                isSelected={selectedNodeName === departments[3].lead.employee.intern.name}
               />
             </motion.div>
           )}
@@ -972,6 +993,7 @@ function DesktopTree({ activeMember, onSelect, expandedExecs, toggleExec, hovere
                 accent={levelAccents[3]}
                 hoveredNode={hoveredNode}
                 tooltipSide="left"
+                isSelected={selectedNodeName === departments[4].lead.name}
               />
               <PersonCard 
                 node={departments[4].lead.employee} 
@@ -982,6 +1004,7 @@ function DesktopTree({ activeMember, onSelect, expandedExecs, toggleExec, hovere
                 accent={levelAccents[4]}
                 hoveredNode={hoveredNode}
                 tooltipSide="left"
+                isSelected={selectedNodeName === departments[4].lead.employee.name}
               />
               <PersonCard 
                 node={departments[4].lead.employee.intern} 
@@ -992,6 +1015,7 @@ function DesktopTree({ activeMember, onSelect, expandedExecs, toggleExec, hovere
                 accent={levelAccents[5]}
                 hoveredNode={hoveredNode}
                 tooltipSide="left"
+                isSelected={selectedNodeName === departments[4].lead.employee.intern.name}
               />
             </motion.div>
           )}
@@ -1039,9 +1063,10 @@ function MobileTreeNode({ node, activeMember, onSelect }) {
 }
 
 /* ══════════════════ MAIN EXPORT ══════════════════ */
-export default function OurPeople() {
-  const { content } = useContent();
-  const peopleList = content?.people || [];
+export default function OurPeople({ overrideContent }) {
+  const { content: globalContent } = useContent();
+  const activeContent = overrideContent || globalContent;
+  const peopleList = activeContent?.people || [];
 
   // Compute structures dynamically
   const founders = [
@@ -1159,7 +1184,7 @@ export default function OurPeople() {
 
   // Preview / Editor State
   const isPreviewMode = window.location.hash.includes('preview');
-  const [viewMode, setViewMode] = useState('map'); // 'map' or 'tree'
+  const [viewMode, setViewMode] = useState('tree'); // 'map' or 'tree'
   const [selectedNodeName, setSelectedNodeName] = useState(null);
 
   const { updatePeople } = useContent(); // context update helper if any, but we sync via parent message
@@ -1231,74 +1256,21 @@ export default function OurPeople() {
           The constellation of minds engineering the future at HariKrushn DigiVerse.
         </p>
 
-        {/* View Mode Toggle Buttons */}
-        {!isPreviewMode && (
-          <div className="inline-flex p-1 bg-white/5 border border-white/10 rounded-xl relative z-20">
-            <button
-              onClick={() => setViewMode('map')}
-              className={`px-4 py-2 text-[10px] font-semibold uppercase tracking-widest rounded-lg transition-all ${viewMode === 'map' ? 'bg-white text-black' : 'text-neutral-400 hover:text-white'}`}
-            >
-              Constellation Map
-            </button>
-            <button
-              onClick={() => setViewMode('tree')}
-              className={`px-4 py-2 text-[10px] font-semibold uppercase tracking-widest rounded-lg transition-all ${viewMode === 'tree' ? 'bg-white text-black' : 'text-neutral-400 hover:text-white'}`}
-            >
-              Tree Hierarchy
-            </button>
-          </div>
-        )}
       </div>
 
-      {/* ── Interactive Constellation Canvas ── */}
-      {viewMode === 'map' || isPreviewMode ? (
+      {/* ── Interactive Constellation Canvas (Admin Preview Only for Drag & Drop Editing) ── */}
+      {isPreviewMode ? (
         <div className="w-full max-w-[1400px] mx-auto px-4 md:px-8 lg:px-12 relative z-10">
           <OrganigramCanvas
             people={peopleList}
             onChange={handleCanvasChange}
             onSelectNode={(node) => handleSelect(node)}
             selectedNodeName={selectedNodeName}
-            isEditMode={isPreviewMode}
+            isEditMode={true}
           />
-          
-          {/* Selected Member Detail Card (overlay) */}
-          {activeMember && (
-            <div className="mt-6 p-6 bg-neutral-900/90 border border-white/10 rounded-2xl max-w-md mx-auto text-left relative overflow-hidden backdrop-blur-md">
-              <div className="absolute top-0 right-0 p-3">
-                <button onClick={() => handleSelect(null)} className="text-neutral-500 hover:text-white text-xs">✕ Close</button>
-              </div>
-              {(() => {
-                const member = peopleList.find(p => p.name === activeMember);
-                if (!member) return null;
-                return (
-                  <div className="flex gap-4 items-start">
-                    <div className="w-16 h-16 rounded-xl overflow-hidden bg-neutral-800 border border-white/10 flex-shrink-0">
-                      {member.image ? (
-                        <img src={member.image} alt={member.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-xl">{member.icon || '👤'}</div>
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-white flex items-center gap-1.5">
-                        {member.name} <span className="text-sm">{member.icon}</span>
-                      </h3>
-                      <p className="text-xs text-rose-400 font-medium">{member.role}</p>
-                      {member.dept && (
-                        <span className="inline-block mt-2 px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[9px] font-mono text-neutral-400 uppercase">
-                          {member.dept}
-                        </span>
-                      )}
-                      <p className="text-xs text-neutral-400 leading-relaxed mt-3 font-light">{member.bio}</p>
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
-          )}
         </div>
       ) : (
-        /* ── Desktop Constellation Tree (Full Page Width) ── */
+        /* ── Desktop Constellation Tree (Full Page Width for Public Live Site) ── */
         <div className="hidden lg:block w-full pb-32 pt-12 relative">
           <div
             className="absolute inset-0 rounded-3xl border border-white/[0.03] overflow-hidden"
@@ -1322,6 +1294,7 @@ export default function OurPeople() {
               founders={founders}
               cLevels={cLevels}
               departments={clonedDeps}
+              selectedNodeName={selectedNodeName}
             />
           </div>
         </div>

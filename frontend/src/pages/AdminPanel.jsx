@@ -357,8 +357,9 @@ export default function AdminPanel() {
         nextContent.people = event.data.people;
         pushState(nextContent);
         
-        // Auto Save to database
+        // Auto Save and Publish directly to database
         saveDraft(nextContent, password);
+        publishDraft(nextContent, password);
         setIsDirty(false);
       } else if (event.data && event.data.type === 'ORGANIGRAM_NODE_SELECTED') {
         setSelectedNodeName(event.data.name);

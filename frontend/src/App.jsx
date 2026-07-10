@@ -124,7 +124,7 @@ function PreviewContainer({ currentHash }) {
       case '/our-story':
         return <OurStory />;
       case '/our-people':
-        return <OurPeople />;
+        return <OurPeople overrideContent={previewContent} />;
       case '/our-culture':
         return <OurCulture />;
       case '/about-us':
