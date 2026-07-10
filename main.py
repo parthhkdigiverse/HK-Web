@@ -27,7 +27,7 @@ if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
 os.environ["PYTHONPATH"] = backend_dir + os.pathsep + os.environ.get("PYTHONPATH", "")
 
-load_dotenv()  # Loads .env from the root directory
+load_dotenv(override=True)  # Loads .env from the root directory
 
 from app.core.config import settings
 

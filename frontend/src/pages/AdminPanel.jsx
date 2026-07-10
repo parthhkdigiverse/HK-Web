@@ -90,6 +90,7 @@ export default function AdminPanel() {
   // Submissions search and filter states
   const [submissionSearch, setSubmissionSearch] = useState('');
   const [submissionFilter, setSubmissionFilter] = useState('all'); // 'all', 'inquiry', 'application'
+  const [peopleSearch, setPeopleSearch] = useState('');
 
   // Active state content is pulled from our history stack
   const currentContent = history[historyIndex] || DEFAULT_CONTENT;
@@ -363,6 +364,10 @@ export default function AdminPanel() {
         setIsDirty(false);
       } else if (event.data && event.data.type === 'ORGANIGRAM_NODE_SELECTED') {
         setSelectedNodeName(event.data.name);
+      } else if (event.data && event.data.type === 'ORGANIGRAM_UNDO') {
+        handleUndo();
+      } else if (event.data && event.data.type === 'ORGANIGRAM_REDO') {
+        handleRedo();
       }
     };
     window.addEventListener('message', handlePreviewMessages);
@@ -1309,23 +1314,54 @@ export default function AdminPanel() {
   const addPeopleItem = () => {
     const nextContent = JSON.parse(JSON.stringify(currentContent));
     if (!nextContent.people) nextContent.people = [];
+    const newId = crypto.randomUUID().split('-')[0];
     nextContent.people.push({
-      name: 'New Member ' + (nextContent.people.length + 1),
+      name: `Employee-${newId}`,
       role: 'Engineer / Designer',
       bio: 'Detail bio...',
       level: 4,
       icon: '💻',
       dept: 'DEVELOPMENT',
       image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&h=150&q=80',
-      parent_id: null,
-      x: 600,
-      y: 980
+      parent_id: null
     });
     pushState(nextContent);
   };
 
   const deletePeopleItem = (index) => {
     const nextContent = JSON.parse(JSON.stringify(currentContent));
+    const deletedMember = nextContent.people[index];
+    if (!deletedMember) return;
+
+    const subordinates = nextContent.people.filter(p => p.parent_id === deletedMember.name);
+
+    if (subordinates.length > 0) {
+      const choice = confirm(
+        `તમે "${deletedMember.name}" ને ડિલીટ કરી રહ્યા છો જેમના હાથ નીચે ${subordinates.length} સભ્યો કામ કરે છે.\n\n` +
+        `• 'OK' દબાવો: આ સભ્યોને તેમના ઉપરના મેનેજર (${deletedMember.parent_id || 'HariKrushn DigiVerse LLP'}) સાથે કનેક્ટ કરવા માટે.\n` +
+        `• 'Cancel' દબાવો: આ સભ્યોને ફ્લોટિંગ (મેનેજર વગરના) બનાવવા માટે.`
+      );
+
+      if (choice) {
+        // Move children to parent
+        const parentId = deletedMember.parent_id || null;
+        nextContent.people = nextContent.people.map(p => {
+          if (p.parent_id === deletedMember.name) {
+            return { ...p, parent_id: parentId };
+          }
+          return p;
+        });
+      } else {
+        // Move children to floating
+        nextContent.people = nextContent.people.map(p => {
+          if (p.parent_id === deletedMember.name) {
+            return { ...p, parent_id: null };
+          }
+          return p;
+        });
+      }
+    }
+
     nextContent.people.splice(index, 1);
     pushState(nextContent);
   };
@@ -5456,9 +5492,12 @@ export default function AdminPanel() {
                           className="w-full px-3 py-1.5 bg-black border border-white/10 rounded text-white text-xs focus:outline-none"
                         >
                           <option value="">No Parent (Root Node)</option>
-                          {currentContent.people.filter(p => p.name !== selectedItem.name).map(p => (
-                            <option key={p.name} value={p.name}>{p.name} ({p.role})</option>
-                          ))}
+                          {currentContent.people
+                            .filter(p => p.name !== selectedItem.name)
+                            .sort((a, b) => (a.level || 0) - (b.level || 0) || a.name.localeCompare(b.name))
+                            .map(p => (
+                              <option key={p.name} value={p.name}>Lvl {p.level} - {p.name} ({p.role})</option>
+                            ))}
                         </select>
                       </div>
                       <div>
@@ -5543,21 +5582,52 @@ export default function AdminPanel() {
                     </div>
 
                     <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4 space-y-3 text-left">
-                      <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">// Registry Index</h4>
+                      <div className="flex items-center justify-between gap-4">
+                        <h4 className="font-mono text-[9px] uppercase tracking-wider text-neutral-400">// Registry Index</h4>
+                        <input
+                          type="text"
+                          placeholder="Search..."
+                          value={peopleSearch}
+                          onChange={(e) => setPeopleSearch(e.target.value)}
+                          className="px-2.5 py-1 bg-black border border-white/10 rounded-lg text-[10px] text-white focus:outline-none focus:border-rose-500/50 w-28 placeholder-neutral-600"
+                        />
+                      </div>
                       <div className="max-h-[300px] overflow-y-auto space-y-1.5 pr-1">
-                        {currentContent.people.map((p) => (
-                          <div 
-                            key={p.name}
-                            onClick={() => setSelectedNodeName(p.name)}
-                            className="p-2.5 bg-black/40 border border-white/5 hover:border-rose-500/20 hover:bg-rose-500/5 rounded-lg flex items-center justify-between cursor-pointer transition-all"
-                          >
-                            <div>
-                              <p className="text-xs font-bold text-white">{p.name}</p>
-                              <p className="text-[10px] text-neutral-400 mt-0.5">{p.role}</p>
-                            </div>
-                            <span className="text-[9px] font-mono text-neutral-500 uppercase">Level {p.level}</span>
-                          </div>
-                        ))}
+                        {currentContent.people
+                          .filter(p => 
+                            p.name.toLowerCase().includes(peopleSearch.toLowerCase()) || 
+                            (p.role && p.role.toLowerCase().includes(peopleSearch.toLowerCase())) ||
+                            (p.dept && p.dept.toLowerCase().includes(peopleSearch.toLowerCase()))
+                          )
+                          .sort((a, b) => (a.level || 0) - (b.level || 0) || a.name.localeCompare(b.name))
+                          .map((p) => {
+                            let levelColor = 'text-rose-400 bg-rose-500/10 border-rose-500/20';
+                            if (p.level === 1) levelColor = 'text-amber-400 bg-amber-500/10 border-amber-500/20';
+                            else if (p.level === 2) levelColor = 'text-violet-400 bg-violet-500/10 border-violet-500/20';
+                            else if (p.level === 3) levelColor = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+                            else if (p.level === 4) levelColor = 'text-sky-400 bg-sky-500/10 border-sky-500/20';
+
+                            return (
+                              <div 
+                                key={p.name}
+                                onClick={() => setSelectedNodeName(p.name)}
+                                className={`p-2.5 bg-black/40 border hover:bg-rose-500/5 rounded-lg flex items-center justify-between cursor-pointer transition-all ${
+                                  selectedNodeName === p.name ? 'border-rose-500/40 shadow-lg shadow-rose-500/5' : 'border-white/5 hover:border-rose-500/20'
+                                }`}
+                              >
+                                <div>
+                                  <p className="text-xs font-bold text-white flex items-center gap-1.5">
+                                    <span>{p.icon || '👥'}</span>
+                                    {p.name}
+                                  </p>
+                                  <p className="text-[10px] text-neutral-400 mt-0.5">{p.role}</p>
+                                </div>
+                                <span className={`text-[8px] font-mono border px-1.5 py-0.5 rounded uppercase tracking-wider ${levelColor}`}>
+                                  Lvl {p.level}
+                                </span>
+                              </div>
+                            );
+                          })}
                       </div>
                     </div>
                   </div>

@@ -857,7 +857,7 @@ DEFAULT_STRATEGIC_DIRECTIVES = [
 
 
 def seed_database():
-    load_dotenv()
+    load_dotenv(override=True)
     uri = os.getenv("MONGODB_URI")
     if not uri:
         print("MONGODB_URI not found in env!")
