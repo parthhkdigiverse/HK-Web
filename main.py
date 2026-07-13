@@ -900,58 +900,60 @@ def compile_full_content(base_content: dict) -> dict:
 
 def load_content() -> dict:
     collection = get_mongo_collection()
-    if collection is not None:
-        try:
-            # Check for published content
-            doc = collection.find_one({"identifier": "website_content_published"})
-            if not doc:
-                # Compatibility check
-                doc = collection.find_one({"identifier": "website_content"})
-            if doc:
-                content = dict(doc)
-                content.pop("_id", None)
-                content.pop("identifier", None)
-                return compile_full_content(content)
-            else:
-                print("[MongoDB] Published document not found. Seeding base...")
-                local_data = load_local_content()
-                try:
-                    collection.insert_one({"identifier": "website_content_published", **local_data})
-                    collection.insert_one({"identifier": "website_content", **local_data})
-                    print("[MongoDB] Base seeding completed.")
-                except Exception as e:
-                    print(f"[MongoDB] Base seeding failed: {e}")
-                return compile_full_content(local_data)
-        except Exception as e:
-            print(f"[MongoDB] Error loading published content: {e}. Using local fallback.")
-    return load_local_content()
+    if collection is None:
+        raise HTTPException(status_code=503, detail="Database connection failed. System unavailable.")
+    try:
+        # Check for published content
+        doc = collection.find_one({"identifier": "website_content_published"})
+        if not doc:
+            # Compatibility check
+            doc = collection.find_one({"identifier": "website_content"})
+        if doc:
+            content = dict(doc)
+            content.pop("_id", None)
+            content.pop("identifier", None)
+            return compile_full_content(content)
+        else:
+            print("[MongoDB] Published document not found. Seeding base...")
+            local_data = load_local_content()
+            try:
+                collection.insert_one({"identifier": "website_content_published", **local_data})
+                collection.insert_one({"identifier": "website_content", **local_data})
+                print("[MongoDB] Base seeding completed.")
+            except Exception as e:
+                print(f"[MongoDB] Base seeding failed: {e}")
+            return compile_full_content(local_data)
+    except Exception as e:
+        print(f"[MongoDB] Error loading published content: {e}.")
+        raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
 
 def load_draft() -> dict:
     collection = get_mongo_collection()
-    if collection is not None:
-        try:
-            doc = collection.find_one({"identifier": "website_content_draft"})
-            if doc:
-                content = dict(doc)
-                content.pop("_id", None)
-                content.pop("identifier", None)
-                return compile_full_content(content)
-            else:
-                # Seed draft with published content
-                print("[MongoDB] Draft not found. Creating draft from published content...")
-                published = load_content()
-                try:
-                    collection.replace_one(
-                        {"identifier": "website_content_draft"},
-                        {"identifier": "website_content_draft", **published},
-                        upsert=True
-                    )
-                except Exception as e:
-                    print(f"[MongoDB] Failed to write initial draft: {e}")
-                return published
-        except Exception as e:
-            print(f"[MongoDB] Error loading draft: {e}. Using DEFAULT_CONTENT fallback.")
-    return load_content()
+    if collection is None:
+        raise HTTPException(status_code=503, detail="Database connection failed. System unavailable.")
+    try:
+        doc = collection.find_one({"identifier": "website_content_draft"})
+        if doc:
+            content = dict(doc)
+            content.pop("_id", None)
+            content.pop("identifier", None)
+            return compile_full_content(content)
+        else:
+            # Seed draft with published content
+            print("[MongoDB] Draft not found. Creating draft from published content...")
+            published = load_content()
+            try:
+                collection.replace_one(
+                    {"identifier": "website_content_draft"},
+                    {"identifier": "website_content_draft", **published},
+                    upsert=True
+                )
+            except Exception as e:
+                print(f"[MongoDB] Failed to write initial draft: {e}")
+            return published
+    except Exception as e:
+        print(f"[MongoDB] Error loading draft: {e}.")
+        raise HTTPException(status_code=500, detail=f"Database query error: {str(e)}")
 
 def load_local_content() -> dict:
     # All data now lives in MongoDB. This function returns in-memory defaults only.

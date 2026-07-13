@@ -1199,10 +1199,12 @@ export function ContentProvider({ children }) {
   const [content, setContent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [initialLoadDone, setInitialLoadDone] = useState(false);
+  const [apiError, setApiError] = useState(null);
 
   const fetchContent = useCallback(async () => {
     try {
       setLoading(true);
+      setApiError(null);
       const res = await fetch(API_URL + '/api/content');
       if (res.ok) {
         const data = await res.json();
@@ -1215,13 +1217,11 @@ export function ContentProvider({ children }) {
         }
         setContent(data);
       } else {
-        // API returned error, use defaults
-        setContent(prev => prev || DEFAULT_CONTENT);
+        setApiError("Database connection failed. System unavailable.");
       }
     } catch (e) {
-      console.warn("Failed to fetch dynamic content from API, using defaults:", e);
-      // Only fall back to defaults if we don't have content yet
-      setContent(prev => prev || DEFAULT_CONTENT);
+      console.error("Failed to fetch dynamic content from API:", e);
+      setApiError("Database connection failed. System unavailable.");
     } finally {
       setLoading(false);
       setInitialLoadDone(true);
@@ -1321,6 +1321,86 @@ export function ContentProvider({ children }) {
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, []);
+
+  // Render beautiful error screen if database connection fails
+  if (apiError) {
+    return (
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#07070a',
+        zIndex: 9999,
+        color: '#fff',
+        fontFamily: "'Inter', sans-serif"
+      }}>
+        <div style={{
+          textAlign: 'center',
+          maxWidth: '480px',
+          padding: '40px',
+          borderRadius: '24px',
+          background: 'rgba(255,255,255,0.01)',
+          border: '1px solid rgba(255,255,255,0.05)',
+          boxShadow: '0 20px 50px rgba(0,0,0,0.5), inset 0 0 20px rgba(239,68,68,0.05)'
+        }}>
+          <div style={{
+            width: '64px',
+            height: '64px',
+            borderRadius: '50%',
+            background: 'rgba(239,68,68,0.1)',
+            border: '1px solid rgba(239,68,68,0.2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 24px',
+            color: '#ef4444',
+            fontSize: '24px',
+            fontWeight: 'bold'
+          }}>
+            ⚠
+          </div>
+          <h2 style={{
+            fontSize: '20px',
+            fontWeight: 'bold',
+            letterSpacing: '1px',
+            marginBottom: '12px',
+            background: 'linear-gradient(to right, #ffffff, #a3a3a3)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent'
+          }}>SYSTEM UNAVAILABLE</h2>
+          <p style={{
+            color: 'rgba(255,255,255,0.4)',
+            fontSize: '13px',
+            lineHeight: '1.6',
+            marginBottom: '28px',
+            fontFamily: "'JetBrains Mono', monospace"
+          }}>
+            [CRITICAL_ERROR]: {apiError}
+          </p>
+          <button 
+            onClick={fetchContent}
+            style={{
+              padding: '12px 28px',
+              borderRadius: '9999px',
+              border: '1px solid rgba(255,255,255,0.1)',
+              background: '#ef4444',
+              color: '#fff',
+              fontSize: '12px',
+              letterSpacing: '2px',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+              transition: 'all 0.3s',
+              fontWeight: '600'
+            }}
+          >
+            Retry Connection
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Don't render children until initial API fetch completes
   // This prevents the flash of default/static content
