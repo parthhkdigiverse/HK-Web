@@ -1918,12 +1918,12 @@ async def restore_backup(req: dict, user: dict = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# 3. Production Frontend SPA Server Setup
+# 3. Production & Development Static Files / SPA Server Setup
 env_mode = os.getenv("ENV", "development")
-if env_mode == "production":
-    from fastapi.staticfiles import StaticFiles
-    from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
+if env_mode == "production":
     dist_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "frontend", "dist"))
     if os.path.exists(dist_dir):
         # Serve compiled static assets
@@ -1949,6 +1949,16 @@ if env_mode == "production":
             if os.path.exists(index_file):
                 return FileResponse(index_file)
             raise HTTPException(status_code=404)
+else:
+    # In development mode, mount images and uploads directly from frontend/public if available
+    public_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "frontend", "public"))
+    images_dir = os.path.join(public_dir, "images")
+    if os.path.exists(images_dir):
+        app.mount("/images", StaticFiles(directory=images_dir), name="images")
+
+    uploads_dir = os.path.join(public_dir, "uploads")
+    if os.path.exists(uploads_dir):
+        app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
 # 4. Process Runner Orchestrator
 if __name__ == "__main__":
