@@ -1916,7 +1916,39 @@ async def restore_backup(req: dict, user: dict = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# 3. Process Runner Orchestrator
+# 3. Production Frontend SPA Server Setup
+env_mode = os.getenv("ENV", "development")
+if env_mode == "production":
+    from fastapi.staticfiles import StaticFiles
+    from fastapi.responses import FileResponse
+
+    dist_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "frontend", "dist"))
+    if os.path.exists(dist_dir):
+        # Serve compiled static assets
+        assets_dir = os.path.join(dist_dir, "assets")
+        if os.path.exists(assets_dir):
+            app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+        # Serve static public files (images, uploads) from dist
+        images_dir = os.path.join(dist_dir, "images")
+        if os.path.exists(images_dir):
+            app.mount("/images", StaticFiles(directory=images_dir), name="images")
+
+        uploads_dir = os.path.join(dist_dir, "uploads")
+        if os.path.exists(uploads_dir):
+            app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
+
+        # Catch-all fallback route to support React SPA Routing (e.g. /our-people, /about-us)
+        @app.get("/{catchall:path}")
+        async def serve_spa_frontend(catchall: str):
+            if catchall.startswith("api/") or catchall == "api" or catchall == "health" or catchall.startswith("docs") or catchall.startswith("openapi.json"):
+                raise HTTPException(status_code=404)
+            index_file = os.path.join(dist_dir, "index.html")
+            if os.path.exists(index_file):
+                return FileResponse(index_file)
+            raise HTTPException(status_code=404)
+
+# 4. Process Runner Orchestrator
 if __name__ == "__main__":
     import signal
 
@@ -1943,13 +1975,14 @@ if __name__ == "__main__":
     npm_cmd = "npm.cmd" if os.name == 'nt' else "npm"
     frontend_dir = os.path.join(os.path.dirname(__file__), "frontend")
 
-    # Write frontend env dynamically to sync backend port
-    backend_port = os.getenv("PORT", "8008")
-    try:
-        with open(os.path.join(frontend_dir, ".env"), "w") as f:
-            f.write(f"VITE_API_URL=http://localhost:{backend_port}\n")
-    except Exception as e:
-        print(f"[System] Warning: Could not write frontend .env ({e})")
+    # Write frontend env dynamically to sync backend port (only in development)
+    if os.getenv("ENV", "development") != "production":
+        backend_port = os.getenv("PORT", "8008")
+        try:
+            with open(os.path.join(frontend_dir, ".env"), "w") as f:
+                f.write(f"VITE_API_URL=http://localhost:{backend_port}\n")
+        except Exception as e:
+            print(f"[System] Warning: Could not write frontend .env ({e})")
 
     # Run build synchronously first
     print("[System] Generating frontend production build...")

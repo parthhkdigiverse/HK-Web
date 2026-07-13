@@ -252,13 +252,13 @@ export default function HeroSection({ isLoaded, overrideContent }) {
           </div>
 
           <h1 className="font-display leading-[1.05] mb-2 flex flex-col text-white text-[56px] sm:text-[72px] md:text-[96px] xl:text-[120px] font-bold tracking-tight">
-            <span className="mask-reveal block h-fit py-2">
+            <span className="mask-reveal block h-fit py-2 pr-6">
               <span className="reveal-title-1 block text-neutral-400 opacity-60 font-semibold leading-none">
                 {hero.title1}
               </span>
             </span>
-            <span className="mask-reveal block h-fit py-2">
-              <span className="reveal-title-2 block text-white italic font-normal leading-none pt-2">
+            <span className="mask-reveal block h-fit py-2 pr-6">
+              <span className="reveal-title-2 block text-white italic font-normal leading-none pt-2 pr-4 lg:whitespace-nowrap">
                 {hero.title2}
               </span>
             </span>

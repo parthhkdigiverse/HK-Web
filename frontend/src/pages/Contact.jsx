@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useContent } from '../context/ContentContext';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8008';
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 /* ────────────────────────── OFFICE DATA ────────────────────────── */
 const offices = [

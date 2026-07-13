@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { cn } from '../utils/cn';
 import { useContent } from '../context/ContentContext';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8008';
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 export default function Navbar() {
   const { content } = useContent();

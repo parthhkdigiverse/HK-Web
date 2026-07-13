@@ -601,6 +601,7 @@ function PersonCard({ node, isActive, isDimmed, onHover, onClick, accent, hovere
             src={node.image} 
             alt={node.name}
             className="w-full h-full object-cover bg-neutral-900"
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             loading="lazy"
           />
         )}
@@ -645,7 +646,7 @@ function PersonCard({ node, isActive, isDimmed, onHover, onClick, accent, hovere
 
             <div className="flex gap-3.5 items-start relative z-10">
               <div className="w-12 h-12 rounded-full overflow-hidden border-2" style={{ borderColor: accent.glowColor }}>
-                <img src={node.image} alt={node.name} className="w-full h-full object-cover" />
+                <img src={node.image} alt={node.name} className="w-full h-full object-cover" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 justify-between">
@@ -792,15 +793,46 @@ function DesktopTree({
 
   const positions = runAutoLayout(treeNodes);
 
-  // 4. Determine container viewport size dynamically
-  let maxX = 1200;
-  let maxY = 800;
+  // 4. Determine container viewport size dynamically and compute centering offset
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
   Object.entries(positions).forEach(([name, pos]) => {
+    if (pos.x < minX) minX = pos.x;
     if (pos.x > maxX) maxX = pos.x;
     if (pos.y > maxY) maxY = pos.y;
   });
 
-  const canvasWidth = maxX + 260;
+  if (minX === Infinity) minX = 0;
+  if (maxX === -Infinity) maxX = 1200;
+
+  // Node dimension constants
+  const CARD_WIDTH = 176;
+  const CARD_HEIGHT = 100;
+  const treeWidth = maxX - minX + CARD_WIDTH;
+
+  const [containerWidth, setContainerWidth] = useState(1200);
+
+  useEffect(() => {
+    if (!treeContainerRef.current) return;
+    const updateWidth = () => {
+      const parent = treeContainerRef.current.parentElement;
+      if (parent) {
+        setContainerWidth(Math.max(parent.clientWidth, treeWidth + 80));
+      }
+    };
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
+  }, [treeWidth]);
+
+  const centerOffset = (containerWidth - treeWidth) / 2 - minX;
+
+  const getX = (name) => {
+    return (positions[name]?.x || 0) + centerOffset;
+  };
+
+  const canvasWidth = containerWidth;
   const canvasHeight = maxY + 350;
 
   // 5. Track mouse coordinates during live connections/dragging
@@ -812,10 +844,6 @@ function DesktopTree({
       y: e.clientY - rect.top
     });
   };
-
-  // Node dimension constants
-  const CARD_WIDTH = 176;
-  const CARD_HEIGHT = 100;
 
   const isNodeDimmed = (name) => {
     if (!hoveredNode) return false;
@@ -848,8 +876,8 @@ function DesktopTree({
           const childPos = positions[node.name];
           if (!parentPos || !childPos) return null;
 
-          const fromPoint = { x: parentPos.x + CARD_WIDTH / 2, y: parentPos.y + CARD_HEIGHT };
-          const toPoint = { x: childPos.x + CARD_WIDTH / 2, y: childPos.y };
+          const fromPoint = { x: getX(node.parent_id) + CARD_WIDTH / 2, y: parentPos.y + CARD_HEIGHT };
+          const toPoint = { x: getX(node.name) + CARD_WIDTH / 2, y: childPos.y };
 
           const fromActive = isInActivePath(node.parent_id);
           const toActive = isInActivePath(node.name);
@@ -901,7 +929,7 @@ function DesktopTree({
         {/* Live animated connection line preview */}
         {connectMode && selectedNodeName && (
           <path
-            d={`M ${positions[selectedNodeName]?.x + CARD_WIDTH / 2} ${positions[selectedNodeName]?.y + CARD_HEIGHT} L ${mousePos.x} ${mousePos.y}`}
+            d={`M ${getX(selectedNodeName) + CARD_WIDTH / 2} ${positions[selectedNodeName]?.y + CARD_HEIGHT} L ${mousePos.x} ${mousePos.y}`}
             fill="none"
             stroke="#22d3ee"
             strokeWidth="2"
@@ -922,7 +950,7 @@ function DesktopTree({
             id={`node-${node.name.replace(/\s+/g, '-').toLowerCase()}`}
             className="absolute transition-all duration-300"
             style={{ 
-              left: `${pos.x}px`, 
+              left: `${getX(node.name)}px`, 
               top: `${pos.y}px`,
               zIndex: 10
             }}
@@ -1438,6 +1466,7 @@ export default function OurPeople({ overrideContent }) {
               connectMode={connectMode}
               onConnectClick={handleConnectClick}
               unassignedPeople={unassignedPeople}
+              peopleList={peopleList}
             />
           </div>
         </div>

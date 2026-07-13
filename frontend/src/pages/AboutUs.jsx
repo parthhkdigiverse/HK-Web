@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, useScroll, useSpring, useTransform, AnimatePresence, useMotionValue } from 'framer-motion';
 import { useContent } from '../context/ContentContext';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8008';
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 const resolveImageUrl = (imgSrc) => {
   if (!imgSrc) return '';

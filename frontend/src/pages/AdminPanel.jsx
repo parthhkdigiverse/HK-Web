@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useContent, DEFAULT_CONTENT } from '../context/ContentContext';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8008';
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 const getServiceDefaultPreview = (num, index) => {
   const defaults = {
@@ -79,6 +79,46 @@ export default function AdminPanel() {
   
   // Organigram selection state
   const [selectedNodeName, setSelectedNodeName] = useState(null);
+
+  // Resizable Sidebar States & Effects
+  const [sidebarWidth, setSidebarWidth] = useState(400);
+  const [isResizing, setIsResizing] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const checkIsDesktop = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+    checkIsDesktop();
+    window.addEventListener('resize', checkIsDesktop);
+    return () => window.removeEventListener('resize', checkIsDesktop);
+  }, []);
+
+  const startResizing = (e) => {
+    e.preventDefault();
+    setIsResizing(true);
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isResizing) return;
+      const newWidth = Math.max(320, Math.min(800, e.clientX));
+      setSidebarWidth(newWidth);
+    };
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    if (isResizing) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing]);
 
   const iframeRef = useRef(null);
 
@@ -2411,8 +2451,35 @@ export default function AdminPanel() {
   return (
     <div className="flex flex-col lg:flex-row h-screen bg-black text-[#e5e2e1] overflow-hidden select-none">
       
-      {/* LEFT PANEL: CMS CONTROLS (35% Width on desktop, full width on mobile) */}
-      <aside className="w-full lg:w-[35%] lg:min-w-[380px] lg:max-w-[500px] border-b lg:border-b-0 lg:border-r border-white/10 bg-[#060608]/90 backdrop-blur-xl flex flex-col h-[50vh] lg:h-full relative z-20 overflow-y-auto">
+      {/* LEFT PANEL: CMS CONTROLS (Resizable on desktop, full width on mobile) */}
+      <aside 
+        style={{ 
+          width: isDesktop ? (isSidebarCollapsed ? '0px' : `${sidebarWidth}px`) : '100%', 
+          minWidth: isDesktop ? (isSidebarCollapsed ? '0px' : '320px') : 'auto', 
+          maxWidth: isDesktop ? (isSidebarCollapsed ? '0px' : '800px') : 'none',
+          borderRightWidth: isSidebarCollapsed ? '0px' : '1px'
+        }}
+        className={`w-full border-b lg:border-b-0 lg:border-r border-white/10 bg-[#060608]/90 backdrop-blur-xl flex flex-col h-[50vh] lg:h-full relative z-20 overflow-y-auto overflow-x-hidden ${isResizing ? '' : 'transition-all duration-300'}`}
+      >
+        {/* Resizer Handle */}
+        {isDesktop && !isSidebarCollapsed && (
+          <div
+            onMouseDown={startResizing}
+            className={`absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-emerald-500/40 active:bg-emerald-500/80 transition-colors z-[999] ${isResizing ? 'bg-emerald-500' : ''}`}
+            style={{ transform: 'translateX(50%)' }}
+          />
+        )}
+
+        {/* Toggle Collapse Button */}
+        {isDesktop && (
+          <button
+            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            className={`absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[#111115] border border-white/10 hover:border-emerald-500/50 flex items-center justify-center text-[10px] text-neutral-400 hover:text-white transition-all shadow-xl z-[1000] cursor-pointer ${isSidebarCollapsed ? 'translate-x-6' : ''}`}
+            title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          >
+            {isSidebarCollapsed ? '▶' : '◀'}
+          </button>
+        )}
         
         {/* Editor Title */}
         <header className="p-6 border-b border-white/10 flex items-center justify-between bg-white/[0.01]">
