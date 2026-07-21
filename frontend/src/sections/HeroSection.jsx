@@ -62,7 +62,20 @@ export default function HeroSection({ isLoaded, overrideContent }) {
 
     // Frame drawing logic (respects cover sizing)
     const drawFrame = (index) => {
-      const img = window.preloadedFrames[index];
+      const frames = window.preloadedFrames;
+      if (!frames || frames.length === 0) return;
+
+      let img = frames[index];
+      if (!img) {
+        for (let i = index; i >= 0; i--) {
+          if (frames[i]) { img = frames[i]; break; }
+        }
+        if (!img) {
+          for (let i = index; i < frames.length; i++) {
+            if (frames[i]) { img = frames[i]; break; }
+          }
+        }
+      }
       if (!img) return;
 
       const canvasWidth = window.innerWidth;
@@ -103,27 +116,27 @@ export default function HeroSection({ isLoaded, overrideContent }) {
       ScrollTrigger.create({
         trigger: containerRef.current,
         start: "top top",
-        end: "+=300%", // 300% of viewport scroll track height (400vh total height)
+        end: "+=300%", // 300% viewport scroll track for smooth 315-frame scrub
         pin: true,
-        scrub: true,
+        scrub: 0.5,
         onUpdate: (self) => {
           // Map scroll progress (0 to 1) directly to total frame indices
           targetFrameRef.current = self.progress * (totalFrames - 1);
         }
       });
 
-      // Slow fade out on scroll for typography
+      // Fade out hero text during scroll
       const content = textContainerRef.current;
       if (content) {
         gsap.to(content, {
           scrollTrigger: {
             trigger: containerRef.current,
             start: "top top",
-            end: "+=150%",
+            end: "+=120%",
             scrub: true,
           },
-          opacity: 0.1,
-          y: -40,
+          opacity: 0,
+          y: -60,
           ease: "none"
         });
       }
@@ -132,7 +145,7 @@ export default function HeroSection({ isLoaded, overrideContent }) {
     // Lerp loop for fluid 60 FPS scrolling frame renders
     let frameRenderAnimFrameId;
     const updateFrame = () => {
-      const lerpFactor = 0.08; 
+      const lerpFactor = 0.18; 
       const diff = targetFrameRef.current - currentFrameRef.current;
       
       if (Math.abs(diff) > 0.01) {
@@ -218,80 +231,84 @@ export default function HeroSection({ isLoaded, overrideContent }) {
   };
 
   return (
-    <div className="w-full bg-black">
+    <div 
+      ref={containerRef} 
+      style={containerStyle}
+      className="relative w-full overflow-hidden bg-[#0c0c0c]"
+    >
+      {/* Edge-to-Edge Centered Fullscreen Canvas */}
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full object-cover z-0 block"
+      />
+
+      {/* Cinematic Overlays */}
       <div 
-        ref={containerRef} 
-        style={containerStyle}
-        className="relative w-full overflow-hidden bg-black transition-all duration-300"
+        style={overlayStyle}
+        className="absolute inset-0 z-[1] pointer-events-none transition-all duration-300" 
+      />
+      <div className="cinematic-vignette" />
+      <div className="noise-overlay" />
+
+      {/* Bottom gradient: blends last frame into the #0c0c0c background of next section */}
+      <div 
+        className="absolute bottom-0 left-0 right-0 h-[25vh] z-[2] pointer-events-none"
+        style={{ background: 'linear-gradient(to bottom, transparent 0%, #0c0c0c 100%)' }}
+      />
+
+      {/* Hero Content */}
+      <div 
+        ref={textContainerRef}
+        className={`absolute inset-0 z-10 flex flex-col justify-center px-6 sm:px-12 md:px-20 lg:px-28 xl:px-36 max-w-6xl space-y-8 ${alignmentClass}`}
       >
-        {/* Edge-to-Edge Centered Fullscreen Canvas */}
-        <canvas
-          ref={canvasRef}
-          className="absolute inset-0 w-full h-full object-cover z-0 block"
-        />
+        <div className="flex items-center gap-4 reveal-label">
+          {hero.align !== 'right' && <span className="w-12 h-[0.5px] bg-white opacity-60"></span>}
+          <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 font-light">
+            {hero.label}
+          </span>
+          {hero.align === 'right' && <span className="w-12 h-[0.5px] bg-white opacity-60"></span>}
+        </div>
 
-        {/* Cinematic Overlays */}
-        <div 
-          style={overlayStyle}
-          className="absolute inset-0 z-[1] pointer-events-none transition-all duration-300" 
-        />
-        <div className="cinematic-vignette" />
-        <div className="noise-overlay" />
-
-        {/* Hero Content */}
-        <div 
-          ref={textContainerRef}
-          className={`absolute inset-0 z-10 flex flex-col justify-center px-6 sm:px-12 md:px-20 lg:px-28 xl:px-36 max-w-6xl space-y-8 ${alignmentClass}`}
-        >
-          <div className="flex items-center gap-4 reveal-label">
-            {hero.align !== 'right' && <span className="w-12 h-[0.5px] bg-white opacity-60"></span>}
-            <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 font-light">
-              {hero.label}
+        <h1 className="font-display leading-[1.05] mb-2 flex flex-col text-white text-[56px] sm:text-[72px] md:text-[96px] xl:text-[120px] font-bold tracking-tight">
+          <span className="mask-reveal block h-fit py-2 pr-6">
+            <span className="reveal-title-1 block text-neutral-400 opacity-60 font-semibold leading-none">
+              {hero.title1}
             </span>
-            {hero.align === 'right' && <span className="w-12 h-[0.5px] bg-white opacity-60"></span>}
-          </div>
-
-          <h1 className="font-display leading-[1.05] mb-2 flex flex-col text-white text-[56px] sm:text-[72px] md:text-[96px] xl:text-[120px] font-bold tracking-tight">
-            <span className="mask-reveal block h-fit py-2 pr-6">
-              <span className="reveal-title-1 block text-neutral-400 opacity-60 font-semibold leading-none">
-                {hero.title1}
-              </span>
+          </span>
+          <span className="mask-reveal block h-fit py-2 pr-6">
+            <span className="reveal-title-2 block text-white italic font-normal leading-none pt-2 pr-4 lg:whitespace-nowrap">
+              {hero.title2}
             </span>
-            <span className="mask-reveal block h-fit py-2 pr-6">
-              <span className="reveal-title-2 block text-white italic font-normal leading-none pt-2 pr-4 lg:whitespace-nowrap">
-                {hero.title2}
-              </span>
-            </span>
-          </h1>
+          </span>
+        </h1>
 
-          <p className="reveal-desc font-light text-neutral-400 text-sm sm:text-base md:text-lg leading-relaxed max-w-2xl">
-            {hero.desc}
-          </p>
+        <p className="reveal-desc font-light text-neutral-400 text-sm sm:text-base md:text-lg leading-relaxed max-w-2xl">
+          {hero.desc}
+        </p>
 
-          <div className="reveal-buttons flex flex-wrap gap-5 items-center pt-2">
-            {hero.primaryBtnText !== '' && (
-              <Magnetic speed={1.2} tolerance={0.4}>
-                <a 
-                  href={hero.primaryBtnLink || '#contact'}
-                  className="glass-btn px-10 py-5 rounded-full text-xs uppercase tracking-[0.2em] font-medium text-white shadow-md relative overflow-hidden group/btn cursor-pointer inline-block"
-                >
-                  <span className="relative z-10">{hero.primaryBtnText || 'Start a Project →'}</span>
-                  <div className="absolute inset-0 bg-white/10 scale-x-0 origin-left transition-transform duration-500 group-hover/btn:scale-x-100" />
-                </a>
-              </Magnetic>
-            )}
+        <div className="reveal-buttons flex flex-wrap gap-5 items-center pt-2">
+          {hero.primaryBtnText !== '' && (
+            <Magnetic speed={1.2} tolerance={0.4}>
+              <a 
+                href={hero.primaryBtnLink || '#contact'}
+                className="glass-btn px-10 py-5 rounded-full text-xs uppercase tracking-[0.2em] font-medium text-white shadow-md relative overflow-hidden group/btn cursor-pointer inline-block"
+              >
+                <span className="relative z-10">{hero.primaryBtnText || 'Start a Project →'}</span>
+                <div className="absolute inset-0 bg-white/10 scale-x-0 origin-left transition-transform duration-500 group-hover/btn:scale-x-100" />
+              </a>
+            </Magnetic>
+          )}
 
-            {hero.secondaryBtnText !== '' && (
-              <Magnetic speed={1.2} tolerance={0.4}>
-                <a 
-                  href={hero.secondaryBtnLink || '#portfolio'}
-                  className="px-10 py-5 rounded-full text-xs uppercase tracking-[0.2em] font-medium text-neutral-400 hover:text-white transition-colors duration-300 cursor-pointer flex items-center gap-2 group/secondary inline-block"
-                >
-                  <span>{hero.secondaryBtnText || 'View Work'}</span>
-                </a>
-              </Magnetic>
-            )}
-          </div>
+          {hero.secondaryBtnText !== '' && (
+            <Magnetic speed={1.2} tolerance={0.4}>
+              <a 
+                href={hero.secondaryBtnLink || '#portfolio'}
+                className="px-10 py-5 rounded-full text-xs uppercase tracking-[0.2em] font-medium text-neutral-400 hover:text-white transition-colors duration-300 cursor-pointer flex items-center gap-2 group/secondary inline-block"
+              >
+                <span>{hero.secondaryBtnText || 'View Work'}</span>
+              </a>
+            </Magnetic>
+          )}
         </div>
       </div>
     </div>
